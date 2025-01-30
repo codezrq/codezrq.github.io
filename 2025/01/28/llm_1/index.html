@@ -38,7 +38,7 @@
 <meta property="og:image" content="http://example.com/2025/01/28/llm_1/llm_1/5a259c8fbe4647e1aea8be7242a5d386.png">
 <meta property="og:image" content="http://example.com/2025/01/28/llm_1/llm_1/cebed53b3256400aa2b1871479e9a69e.png">
 <meta property="article:published_time" content="2025-01-28T15:45:07.742Z">
-<meta property="article:modified_time" content="2025-01-30T16:54:18.449Z">
+<meta property="article:modified_time" content="2025-01-30T17:16:20.950Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="paper notes">
 <meta name="twitter:card" content="summary">
@@ -207,7 +207,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-01-31 00:54:18" itemprop="dateModified" datetime="2025-01-31T00:54:18+08:00">2025-01-31</time>
+                <time title="修改时间：2025-01-31 01:16:20" itemprop="dateModified" datetime="2025-01-31T01:16:20+08:00">2025-01-31</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -259,14 +259,14 @@
 <script type="math/tex; mode=display">
 P(x)=P(x_1) \cdot P(x_2|x_1)\cdot P(x_n|x_1,\cdots,x_{n-1})</script><p>Transformer[53]已经成为在大范围内对上述概率进行建模的事实上的标准架构。基于transformer的语言模型最重要的组件是它的自注意力层。对于输入隐藏层状态 $(x_1,\cdots,x_n) \in \mathbb{R}^{n\times d}$ ，自注意力层首先对每个位置向量进行线性变换，得到Query, key 和 value 向量:</p>
 <script type="math/tex; mode=display">
-q_i=W_qx_i,k_i=W_kx_i,v_i=W_vx_i</script><p>然后，自注意层通过将某一位置的 Query 向量与其之前的所有 key 向量相乘来计算关注分数 $a<em>{ij}$，并计算输出 $o</em>{i}$ 作为 value 向量的加权平均值:</p>
+q_i=W_qx_i,k_i=W_kx_i,v_i=W_vx_i</script><p>然后，自注意层通过将某一位置的 Query 向量与其之前的所有 key 向量相乘来计算关注分数 $a_{ij}$，并计算输出 $o_{i}$ 作为 value 向量的加权平均值:</p>
 <script type="math/tex; mode=display">
 a_{ij}=\frac{exp(q_i^Tk_j/\sqrt{d})}{\sum_{t=1}^i exp(q_i^Tk_t/\sqrt{d})}, o_i=\sum\limits_{j=1}^{i}a_{ij}v_{j}.</script><p>除Eq. 4中的计算外，Transformer模型中的所有其他组成部分，包括嵌入层、前馈层、层归一化[2]、剩余连接[22]、输出logit计算以及Eq. 2中的Query, key, value 值转换，都是按照位置独立应用的，形式为: $y_i=f(x_i)$。</p>
-<h5 id="2-2-LLM-Service-amp-Autoregressive-Generation"><a href="#2-2-LLM-Service-amp-Autoregressive-Generation" class="headerlink" title="2.2 LLM Service &amp; Autoregressive Generation"></a>2.2 LLM Service &amp; Autoregressive Generation</h5><p>经过训练后，llm通常被部署为生成服务(例如，生成API[34]或聊天机器人[19,35])。对LLM服务的请求提供了一个输入提示token序列$(x<em>1,\cdots,x_n)$，LLM服务根据式(1)生成一个输出令牌列表$(x</em>{n+1},\cdots,x{n+T})$。我们将提示符列表和输出列表的连接称为序列。</p>
+<h5 id="2-2-LLM-Service-amp-Autoregressive-Generation"><a href="#2-2-LLM-Service-amp-Autoregressive-Generation" class="headerlink" title="2.2 LLM Service &amp; Autoregressive Generation"></a>2.2 LLM Service &amp; Autoregressive Generation</h5><p>经过训练后，llm通常被部署为生成服务(例如，生成API[34]或聊天机器人[19,35])。对LLM服务的请求提供了一个输入提示token序列$(x_1,\cdots,x_n)$，LLM服务根据式(1)生成一个输出令牌列表$(x_{n+1},\cdots,x{n+T})$。我们将提示符列表和输出列表的连接称为序列。</p>
 <p>LLM只能逐个采样并生成新的令牌，并且每个新token的生成过程取决于该序列中所有先前的tonken，特别是它们的key和value。在这个顺序生成过程中，通常缓存现有token的key和value向量，以生成未来的token，称为KV cache。注意，一个token的KV cache依赖于它之前的所有token。这意味着同一token在序列中出现在不同位置的KV cache 将是不同的。</p>
 <p>给定一个请求prompt，LLM服务中的生成计算可以分解为两个阶段:</p>
-<p><strong>The prompt phase: </strong> 将用户的整个prompt  $(x<em>1,\cdots,x_n)$ 作为输入计算第一个token的概率$P(x</em>{n+1}|x_1,\cdots,x_n)$ ，在此过程中，还生成了key向量$k_1,\cdots,k_n$ 和 value 向量$v_1,\cdots,v_n$，由于token $(x_1,\cdots,x_n)$ 都是已知的，提示阶段的计算可以使用矩阵乘法运算并行化。因此，这一阶段可以有效地利用gpu固有的并行性。</p>
-<p><strong>The autoregressive generation phase: </strong> 依次生成剩余的新token，在第 t 个迭代，模型需要token $x<em>{n+t}$ 作为输入并使用key向量 $k_1,\cdots,k</em>{n+t}$ 和value 向量 $v<em>1,\cdots,v</em>{n+t}$ 计算概率 $P(x<em>{n+t+1}|x_1,\cdots,x</em>{n+t})$ ,注意，$1\to n + t-1$ 的key和value向量在之前的迭代已经缓存了，这个迭代值生成新的token的key 和 value 。当序列达到最大长度(由用户或者llm限制)或发出序列结束($<eos>$)token时，自回归阶段完成。由于数据依赖性，不同迭代的计算不能并行化，通常采用矩阵-向量乘法，效率较低。因此，这一阶段严重未充分利用GPU计算并成为内存限制，带来单个请求的大部分延迟。</p>
+<p><strong>The prompt phase: </strong> 将用户的整个prompt  $(x_1,\cdots,x_n)$ 作为输入计算第一个token的概率$P(x_{n+1}|x_1,\cdots,x_n)$ ，在此过程中，还生成了key向量$k_1,\cdots,k_n$ 和 value 向量$v_1,\cdots,v_n$，由于token $(x_1,\cdots,x_n)$ 都是已知的，提示阶段的计算可以使用矩阵乘法运算并行化。因此，这一阶段可以有效地利用gpu固有的并行性。</p>
+<p><strong>The autoregressive generation phase: </strong> 依次生成剩余的新token，在第 t 个迭代，模型需要token $x_{n+t}$ 作为输入并使用key向量 $k_1,\cdots,k_{n+t}$ 和value 向量 $v_1,\cdots,v_{n+t}$ 计算概率 $P(x_{n+t+1}|x_1,\cdots,x_{n+t})$ ,注意，$1\to n + t-1$ 的key和value向量在之前的迭代已经缓存了，这个迭代值生成新的token的key 和 value 。当序列达到最大长度(由用户或者llm限制)或发出序列结束($<eos>$)token时，自回归阶段完成。由于数据依赖性，不同迭代的计算不能并行化，通常采用矩阵-向量乘法，效率较低。因此，这一阶段严重未充分利用GPU计算并成为内存限制，带来单个请求的大部分延迟。</p>
 <h5 id="2-3-Batching-Techniques-for-LLMs"><a href="#2-3-Batching-Techniques-for-LLMs" class="headerlink" title="2.3 Batching Techniques for LLMs"></a>2.3 Batching Techniques for LLMs</h5><p>通过批量处理多个请求，可以提高llm服务的计算利用率。由于请求共享相同的模型权重，因此移动权重的开销在批处理请求中平摊，并且当批处理大小足够大时，可能会被计算开销所抵消(相比变得很小)。但是，由于两个原因，将请求批处理到LLM服务是非常重要的。首先，请求可能在不同的时间到达。直接的批处理策略要么让较早的请求等待较晚的请求，要么将之后的请求延迟到较早的请求完成，从而导致严重的排队延迟。其次，请求可能具有不同的输入和输出长度(图11)。直接的批处理技术填充请求的输入和输出，以平衡它们的长度，但会浪费GPU计算和内存。</p>
 <p>为了解决这个问题，人们提出了细粒度的批处理机制，如cellular batching[16]和iteration-level scheduling[60]。与在请求级别工作的传统方法不同，这些技术在迭代级别操作。在每次迭代之后，完成的请求将从批处理中删除，并添加新的请求。因此，可以在等待单个迭代后处理新请求，而不是等待整个批处理完成。</p>
 <p>此外，使用特殊的GPU内核，这些技术消除了填充输入和输出的需要。通过减少排队延迟和填充带来的低效率，细粒度批处理机制显著提高了LLM服务的吞吐量。</p>
@@ -281,9 +281,9 @@ a_{ij}=\frac{exp(q_i^Tk_j/\sqrt{d})}{\sum_{t=1}^i exp(q_i^Tk_t/\sqrt{d})}, o_i=\
 <h4 id="4-Method"><a href="#4-Method" class="headerlink" title="4. Method"></a>4. Method</h4><p> <img src="llm_1/062049b20dcc430d999bc89bf80af483.png" alt="在这里插入图片描述"></p>
 <p>在这项工作中，我们开发了一种新的注意力算法PagedAttention，并构建了一个LLM服务引擎vLLM，以解决§3中概述的挑战。vLLM的架构如图4所示。vLLM采用集中式调度程序来协调分布式GPU工作线程的执行。KV cache 管理器以分页方式有效地管理KV cache，由PagedAttention启用。具体来说，KV cache 管理器通过集中调度程序发送的指令来管理GPU工作线程上的物理KV cache。</p>
 <p>接下来，我们在§4.1中描述PagedAttention算法。我们分别在§4.2中展示KV cache 管理器的设计以及它如何促进§4.3中的PagedAttention。然后，我们展示了这种设计如何促进各种解码方法(§4.4)的有效内存管理，并处理可变长度的输入和输出序列(§4.5)。最后，我们展示了vLLM的系统设计如何在分布式设置中工作(第4.6节)。</p>
-<h5 id="4-1-PageAttention"><a href="#4-1-PageAttention" class="headerlink" title="4.1 PageAttention"></a>4.1 PageAttention</h5><p>为了解决§3中的内存挑战，我们引入了PagedAttention，这是一种受操作系统中分页的经典思想启发的注意力算法[25]。与传统的注意力算法不同，PagedAttention允许在非连续的内存空间中存储连续的键和值。具体来说，PagedAttention将每个序列的KV cache 划分为KV block。每个块包含固定数量的token的key和value向量，我们将其记为KV block size。记key block为 $K<em>j=(k</em>{(j-1)B+1},\cdots,k<em>{jB})$ ，记value block为$V_j=(v</em>{(j-1)B+1},\cdots,v_{jB})$ ，注意力可以逐块计算为:</p>
+<h5 id="4-1-PageAttention"><a href="#4-1-PageAttention" class="headerlink" title="4.1 PageAttention"></a>4.1 PageAttention</h5><p>为了解决§3中的内存挑战，我们引入了PagedAttention，这是一种受操作系统中分页的经典思想启发的注意力算法[25]。与传统的注意力算法不同，PagedAttention允许在非连续的内存空间中存储连续的键和值。具体来说，PagedAttention将每个序列的KV cache 划分为KV block。每个块包含固定数量的token的key和value向量，我们将其记为KV block size。记key block为 $K_j=(k_{(j-1)B+1},\cdots,k_{jB})$ ，记value block为$V_j=(v_{(j-1)B+1},\cdots,v_{jB})$ ，注意力可以逐块计算为:</p>
 <script type="math/tex; mode=display">
-A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\sqrt{d})}, o_i = \sum\limits_{j=1}^{\lceil i / B\rceil} V_j A_{ij}^T</script><p>其中$A<em>{ij}=(a</em>{i,(j-1)B+1},\cdots,a<em>{i,j}B)$表示第j个KV block中的行向量。在注意力计算过程中，PagedAttention内核分别识别和提取不同的KV块，我们在图5中展示了一个PagedAttention的例子:键和值向量分布在三个块上，并且这三个块在物理内存上不是连续的。每次，内核将查询tokend 的Query向量和block中的key向量$K_j$ (例如，block 0中的key向量”Four score and seven”)相乘，计算出注意力分数 $A</em>{ij}$， 然后将变量 $A_{ij}$ 和block中的value向量$V_j$相乘得到最终的注意力分数。 </p>
+A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\sqrt{d})}, o_i = \sum\limits_{j=1}^{\lceil i / B\rceil} V_j A_{ij}^T</script><p>其中$A_{ij}=(a_{i,(j-1)B+1},\cdots,a_{i,j}B)$表示第j个KV block中的行向量。在注意力计算过程中，PagedAttention内核分别识别和提取不同的KV块，我们在图5中展示了一个PagedAttention的例子:键和值向量分布在三个块上，并且这三个块在物理内存上不是连续的。每次，内核将查询tokend 的Query向量和block中的key向量$K_j$ (例如，block 0中的key向量”Four score and seven”)相乘，计算出注意力分数 $A_{ij}$， 然后将变量 $A_{ij}$ 和block中的value向量$V_j$相乘得到最终的注意力分数。 </p>
 <p> <img src="llm_1/d64723720b434d668211104cb6a749cc.png" alt="在这里插入图片描述"></p>
 <p>总之，PagedAttention算法允许将KV块存储在非连续的物理内存中，从而在vLLM中实现更灵活的分页内存管理。</p>
 <h5 id="4-2-KV-Cache-Manager"><a href="#4-2-KV-Cache-Manager" class="headerlink" title="4.2 KV Cache Manager"></a>4.2 KV Cache Manager</h5><p>vLLM内存管理器背后的关键思想类似于操作系统中的虚拟内存[25]。操作系统将内存划分为固定大小的页面，并将用户程序的逻辑页面映射到物理页面。连续的逻辑页可以对应于非连续的物理内存页，允许用户程序访问内存，就好像它是连续的一样。此外，物理内存空间不需要提前完全预留，使操作系统可以根据需要动态分配物理页面。vLLM使用虚拟内存背后的思想来管理LLM服务中的KV缓存。通过PagedAttention，我们将KV缓存组织为固定大小的KV块，就像虚拟内存中的页面一样。</p>
@@ -510,6 +510,61 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 
 
   
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 
