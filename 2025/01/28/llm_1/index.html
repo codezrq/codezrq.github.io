@@ -27,7 +27,7 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="从虚拟内存的分页管理得到的灵感，用分页管理管理llm的kvcache，使其能够动态扩缩容，重用，碎片小。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//90f34ab726a84868a23baf38716f1415.png">
+<meta property="og:image" content="http://example.com/.com//Photos/90f34ab726a84868a23baf38716f1415.png">
 <meta property="og:image" content="http://example.com/.com//5b4d27afa1d44d4ba1fe56329043ad0d.png">
 <meta property="og:image" content="http://example.com/.com//c86039995d1b47249a4346281689a445.png">
 <meta property="og:image" content="http://example.com/.com//062049b20dcc430d999bc89bf80af483.png">
@@ -38,11 +38,11 @@
 <meta property="og:image" content="http://example.com/.com//5a259c8fbe4647e1aea8be7242a5d386.png">
 <meta property="og:image" content="http://example.com/.com//cebed53b3256400aa2b1871479e9a69e.png">
 <meta property="article:published_time" content="2025-01-28T15:45:07.742Z">
-<meta property="article:modified_time" content="2025-01-30T17:39:02.057Z">
+<meta property="article:modified_time" content="2025-01-30T17:54:10.949Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="paper notes">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//90f34ab726a84868a23baf38716f1415.png">
+<meta name="twitter:image" content="http://example.com/.com//Photos/90f34ab726a84868a23baf38716f1415.png">
 
 <link rel="canonical" href="http://example.com/2025/01/28/llm_1/">
 
@@ -207,7 +207,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-01-31 01:39:02" itemprop="dateModified" datetime="2025-01-31T01:39:02+08:00">2025-01-31</time>
+                <time title="修改时间：2025-01-31 01:54:10" itemprop="dateModified" datetime="2025-01-31T01:54:10+08:00">2025-01-31</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -241,7 +241,7 @@
 <p>llm的核心是自回归的Transformer模型。该模型基于输入(提示)和迄今为止生成的输出标记的前一个序列，一次生成一个单词(token)。对于每个请求，重复这个昂贵的过程，直到模型输出一个终止令牌。这种顺序生成过程使工作负载受到内存限制，使gpu的计算能力得不到充分利用，并限制了服务吞吐量。</p>
 
 <p>hhhhhhhhhhhhhhhhh</p>
-<p> <img src="/.com//90f34ab726a84868a23baf38716f1415.png" alt="在这里插入图片描述"></p>
+<p> <img src="/.com//Photos/90f34ab726a84868a23baf38716f1415.png" alt="在这里插入图片描述"></p>
 <p>通过将多个请求批处理在一起，可以提高吞吐量。但是，为了批量处理许多请求，应该有效地管理每个请求的内存空间。例如，图1(左)说明了在具有40GB RAM的NVIDIA A100 GPU上13B参数LLM的内存分布。大约65%的内存分配给模型参数，这些权重在服务期间保持静态。接近30%的内存用于存储请求的动态状态。对于transformer，这些状态由与注意力机制相关的key值和value值组成，通常被称为KV cache，它表示来自早期令牌的上下文，以按顺序生成新的输出令牌。剩下的一小部分用于其他数据，包括激活——在评估LLM时产生的短暂张量。由于模型权重是恒定的，并且激活仅占用GPU内存的一小部分，因此管理KV缓存的方式对于确定最大批大小至关重要。当管理效率低下时，KV高速缓存会显著限制批处理大小，从而限制LLM的吞吐量，如图1(右)所示。</p>
 <p>在本文中，我们观察到现有的LLM服务系统无法有效地管理KV缓存。这主要是因为它们将请求的KV缓存存储在连续内存空间中，因为大多数深度学习框架要求将张量存储在连续内存中。然而，与传统深度学习工作负载中的张量不同，KV cache 具有独特的特征:随着模型生成新的token，它会随着时间的推移动态增长和缩小，并且它的生命周期和长度是未知的。这些特点使现有系统的方法在两个方面显着效率低下：</p>
 <p> <img src="/.com//5b4d27afa1d44d4ba1fe56329043ad0d.png" alt="在这里插入图片描述"></p>
