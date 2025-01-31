@@ -1,268 +1,61 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 7.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
-<link rel="stylesheet" href="/css/main.css">
-
-
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
-
-<script id="hexo-configurations">
-    var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
-  </script>
-
-  <meta name="description" content="从虚拟内存的分页管理得到的灵感，用分页管理管理llm的kvcache，使其能够动态扩缩容，重用，碎片小。">
-<meta property="og:type" content="article">
-<meta property="og:title" content="【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention">
-<meta property="og:url" content="http://example.com/2025/01/28/llm_1/index.html">
-<meta property="og:site_name" content="Coderq">
-<meta property="og:description" content="从虚拟内存的分页管理得到的灵感，用分页管理管理llm的kvcache，使其能够动态扩缩容，重用，碎片小。">
-<meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//90f34ab726a84868a23baf38716f1415.png">
-<meta property="og:image" content="http://example.com/.com//5b4d27afa1d44d4ba1fe56329043ad0d.png">
-<meta property="og:image" content="http://example.com/.com//c86039995d1b47249a4346281689a445.png">
-<meta property="og:image" content="http://example.com/.com//062049b20dcc430d999bc89bf80af483.png">
-<meta property="og:image" content="http://example.com/.com//d64723720b434d668211104cb6a749cc.png">
-<meta property="og:image" content="http://example.com/.com//973ddad656ae4831b5623c6cf729b0da.png">
-<meta property="og:image" content="http://example.com/.com//e507ff7cc78044088cd9ae2ce3fff6a6.png">
-<meta property="og:image" content="http://example.com/.com//136cfecb0ff74f36abe81a6ce50bd312.png">
-<meta property="og:image" content="http://example.com/.com//5a259c8fbe4647e1aea8be7242a5d386.png">
-<meta property="og:image" content="http://example.com/.com//cebed53b3256400aa2b1871479e9a69e.png">
-<meta property="article:published_time" content="2025-01-28T15:45:07.742Z">
-<meta property="article:modified_time" content="2025-01-30T18:09:45.531Z">
-<meta property="article:author" content="zheng rq">
-<meta property="article:tag" content="paper notes">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//90f34ab726a84868a23baf38716f1415.png">
-
-<link rel="canonical" href="http://example.com/2025/01/28/llm_1/">
-
-
-<script id="page-configurations">
-  // https://hexo.io/docs/variables.html
-  CONFIG.page = {
-    sidebar: "",
-    isHome : false,
-    isPost : true,
-    lang   : 'zh-CN'
-  };
-</script>
-
-  <title>【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention | Coderq</title>
-  
-
-
-
-
-
-
-  <noscript>
-  <style>
-  .use-motion .brand,
-  .use-motion .menu-item,
-  .sidebar-inner,
-  .use-motion .post-block,
-  .use-motion .pagination,
-  .use-motion .comments,
-  .use-motion .post-header,
-  .use-motion .post-body,
-  .use-motion .collection-header { opacity: initial; }
-
-  .use-motion .site-title,
-  .use-motion .site-subtitle {
-    opacity: initial;
-    top: initial;
-  }
-
-  .use-motion .logo-line-before i { left: initial; }
-  .use-motion .logo-line-after i { right: initial; }
-  </style>
-</noscript>
-
-</head>
-
-<body itemscope itemtype="http://schema.org/WebPage">
-  <div class="container use-motion">
-    <div class="headband"></div>
-
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
-  <div class="site-nav-toggle">
-    <div class="toggle" aria-label="切换导航栏">
-      <span class="toggle-line toggle-line-first"></span>
-      <span class="toggle-line toggle-line-middle"></span>
-      <span class="toggle-line toggle-line-last"></span>
-    </div>
-  </div>
-
-  <div class="site-meta">
-
-    <a href="/" class="brand" rel="start">
-      <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Coderq</h1>
-      <span class="logo-line-after"><i></i></span>
-    </a>
-  </div>
-
-  <div class="site-nav-right">
-    <div class="toggle popup-trigger">
-        <i class="fa fa-search fa-fw fa-lg"></i>
-    </div>
-  </div>
-</div>
-
-
-
-
-<nav class="site-nav">
-  <ul id="menu" class="main-menu menu">
-        <li class="menu-item menu-item-home">
-
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
-
-  </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
-
-  </li>
-        <li class="menu-item menu-item-categories">
-
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
-
-  </li>
-        <li class="menu-item menu-item-schedule">
-
-    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
-
-  </li>
-      <li class="menu-item menu-item-search">
-        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
-        </a>
-      </li>
-  </ul>
-</nav>
-
-
-
-  <div class="search-pop-overlay">
-    <div class="popup search-popup">
-        <div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div id="search-result">
-  <div id="no-result">
-    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
-  </div>
-</div>
-
-    </div>
-  </div>
-
-</div>
-    </header>
-
-    
-  <div class="back-to-top">
-    <i class="fa fa-arrow-up"></i>
-    <span>0%</span>
-  </div>
-
-
-    <main class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          
-
-          <div class="content post posts-expand">
-            
-
-    
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/01/28/llm_1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="zheng rq">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Coderq">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-01-28 23:45:07" itemprop="dateCreated datePublished" datetime="2025-01-28T23:45:07+08:00">2025-01-28</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-01-31 02:09:45" itemprop="dateModified" datetime="2025-01-31T02:09:45+08:00">2025-01-31</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">论文阅读笔记</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-        <p>从虚拟内存的分页管理得到的灵感，用分页管理管理llm的kvcache，使其能够动态扩缩容，重用，碎片小。</p>
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>build_my_blog</title>
+    <url>/2025/01/30/build-my-blog/</url>
+    <content><![CDATA[<p>使用<code>github+hexo</code>创建个人博客</p>
 <span id="more"></span>
-<p>出处: ACM-2023   <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2309.06180">[2309.06180] Efficient Memory Management for Large Language Model Serving with PagedAttention (arxiv.org)</a></p>
+<h4 id="1-下载工具"><a href="#1-下载工具" class="headerlink" title="1. 下载工具"></a>1. 下载工具</h4><p>自行下载node.js npm ,使用以下命令检查是否正确安装</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">node -v</span><br><span class="line">npm -v</span><br></pre></td></tr></table></figure>
+<h4 id="2-在github上创建仓库"><a href="#2-在github上创建仓库" class="headerlink" title="2. 在github上创建仓库"></a>2. 在github上创建仓库</h4><p><img src="/.com//image-20250128013605341.png" alt="image-20250128013605341"></p>
+<h4 id="3-安装hexo"><a href="#3-安装hexo" class="headerlink" title="3.  安装hexo"></a>3.  安装hexo</h4><p>使用以下命令暗转hexo</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install -g hexo -cli</span><br></pre></td></tr></table></figure>
+<h4 id="4-创建Hexo文件夹"><a href="#4-创建Hexo文件夹" class="headerlink" title="4. 创建Hexo文件夹"></a>4. 创建Hexo文件夹</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
+<p>使用以下命令可以本地查看效果</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo server</span><br></pre></td></tr></table></figure>
+<p>网页浏览: localhost:4000查看效果</p>
+<p>初次登录会要求登录github, 现在github不支持密码登录了，只能通过token登录，去GitHub首页</p>
+<p> <img src="/.com//image-20250128014633141.png" alt="image-20250128014633141"></p>
+<p>进入setting后拉到最下面的<code>Developer settings</code> 进行生成，期限选择永久。</p>
+<p>修改<code>&lt;folder&gt;</code>下的配置文件<code>_config.yml</code></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repo: &lt;repository url&gt; # 库地址</span><br><span class="line">  branch: [branch]  # 分支，如main</span><br><span class="line">  message: [message] # 缺省为创建时间</span><br></pre></td></tr></table></figure>
+<h4 id="5-发布文章"><a href="#5-发布文章" class="headerlink" title="5. 发布文章"></a>5. 发布文章</h4><p>进入site目录, 右键打开Git Bash, 创建博文:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo new &quot;My New Post&quot;</span><br></pre></td></tr></table></figure>
+<p>然后source文件夹中会出现一个My New Post.md 文件，可以使用Markdown写文章。写完之后运行下面代码将文章渲染到GitHub Pages 上完成发布。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo g # 生成静态页面</span><br><span class="line">hexo d # 部署页面</span><br></pre></td></tr></table></figure>
+<p>也可以不通过命令直接自己生成页面，但要在页面开始加入如下格式:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: Hello World # 标题</span><br><span class="line">date: 2019/3/26 hh:mm:ss # 时间</span><br><span class="line">categories: # 分类</span><br><span class="line">- Diary</span><br><span class="line">tags: # 标签</span><br><span class="line">- PS3</span><br><span class="line">- Games</span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">摘要</span><br><span class="line">&lt;!--more--&gt;</span><br><span class="line">正文</span><br></pre></td></tr></table></figure>
+<p>常用命令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo new &quot;name&quot;       # 新建文章</span><br><span class="line">hexo new page &quot;name&quot;  # 新建页面</span><br><span class="line">hexo g                # 生成页面</span><br><span class="line">hexo d                # 部署</span><br><span class="line">hexo g -d             # 生成页面并部署</span><br><span class="line">hexo s                # 本地预览</span><br><span class="line">hexo clean            # 清除缓存和已生成的静态文件</span><br><span class="line">hexo help             # 帮助</span><br></pre></td></tr></table></figure>
+<h4 id="6-访问"><a href="#6-访问" class="headerlink" title="6. 访问"></a>6. 访问</h4><p><a href="https://codezrq.github.io/">Hexo</a></p>
+<h4 id="8-更换主题"><a href="#8-更换主题" class="headerlink" title="8. 更换主题"></a>8. 更换主题</h4><p>在<a href="https://hexo.io/themes/">Themes | Hexo</a>上选择主题，进入网站目录下载主题、</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/iissnan/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
+<p>然后修改 _config.yml 中的 theme 为新主题名称 next，发布。（有的主题需要将 _config.yml 替换为主题自带的，参考主题说明。）</p>
+<h4 id="9-更改设置"><a href="#9-更改设置" class="headerlink" title="9. 更改设置"></a>9. 更改设置</h4><p>所有设置都在<code>_config.yml</code>目录下，参考官方文档<a href="https://hexo.io/zh-cn/docs/configuration">配置 | Hexo</a></p>
+<h4 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h4><h5 id="1-在执行-hexo-d-时报错"><a href="#1-在执行-hexo-d-时报错" class="headerlink" title="1. 在执行 hexo d 时报错"></a>1. 在执行 hexo d 时报错</h5><p>fatal: 无法访问 ‘<a href="https://github.com/chixinn/chixinn.github.io.git/">https://github.com/chixinn/chixinn.github.io.git/</a>‘</p>
+<p>解决办法： 其实时git push 的问题。先执行以下命令，再执行<code>hexo d</code></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git config --global --unset http.proxy</span><br></pre></td></tr></table></figure>
+<h5 id="2-在执行-hexo-d-时报错"><a href="#2-在执行-hexo-d-时报错" class="headerlink" title="2.在执行 hexo d 时报错"></a>2.在执行 hexo d 时报错</h5><p>ERROR Deployer not found: git</p>
+<p>解决办法: 没有安装<code>hexo-deployer-git</code></p>
+<p>使用以下命令安装</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+<h5 id="3-修改并部署后没有效果"><a href="#3-修改并部署后没有效果" class="headerlink" title="3. 修改并部署后没有效果"></a>3. 修改并部署后没有效果</h5><p>使用 <code>hexo clean</code>清理后重新部署</p>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention</title>
+    <url>/2025/01/28/llm_1/</url>
+    <content><![CDATA[<p>从虚拟内存的分页管理得到的灵感，用分页管理管理llm的kvcache，使其能够动态扩缩容，重用，碎片小。</p>
+<span id="more"></span>
+<p>出处: ACM-2023   <a href="https://arxiv.org/abs/2309.06180">[2309.06180] Efficient Memory Management for Large Language Model Serving with PagedAttention (arxiv.org)</a></p>
 <ul>
-<li>源码: <a target="_blank" rel="noopener" href="https://github.com/vllm-project/vllm.git">项目地址</a></li>
+<li>源码: <a href="https://github.com/vllm-project/vllm.git">项目地址</a></li>
 </ul>
 <h4 id="Abstract"><a href="#Abstract" class="headerlink" title="Abstract"></a>Abstract</h4><p>高吞吐量的LLM服务需同时处理多个请求。但是现有系统非常困难，因为KV cache非常巨大并且是动态伸缩的，因为显存管理不善，导致碎片和重复，造成显存的巨大浪费，从而限制了batch的大小和吞吐量。为了解决这个问题，本文借鉴操作系统的分页内存管理方法，提出PagedAttention。基于这个方法，实现了vLLM，它能够实现：1) 接近零的KV cache浪费；2) 同一请求内和不同请求间KV cache的灵活共享。实验证明本方法的吞吐量是SOTA系统的2-4倍。</p>
 <h4 id="1-Introduction"><a href="#1-Introduction" class="headerlink" title="1.Introduction"></a>1.Introduction</h4><p>像GPT和PaLM这样的大型语言模型(llm)的出现使编程助理和通用聊天机器人等新应用成为可能，它们开始深刻地影响我们的工作和日常生活。许多云计算公司[34,44]正在竞相提供这些应用程序作为托管服务。然而，运行这些应用程序是非常昂贵的，需要大量的硬件加速器，如gpu。</p>
@@ -351,260 +144,12 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 <p>(2)Fusing block read and attention.我们采用FasterTransformer[31]中的注意力内核，根据块表读取KV缓存，并动态执行注意力操作。为了确保合并内存访问，我们分配了一个GPU warp来读取每个块。此外，我们还增加了对请求批处理中可变序列长度的支持。</p>
 <p>(3)Fused block copy.由写时拷贝机制发出的块拷贝操作可以在不连续的块上操作。如果我们使用cudamempyasync API，这可能导致大量的小数据移动调用。为了减少开销，我们实现了一个内核，它将不同块的复制操作批处理到单个内核启动中。</p>
 <h5 id="5-2-Supporting-Various-Decoding-Algrithms"><a href="#5-2-Supporting-Various-Decoding-Algrithms" class="headerlink" title="5.2 Supporting Various Decoding Algrithms"></a>5.2 Supporting Various Decoding Algrithms</h5><p>vLLM使用三个关键方法实现各种解码算法:fork、append和free。fork方法从一个现有序列创建一个新序列。append方法向序列追加一个新标记。最后，free方法删除序列。例如，在并行采样中，vLLM使用fork方法从单个输入序列创建多个输出序列。然后在每次迭代中使用append向这些序列添加新的标记，并使用free删除满足停止条件的序列。vLLM在波束搜索和前缀共享中也采用了相同的策略。我们相信结合这些方法也可以支持未来的解码算法。</p>
-
-    </div>
-
-    
-    
-    
-
-      <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/paper-notes/" rel="tag"># paper notes</a>
-          </div>
-
-        
-
-
-        
-    <div class="post-nav">
-      <div class="post-nav-item"></div>
-      <div class="post-nav-item">
-    <a href="/2025/01/30/build-my-blog/" rel="next" title="build_my_blog">
-      build_my_blog <i class="fa fa-chevron-right"></i>
-    </a></div>
-    </div>
-      </footer>
-    
-  </article>
-  
-  
-  
-
-
-
-          </div>
-          
-
-<script>
-  window.addEventListener('tabs:register', () => {
-    let { activeClass } = CONFIG.comments;
-    if (CONFIG.comments.storage) {
-      activeClass = localStorage.getItem('comments_active') || activeClass;
-    }
-    if (activeClass) {
-      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
-      if (activeTab) {
-        activeTab.click();
-      }
-    }
-  });
-  if (CONFIG.comments.storage) {
-    window.addEventListener('tabs:click', event => {
-      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
-      let commentClass = event.target.classList[1];
-      localStorage.setItem('comments_active', commentClass);
-    });
-  }
-</script>
-
-        </div>
-          
-  
-  <div class="toggle sidebar-toggle">
-    <span class="toggle-line toggle-line-first"></span>
-    <span class="toggle-line toggle-line-middle"></span>
-    <span class="toggle-line toggle-line-last"></span>
-  </div>
-
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-
-      <ul class="sidebar-nav motion-element">
-        <li class="sidebar-nav-toc">
-          文章目录
-        </li>
-        <li class="sidebar-nav-overview">
-          站点概览
-        </li>
-      </ul>
-
-      <!--noindex-->
-      <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Abstract"><span class="nav-number">1.</span> <span class="nav-text">Abstract</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-Introduction"><span class="nav-number">2.</span> <span class="nav-text">1.Introduction</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-Background"><span class="nav-number">3.</span> <span class="nav-text">2. Background</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-Transformer-Based-Large-Language-Models"><span class="nav-number">3.1.</span> <span class="nav-text">2.1 Transformer-Based Large Language Models</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-LLM-Service-amp-Autoregressive-Generation"><span class="nav-number">3.2.</span> <span class="nav-text">2.2 LLM Service &amp; Autoregressive Generation</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-Batching-Techniques-for-LLMs"><span class="nav-number">3.3.</span> <span class="nav-text">2.3 Batching Techniques for LLMs</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-Memory-Callenge-in-LLM-Serving"><span class="nav-number">4.</span> <span class="nav-text">3. Memory Callenge in LLM Serving</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-Memory-Management-in-Existing-Systems"><span class="nav-number">4.1.</span> <span class="nav-text">3.1 Memory Management in Existing Systems</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-Method"><span class="nav-number">5.</span> <span class="nav-text">4. Method</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-1-PageAttention"><span class="nav-number">5.1.</span> <span class="nav-text">4.1 PageAttention</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-2-KV-Cache-Manager"><span class="nav-number">5.2.</span> <span class="nav-text">4.2 KV Cache Manager</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-3-Decoding-with-PagedAttention-and-vLLM"><span class="nav-number">5.3.</span> <span class="nav-text">4.3 Decoding with PagedAttention and vLLM</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-4-Application-to-Other-Decoding-Scenarios"><span class="nav-number">5.4.</span> <span class="nav-text">4.4 Application to Other Decoding Scenarios</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-5-Scheduling-and-Preemption"><span class="nav-number">5.5.</span> <span class="nav-text">4.5 Scheduling and Preemption</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-6-Distributed-Execution"><span class="nav-number">5.6.</span> <span class="nav-text">4.6 Distributed Execution</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-Implementation"><span class="nav-number">6.</span> <span class="nav-text">5. Implementation</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-Kernel-level-Optimization"><span class="nav-number">6.1.</span> <span class="nav-text">5.1 Kernel-level Optimization</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-2-Supporting-Various-Decoding-Algrithms"><span class="nav-number">6.2.</span> <span class="nav-text">5.2 Supporting Various Decoding Algrithms</span></a></li></ol></li></ol></div>
-      </div>
-      <!--/noindex-->
-
-      <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">zheng rq</p>
-  <div class="site-description" itemprop="description"></div>
-</div>
-<div class="site-state-wrap motion-element">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
-          <span class="site-state-item-count">2</span>
-          <span class="site-state-item-name">日志</span>
-        </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-          
-        <span class="site-state-item-count">2</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">2</span>
-        <span class="site-state-item-name">标签</span>
-      </div>
-  </nav>
-</div>
-
-
-
-      </div>
-
-    </div>
-  </aside>
-  <div id="sidebar-dimmer"></div>
-
-
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        
-
-        
-
-<div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2025</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">zheng rq</span>
-</div>
-
-
-<!--
-  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
-  </div>
--->
-
-        
-
-
-
-
-
-
-
-
-      </div>
-    </footer>
-  </div>
-
-  
-  <script src="/lib/anime.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
-
-
-<script src="/js/next-boot.js"></script>
-
-
-
-
-  
-
-
-
-
-  
-<script src="/js/local-search.js"></script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-      
-
-<script>
-  if (typeof MathJax === 'undefined') {
-    window.MathJax = {
-      loader: {
-        source: {
-          '[tex]/amsCd': '[tex]/amscd',
-          '[tex]/AMScd': '[tex]/amscd'
-        }
-      },
-      tex: {
-        inlineMath: {'[+]': [['$', '$']]},
-        tags: 'ams'
-      },
-      options: {
-        renderActions: {
-          findScript: [10, doc => {
-            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
-              const display = !!node.type.match(/; *mode=display/);
-              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
-              const text = document.createTextNode('');
-              node.parentNode.replaceChild(text, node);
-              math.start = {node: text, delim: '', n: 0};
-              math.end = {node: text, delim: '', n: 0};
-              doc.math.push(math);
-            });
-          }, '', false],
-          insertedScript: [200, () => {
-            document.querySelectorAll('mjx-container').forEach(node => {
-              let target = node.parentNode;
-              if (target.nodeName.toLowerCase() === 'li') {
-                target.parentNode.classList.add('has-jax');
-              }
-            });
-          }, '', false]
-        }
-      }
-    };
-    (function () {
-      var script = document.createElement('script');
-      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
-      script.defer = true;
-      document.head.appendChild(script);
-    })();
-  } else {
-    MathJax.startup.document.state(0);
-    MathJax.texReset();
-    MathJax.typeset();
-  }
-</script>
-
-    
-
-  
-
-</body>
-</html>
+]]></content>
+      <categories>
+        <category>论文阅读笔记</category>
+      </categories>
+      <tags>
+        <tag>paper notes</tag>
+      </tags>
+  </entry>
+</search>
