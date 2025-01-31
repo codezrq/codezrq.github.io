@@ -5,46 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 7.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/codezrq/codezrq.github.io/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/codezrq/codezrq.github.io/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/codezrq/codezrq.github.io/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/codezrq/codezrq.github.io/images/logo.svg" color="#222">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
-<link rel="stylesheet" href="/codezrq/codezrq.github.io/css/main.css">
+<link rel="stylesheet" href="/css/main.css">
 
 
-<link rel="stylesheet" href="/codezrq/codezrq.github.io/lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"github.com","root":"/codezrq/codezrq.github.io/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="从虚拟内存的分页管理得到的灵感，用分页管理管理llm的kvcache，使其能够动态扩缩容，重用，碎片小。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention">
-<meta property="og:url" content="https://github.com/codezrq/codezrq.github.io/2025/01/28/llm_1/index.html">
+<meta property="og:url" content="http://example.com/2025/01/28/llm_1/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="从虚拟内存的分页管理得到的灵感，用分页管理管理llm的kvcache，使其能够动态扩缩容，重用，碎片小。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://github.com/codezrq/codezrq.github.io/codezrq/codezrq.github/90f34ab726a84868a23baf38716f1415.png">
-<meta property="og:image" content="https://github.com/codezrq/codezrq.github.io/codezrq/codezrq.github/5b4d27afa1d44d4ba1fe56329043ad0d.png">
-<meta property="og:image" content="https://github.com/codezrq/codezrq.github.io/codezrq/codezrq.github/c86039995d1b47249a4346281689a445.png">
-<meta property="og:image" content="https://github.com/codezrq/codezrq.github.io/codezrq/codezrq.github/062049b20dcc430d999bc89bf80af483.png">
-<meta property="og:image" content="https://github.com/codezrq/codezrq.github.io/codezrq/codezrq.github/d64723720b434d668211104cb6a749cc.png">
-<meta property="og:image" content="https://github.com/codezrq/codezrq.github.io/codezrq/codezrq.github/973ddad656ae4831b5623c6cf729b0da.png">
-<meta property="og:image" content="https://github.com/codezrq/codezrq.github.io/codezrq/codezrq.github/e507ff7cc78044088cd9ae2ce3fff6a6.png">
-<meta property="og:image" content="https://github.com/codezrq/codezrq.github.io/codezrq/codezrq.github/136cfecb0ff74f36abe81a6ce50bd312.png">
-<meta property="og:image" content="https://github.com/codezrq/codezrq.github.io/codezrq/codezrq.github/5a259c8fbe4647e1aea8be7242a5d386.png">
-<meta property="og:image" content="https://github.com/codezrq/codezrq.github.io/codezrq/codezrq.github/cebed53b3256400aa2b1871479e9a69e.png">
+<meta property="og:image" content="http://example.com/codezrq/codezrq.github.io/codezrq/codezrq.github/90f34ab726a84868a23baf38716f1415.png">
+<meta property="og:image" content="http://example.com/codezrq/codezrq.github.io/codezrq/codezrq.github/5b4d27afa1d44d4ba1fe56329043ad0d.png">
+<meta property="og:image" content="http://example.com/codezrq/codezrq.github.io/codezrq/codezrq.github/c86039995d1b47249a4346281689a445.png">
+<meta property="og:image" content="http://example.com/codezrq/codezrq.github.io/codezrq/codezrq.github/062049b20dcc430d999bc89bf80af483.png">
+<meta property="og:image" content="http://example.com/codezrq/codezrq.github.io/codezrq/codezrq.github/d64723720b434d668211104cb6a749cc.png">
+<meta property="og:image" content="http://example.com/codezrq/codezrq.github.io/codezrq/codezrq.github/973ddad656ae4831b5623c6cf729b0da.png">
+<meta property="og:image" content="http://example.com/codezrq/codezrq.github.io/codezrq/codezrq.github/e507ff7cc78044088cd9ae2ce3fff6a6.png">
+<meta property="og:image" content="http://example.com/codezrq/codezrq.github.io/codezrq/codezrq.github/136cfecb0ff74f36abe81a6ce50bd312.png">
+<meta property="og:image" content="http://example.com/codezrq/codezrq.github.io/codezrq/codezrq.github/5a259c8fbe4647e1aea8be7242a5d386.png">
+<meta property="og:image" content="http://example.com/codezrq/codezrq.github.io/codezrq/codezrq.github/cebed53b3256400aa2b1871479e9a69e.png">
 <meta property="article:published_time" content="2025-01-28T15:45:07.742Z">
 <meta property="article:modified_time" content="2025-01-30T18:09:45.531Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="paper notes">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://github.com/codezrq/codezrq.github.io/codezrq/codezrq.github/90f34ab726a84868a23baf38716f1415.png">
+<meta name="twitter:image" content="http://example.com/codezrq/codezrq.github.io/codezrq/codezrq.github/90f34ab726a84868a23baf38716f1415.png">
 
-<link rel="canonical" href="https://github.com/codezrq/codezrq.github.io/2025/01/28/llm_1/">
+<link rel="canonical" href="http://example.com/2025/01/28/llm_1/">
 
 
 <script id="page-configurations">
@@ -106,7 +106,7 @@
 
   <div class="site-meta">
 
-    <a href="/codezrq/codezrq.github.io/" class="brand" rel="start">
+    <a href="/" class="brand" rel="start">
       <span class="logo-line-before"><i></i></span>
       <h1 class="site-title">Hexo</h1>
       <span class="logo-line-after"><i></i></span>
@@ -126,27 +126,27 @@
   <ul id="menu" class="main-menu menu">
         <li class="menu-item menu-item-home">
 
-    <a href="/codezrq/codezrq.github.io/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
 
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/codezrq/codezrq.github.io/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/codezrq/codezrq.github.io/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/codezrq/codezrq.github.io/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
 
   </li>
         <li class="menu-item menu-item-schedule">
 
-    <a href="/codezrq/codezrq.github.io/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
 
   </li>
   </ul>
@@ -177,10 +177,10 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://github.com/codezrq/codezrq.github.io/2025/01/28/llm_1/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/01/28/llm_1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/codezrq/codezrq.github.io/images/avatar.gif">
+      <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="John Doe">
       <meta itemprop="description" content="">
     </span>
@@ -215,7 +215,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/codezrq/codezrq.github.io/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">论文阅读笔记</span></a>
+                  <a href="/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">论文阅读笔记</span></a>
                 </span>
             </span>
 
@@ -234,7 +234,7 @@
 <span id="more"></span>
 <p>出处: ACM-2023   <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2309.06180">[2309.06180] Efficient Memory Management for Large Language Model Serving with PagedAttention (arxiv.org)</a></p>
 <ul>
-<li>源码: <a href="https://github.com/vllm-project/vllm.git">项目地址</a></li>
+<li>源码: <a target="_blank" rel="noopener" href="https://github.com/vllm-project/vllm.git">项目地址</a></li>
 </ul>
 <h4 id="Abstract"><a href="#Abstract" class="headerlink" title="Abstract"></a>Abstract</h4><p>高吞吐量的LLM服务需同时处理多个请求。但是现有系统非常困难，因为KV cache非常巨大并且是动态伸缩的，因为显存管理不善，导致碎片和重复，造成显存的巨大浪费，从而限制了batch的大小和吞吐量。为了解决这个问题，本文借鉴操作系统的分页内存管理方法，提出PagedAttention。基于这个方法，实现了vLLM，它能够实现：1) 接近零的KV cache浪费；2) 同一请求内和不同请求间KV cache的灵活共享。实验证明本方法的吞吐量是SOTA系统的2-4倍。</p>
 <h4 id="1-Introduction"><a href="#1-Introduction" class="headerlink" title="1.Introduction"></a>1.Introduction</h4><p>像GPT和PaLM这样的大型语言模型(llm)的出现使编程助理和通用聊天机器人等新应用成为可能，它们开始深刻地影响我们的工作和日常生活。许多云计算公司[34,44]正在竞相提供这些应用程序作为托管服务。然而，运行这些应用程序是非常昂贵的，需要大量的硬件加速器，如gpu。</p>
@@ -332,7 +332,7 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/codezrq/codezrq.github.io/tags/paper-notes/" rel="tag"># paper notes</a>
+              <a href="/tags/paper-notes/" rel="tag"># paper notes</a>
           </div>
 
         
@@ -342,7 +342,7 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
     <div class="post-nav">
       <div class="post-nav-item"></div>
       <div class="post-nav-item">
-    <a href="/codezrq/codezrq.github.io/2025/01/30/build-my-blog/" rel="next" title="build_my_blog">
+    <a href="/2025/01/30/build-my-blog/" rel="next" title="build_my_blog">
       build_my_blog <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
@@ -415,7 +415,7 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 <div class="site-state-wrap motion-element">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
-          <a href="/codezrq/codezrq.github.io/archives/">
+          <a href="/archives/">
         
           <span class="site-state-item-count">2</span>
           <span class="site-state-item-name">日志</span>
@@ -476,19 +476,19 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
   </div>
 
   
-  <script src="/codezrq/codezrq.github.io/lib/anime.min.js"></script>
-  <script src="/codezrq/codezrq.github.io/lib/velocity/velocity.min.js"></script>
-  <script src="/codezrq/codezrq.github.io/lib/velocity/velocity.ui.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
 
-<script src="/codezrq/codezrq.github.io/js/utils.js"></script>
+<script src="/js/utils.js"></script>
 
-<script src="/codezrq/codezrq.github.io/js/motion.js"></script>
-
-
-<script src="/codezrq/codezrq.github.io/js/schemes/pisces.js"></script>
+<script src="/js/motion.js"></script>
 
 
-<script src="/codezrq/codezrq.github.io/js/next-boot.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
 
 
 
