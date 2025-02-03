@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="介绍Transformer的两个阶段，以及如何控制推理过程中的KV-Cach缓存大小来优化推理速度，最后分析Transformer的性能瓶颈和优化策略。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="transformer_not">
+<meta property="og:url" content="http://example.com/2025/02/03/transformer-not/index.html">
+<meta property="og:site_name" content="Coderq">
+<meta property="og:description" content="介绍Transformer的两个阶段，以及如何控制推理过程中的KV-Cach缓存大小来优化推理速度，最后分析Transformer的性能瓶颈和优化策略。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/02/03/transformer-not/bed5e37508e74fa390f4ed8949a91dd0.png">
+<meta property="og:image" content="http://example.com/2025/02/03/transformer-not/0525b0974fe6495098901a06816ec47d.png">
+<meta property="og:image" content="http://example.com/2025/02/03/transformer-not/760c80e82311464dad6e90e345f747e1.png">
+<meta property="article:published_time" content="2025-02-03T09:56:36.000Z">
+<meta property="article:modified_time" content="2025-02-03T10:05:45.242Z">
+<meta property="article:author" content="zheng rq">
+<meta property="article:tag" content="notes">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/02/03/transformer-not/bed5e37508e74fa390f4ed8949a91dd0.png">
+
+<link rel="canonical" href="http://example.com/2025/02/03/transformer-not/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>transformer_not | Coderq</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Coderq</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/02/03/transformer-not/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Coderq">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          transformer_not
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-02-03 17:56:36 / 修改时间：18:05:45" itemprop="dateCreated datePublished" datetime="2025-02-03T17:56:36+08:00">2025-02-03</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>介绍Transformer的两个阶段，以及如何控制推理过程中的KV-Cach缓存大小来优化推理速度，最后分析Transformer的性能瓶颈和优化策略。</p>
+<span id="more"></span>
+<p>使用 Transformer 解码器（Transformer decoder）生成 tokens 需要以下两个步骤。这两个步骤分别是处理提示语步骤和多个自回归步骤。两个步骤在硬件利用上有着截然不同的特征。</p>
+<p><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000044790264">程序员 - LLM 推理优化探微 (4) ：模型性能瓶颈分类及优化策略 - IDP技术干货 - SegmentFault 思否</a></p>
+<h4 id="1-LLM-做出回答的两个阶段"><a href="#1-LLM-做出回答的两个阶段" class="headerlink" title="1.LLM 做出回答的两个阶段"></a>1.LLM 做出回答的两个阶段</h4><p>文本生成的两个阶段包括:启动阶段和生成阶段。</p>
+<p>Transformer 解码器的模型轮廓图:<br><img src="/2025/02/03/transformer-not/bed5e37508e74fa390f4ed8949a91dd0.png" alt="在这里插入图片描述"></p>
+<p>解码器本身并不输出 tokens，而是输出 logits（数量与词汇表的大小相同）（译者注：logits 是一个数值向量，其维度等于词汇表的大小，表示每个 token 的可能性分数。）在生成文本时，通过 logits 提取 tokens 的过程是通过一种被称为搜索策略（search strategy）、生成策略（generation strategy）或解码策略（decoding strategy）的启发式方法完成的。</p>
+<p>基于 Transformer 的解码器从输入文本序列（通常称为提示语（prompt））生成文本（通常也被称为对输入文本的扩展或补充）基本上包括以下步骤：</p>
+<ol>
+<li>将模型权重加载到GPU</li>
+<li>在CPU上对提示词(prompt)进行分词(tokenizing)，并将token张量传输到GPU。</li>
+</ol>
+<p>分词步骤示意图:</p>
+<p><img src="/2025/02/03/transformer-not/0525b0974fe6495098901a06816ec47d.png" alt="在这里插入图片描述"></p>
+<ol>
+<li>将分词完成后的提示语输入神经网络，生成扩展的第一个token</li>
+</ol>
+<p><strong>这一阶段通常被称为启动阶段（initiation phase）。</strong> 在下一篇文章中，我们将看到它也经常被称为预填充阶段（pre-fill phase）。</p>
+<ol>
+<li>将生成token附加到输入的token序列中，并将其用作生成扩展文本中第二个token的新输入。然后，重复此过程，直到生成了停止序列或达到所配置的最大序列长度。</li>
+</ol>
+<p><strong>这个由多个步骤组成的阶段通常被称为生成阶段（generation phase）、解码阶段（decoding phase）、自回归阶段（auto-regressive phase），甚至是增量阶段（incremental phase）。</strong></p>
+<ol>
+<li>将完成的 tokens 从 GPU 获取到 CPU ，并对它们进行 detokenize（译者注：”detokenize“指的是将模型生成的 tokens 序列转换回原始文本或句子的过程。可能包括去除 tokens 之间的空格、添加标点符号、还原缩写等操作，以还原生成文本的自然语言形式。），以获取生成的文本（图5）。</li>
+</ol>
+<p>论在硬件上如何进行计算，两个阶段之间确实没有区别，因此两个阶段在这方面都没有什么特别之处。这种设置涉及大量冗余计算，因此在许多情况下效率低下。缓解这种情况的一种重要方式是缓存我们不想重新计算的内容。这种优化被称为 KV 缓存，并引入了我一直在暗示的这两个阶段之间的关键差异。</p>
+<p><strong>单头注意力</strong> :</p>
+<p>假设只处理长度为 t 的单个输入序列,则会有 t 个查询向量、t 个键向量和 t 个值向量。对于每个查询向量，都会生成一个输出向量，输出向量是输入序列中所有值向量的线性组合，每个值向量在线性组合中的权重由对应的注意力分数决定。换句话说，对于每个查询向量，生成的输出向量是通过对输入序列中的值向量进行加权求和而得到的，其中权重由注意力分数确定。对于给定的查询向量，都会与所有的键向量进行点积运算。点积运算的结果表示了查询向量与每个键向量之间的关联度，即它们的<strong>相似性</strong>。这些点积的结果经过适当的处理后，成为了<strong>注意力分数</strong>，用于权衡对应值向量在输出向量中的贡献。这样，我们就能为序列中的每个 token 生成一个包含其他 token 信息的向量表征，也就是说，我们为每个 token 创建了一个上下文表征（contextual representation）。</p>
+<p>然而，在自回归解码（auto-regressive decoding）的情境中，我们不能使用所有可能的值向量来构建给定查询向量的输出表征。实际上，在计算与特定 token 相关的查询向量的输出时，我们不能使用序列中后面出现的 token 的值向量。<strong>这种限制是通过一种称为 masking 的技术实现的，实质上是将被禁止的值向量（即被禁止的 token）的注意力分数设置为零。</strong></p>
+<h4 id="2-masking-技术的使用导致生成阶段出现冗余计算"><a href="#2-masking-技术的使用导致生成阶段出现冗余计算" class="headerlink" title="2. masking 技术的使用导致生成阶段出现冗余计算"></a>2. masking 技术的使用导致生成阶段出现冗余计算</h4><p>由于 masking 技术的使用，在生成当前 tokens 的输出表征时，仅使用之前已生成 tokens 的信息，而不使用之后生成的 tokens 的信息。<strong>因为之前的 tokens 在各次迭代中都是相同的，所以对于该特定 tokens 的输出表征在随后的所有迭代中也都是相同的，这就意味着存在冗余计算。</strong></p>
+<p>在自回归解码步骤的新一次迭代中，使用了“What color is the sky? The sky is ”作为输入序列，在之前的步骤中唯一尚未计算的是输入序列中的最后一个token “is”的表征。</p>
+<p>需要的量有:</p>
+<ol>
+<li>“is”的查询向量。</li>
+<li>用于计算注意力分数的“What”，“ color”，“ is”，“ the”，“ sky”，“?”，“The ”，“sky ”和“is ” 的键向量。</li>
+<li>用于计算输出的“What”，“ color”，“ is”，“ the”，“ sky”，“?”，“The ”，“sky ”和“is ” 的值向量。</li>
+</ol>
+<p>至于键（key）和值（value）向量，除了 ”is “之外，它们已经在之前的迭代中为所有 tokens 计算过了。因此，我们可以保存（即缓存）并重复使用先前迭代中的键和值向量（译者注：原文是“query vectors”，可能是作者笔误，此处译者修改为“值向量”）。这种优化简单地被称为 KV 缓存。为“is ”计算输出表征将会变得非常简单：</p>
+<ol>
+<li>计算“is ”的查询向量、键向量和值向量。</li>
+<li>从缓存中获取“What”，“ color”，“ is”，“ the”，“ sky”，“?”，“The ” 和 “sky ”的键和值向量，并将它们与刚刚为“is ”计算的键向量和值向量连接起来。</li>
+<li>使用“is ”查询向量和所有键向量计算注意力分数。</li>
+<li>使用注意力分数和所有值向量计算“is ”的输出向量。</li>
+</ol>
+<p><strong>当我们使用 KV 缓存时，模型的实际输入是最后生成的 tokens （而非整个序列）和 KV 缓存。</strong></p>
+<p><strong>KV cacge</strong>可以节省多少运算量?假设有一批输入序列，数量为b个，每个序列由N个生成的tokens和t个输入的tokens(总长度为 N+t)组成。对于这些序列的前 t+N-1 个 tokens，计算 KV 值是冗余的，也就是说，在生成步骤的第 N 步，我们可以为每个序列节省 t+N-1 次 KV 计算。如果不重新计算，那么在前 N 个生成步骤中，每个序列总共可以节省 N.t+N.(N-1)/2 次 KV 计算。</p>
+<p>通过 KV 缓存节省的运算数量与生成的 tokens 数量的平方成正比。（换句话说，如果生成的 tokens 数量翻倍，通过KV缓存所节省的运算数量将变为原来的四倍。）</p>
+<p>KV 缓存是一种妥协，因此并不是免费的午餐：<strong>其实是使用更多的内存消耗和数据传输来换取更少的计算量。</strong></p>
+<p>与启动阶段所需的输入相比，强制执行这一缓存策略改变了注意力层在生成阶段的输入。在启动阶段，注意力层会一次性处理整个输入序列，而启用 KV 缓存的生成阶段只需要最后生成的 token 和 KV 缓存作为输入。这种启动阶段和生成阶段之间的新差异不仅仅是概念上的。例如，<strong>与在两个阶段使用相同的 GPU 内核相比，在每个阶段使用特定的 GPU 内核能带来更好的性能。</strong></p>
+<h4 id="3-有效控制KV-cache的内存占用，优化推理速度"><a href="#3-有效控制KV-cache的内存占用，优化推理速度" class="headerlink" title="3. 有效控制KV cache的内存占用，优化推理速度"></a>3. 有效控制KV cache的内存占用，优化推理速度</h4><p>多头注意力（MHA）模型的 KV 缓存确实会<strong>消耗大量 GPU 内存</strong>，并且很容易增长到比模型权重还大的规模， KV 缓存大小的控制对于优化大模型的推理至关重要。</p>
+<p><strong>KV 缓存阻碍了我们处理或生成超长序列（即长上下文窗口带来的挑战或障碍）和/或处理大 batches ，因此无法最大限度地提高硬件效率。</strong></p>
+<p>从这个角度来看，最大化模型处理能力意味着为 KV 缓存留出尽可能多的内存空间，可以通过以下方式实现：</p>
+<ul>
+<li>减少模型权重的内存占用(权重量化)</li>
+<li>较少KV cache 的内存占用，滑动窗口，缓存丢弃，</li>
+<li>将模型分片到多个GPU上，以牺牲网络通信为代价(模型并行)或私用其他类型的存储，如CPU内存或者磁盘，从而将多个设备的内存池化。</li>
+</ul>
+<p>PagedAttention 没有涉及到的另一个可能的优化措施是跨请求重用键值缓存（reusing the key-value cache across requests）。当提示词（prompts）共享某一类共同的前缀时，这种优化就会适用，这种情况通常出现在聊天界面和Agent等多轮用例或使用提示词模板时（图 4）。</p>
+<p><img src="/2025/02/03/transformer-not/760c80e82311464dad6e90e345f747e1.png" alt="在这里插入图片描述"></p>
+<p>RadixAttention 算法在完成内容生成请求后，并非直接丢弃 KV 缓存，而是将其保留在 GPU 内存中，并向专用数据结构（radix tree）添加一个新条目，将 tokens 序列映射到其 KV 缓存张量。当新请求到达时，调度程序会使用 radix tree 进行前缀匹配。如果有缓存命中，调度程序就会重新使用缓存的 KV 张量来满足请求。</p>
+<h4 id="4-模型性能瓶颈分类及优化策略"><a href="#4-模型性能瓶颈分类及优化策略" class="headerlink" title="4. 模型性能瓶颈分类及优化策略"></a>4. 模型性能瓶颈分类及优化策略</h4><p><strong>模型性能瓶颈的4种主要类型:</strong></p>
+<ul>
+<li>计算能力受限情况。在该情况下，大部分时间（即延迟）都耗费在执行计算操作上。</li>
+<li>内存带宽受限情况。在这种情况下，大部分时间都用于在嵌入于处理器芯片上的内存和处理器之间移动数据。</li>
+<li>通信受限情况。仅适用于计算和数据分布在多个芯片上的情况。大部分任务处理时间被芯片间的网络数据传输占用。</li>
+<li>开销受限情况。是软件导致的瓶颈。</li>
+</ul>
+<p>通常情况下，不可能所有内核都运行在同一种机制下。因此，<strong>关键在于识别出大部分时间都耗费在哪一种机制上。</strong> 然后，我们应该<strong>优先优化这一主要的性能瓶颈，再找出下一个影响最大的性能瓶颈，如此循环往复。</strong></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/notes/" rel="tag"># notes</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/01/30/build-my-blog/" rel="prev" title="build_my_blog">
+      <i class="fa fa-chevron-left"></i> build_my_blog
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-LLM-%E5%81%9A%E5%87%BA%E5%9B%9E%E7%AD%94%E7%9A%84%E4%B8%A4%E4%B8%AA%E9%98%B6%E6%AE%B5"><span class="nav-number">1.</span> <span class="nav-text">1.LLM 做出回答的两个阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-masking-%E6%8A%80%E6%9C%AF%E7%9A%84%E4%BD%BF%E7%94%A8%E5%AF%BC%E8%87%B4%E7%94%9F%E6%88%90%E9%98%B6%E6%AE%B5%E5%87%BA%E7%8E%B0%E5%86%97%E4%BD%99%E8%AE%A1%E7%AE%97"><span class="nav-number">2.</span> <span class="nav-text">2. masking 技术的使用导致生成阶段出现冗余计算</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E6%9C%89%E6%95%88%E6%8E%A7%E5%88%B6KV-cache%E7%9A%84%E5%86%85%E5%AD%98%E5%8D%A0%E7%94%A8%EF%BC%8C%E4%BC%98%E5%8C%96%E6%8E%A8%E7%90%86%E9%80%9F%E5%BA%A6"><span class="nav-number">3.</span> <span class="nav-text">3. 有效控制KV cache的内存占用，优化推理速度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E6%A8%A1%E5%9E%8B%E6%80%A7%E8%83%BD%E7%93%B6%E9%A2%88%E5%88%86%E7%B1%BB%E5%8F%8A%E4%BC%98%E5%8C%96%E7%AD%96%E7%95%A5"><span class="nav-number">4.</span> <span class="nav-text">4. 模型性能瓶颈分类及优化策略</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
