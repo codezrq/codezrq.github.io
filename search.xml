@@ -1,54 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>build_my_blog</title>
-    <url>/2025/01/30/build-my-blog/</url>
-    <content><![CDATA[<p>使用<code>github+hexo</code>创建个人博客</p>
-<span id="more"></span>
-<h4 id="1-下载工具"><a href="#1-下载工具" class="headerlink" title="1. 下载工具"></a>1. 下载工具</h4><p>自行下载node.js npm ,使用以下命令检查是否正确安装</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">node -v</span><br><span class="line">npm -v</span><br></pre></td></tr></table></figure>
-<h4 id="2-在github上创建仓库"><a href="#2-在github上创建仓库" class="headerlink" title="2. 在github上创建仓库"></a>2. 在github上创建仓库</h4><p><img src="/2025/01/30/build-my-blog/image-20250128013605341.png" alt="image-20250128013605341"></p>
-<h4 id="3-安装hexo"><a href="#3-安装hexo" class="headerlink" title="3.  安装hexo"></a>3.  安装hexo</h4><p>使用以下命令暗转hexo</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install -g hexo -cli</span><br></pre></td></tr></table></figure>
-<h4 id="4-创建Hexo文件夹"><a href="#4-创建Hexo文件夹" class="headerlink" title="4. 创建Hexo文件夹"></a>4. 创建Hexo文件夹</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
-<p>使用以下命令可以本地查看效果</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo server</span><br></pre></td></tr></table></figure>
-<p>网页浏览: localhost:4000查看效果</p>
-<p>初次登录会要求登录github, 现在github不支持密码登录了，只能通过token登录，去GitHub首页</p>
-<p> <img src="/2025/01/30/build-my-blog/image-20250128014633141.png" alt="image-20250128014633141"></p>
-<p>进入setting后拉到最下面的<code>Developer settings</code> 进行生成，期限选择永久。</p>
-<p>修改<code>&lt;folder&gt;</code>下的配置文件<code>_config.yml</code></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repo: &lt;repository url&gt; # 库地址</span><br><span class="line">  branch: [branch]  # 分支，如main</span><br><span class="line">  message: [message] # 缺省为创建时间</span><br></pre></td></tr></table></figure>
-<h4 id="5-发布文章"><a href="#5-发布文章" class="headerlink" title="5. 发布文章"></a>5. 发布文章</h4><p>进入site目录, 右键打开Git Bash, 创建博文:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo new &quot;My New Post&quot;</span><br></pre></td></tr></table></figure>
-<p>然后source文件夹中会出现一个My New Post.md 文件，可以使用Markdown写文章。写完之后运行下面代码将文章渲染到GitHub Pages 上完成发布。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo g # 生成静态页面</span><br><span class="line">hexo d # 部署页面</span><br></pre></td></tr></table></figure>
-<p>也可以不通过命令直接自己生成页面，但要在页面开始加入如下格式:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: Hello World # 标题</span><br><span class="line">date: 2019/3/26 hh:mm:ss # 时间</span><br><span class="line">categories: # 分类</span><br><span class="line">- Diary</span><br><span class="line">tags: # 标签</span><br><span class="line">- PS3</span><br><span class="line">- Games</span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">摘要</span><br><span class="line">&lt;!--more--&gt;</span><br><span class="line">正文</span><br></pre></td></tr></table></figure>
-<p>常用命令</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo new &quot;name&quot;       # 新建文章</span><br><span class="line">hexo new page &quot;name&quot;  # 新建页面</span><br><span class="line">hexo g                # 生成页面</span><br><span class="line">hexo d                # 部署</span><br><span class="line">hexo g -d             # 生成页面并部署</span><br><span class="line">hexo s                # 本地预览</span><br><span class="line">hexo clean            # 清除缓存和已生成的静态文件</span><br><span class="line">hexo help             # 帮助</span><br></pre></td></tr></table></figure>
-<h4 id="6-访问"><a href="#6-访问" class="headerlink" title="6. 访问"></a>6. 访问</h4><p><a href="https://codezrq.github.io/">Hexo</a></p>
-<h4 id="8-更换主题"><a href="#8-更换主题" class="headerlink" title="8. 更换主题"></a>8. 更换主题</h4><p>在<a href="https://hexo.io/themes/">Themes | Hexo</a>上选择主题，进入网站目录下载主题、</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/iissnan/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
-<p>然后修改 _config.yml 中的 theme 为新主题名称 next，发布。（有的主题需要将 _config.yml 替换为主题自带的，参考主题说明。）</p>
-<h4 id="9-更改设置"><a href="#9-更改设置" class="headerlink" title="9. 更改设置"></a>9. 更改设置</h4><p>所有设置都在<code>_config.yml</code>目录下，参考官方文档<a href="https://hexo.io/zh-cn/docs/configuration">配置 | Hexo</a></p>
-<h4 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h4><h5 id="1-在执行-hexo-d-时报错"><a href="#1-在执行-hexo-d-时报错" class="headerlink" title="1. 在执行 hexo d 时报错"></a>1. 在执行 hexo d 时报错</h5><p>fatal: 无法访问 ‘<a href="https://github.com/chixinn/chixinn.github.io.git/">https://github.com/chixinn/chixinn.github.io.git/</a>‘</p>
-<p>解决办法： 其实时git push 的问题。先执行以下命令，再执行<code>hexo d</code></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git config --global --unset http.proxy</span><br></pre></td></tr></table></figure>
-<h5 id="2-在执行-hexo-d-时报错"><a href="#2-在执行-hexo-d-时报错" class="headerlink" title="2.在执行 hexo d 时报错"></a>2.在执行 hexo d 时报错</h5><p>ERROR Deployer not found: git</p>
-<p>解决办法: 没有安装<code>hexo-deployer-git</code></p>
-<p>使用以下命令安装</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
-<h5 id="3-修改并部署后没有效果"><a href="#3-修改并部署后没有效果" class="headerlink" title="3. 修改并部署后没有效果"></a>3. 修改并部署后没有效果</h5><p>使用 <code>hexo clean</code>清理后重新部署</p>
-]]></content>
-      <categories>
-        <category>配置</category>
-      </categories>
-      <tags>
-        <tag>configure</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention</title>
     <url>/2025/01/28/llm_1/</url>
     <content><![CDATA[<p>从虚拟内存的分页管理得到的灵感，用分页管理管理llm的kvcache，使其能够动态扩缩容，重用，碎片小。</p>
@@ -150,6 +102,54 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
       </categories>
       <tags>
         <tag>paper notes</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>build_my_blog</title>
+    <url>/2025/01/30/build-my-blog/</url>
+    <content><![CDATA[<p>使用<code>github+hexo</code>创建个人博客</p>
+<span id="more"></span>
+<h4 id="1-下载工具"><a href="#1-下载工具" class="headerlink" title="1. 下载工具"></a>1. 下载工具</h4><p>自行下载node.js npm ,使用以下命令检查是否正确安装</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">node -v</span><br><span class="line">npm -v</span><br></pre></td></tr></table></figure>
+<h4 id="2-在github上创建仓库"><a href="#2-在github上创建仓库" class="headerlink" title="2. 在github上创建仓库"></a>2. 在github上创建仓库</h4><p><img src="/2025/01/30/build-my-blog/image-20250128013605341.png" alt="image-20250128013605341"></p>
+<h4 id="3-安装hexo"><a href="#3-安装hexo" class="headerlink" title="3.  安装hexo"></a>3.  安装hexo</h4><p>使用以下命令暗转hexo</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install -g hexo -cli</span><br></pre></td></tr></table></figure>
+<h4 id="4-创建Hexo文件夹"><a href="#4-创建Hexo文件夹" class="headerlink" title="4. 创建Hexo文件夹"></a>4. 创建Hexo文件夹</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
+<p>使用以下命令可以本地查看效果</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo server</span><br></pre></td></tr></table></figure>
+<p>网页浏览: localhost:4000查看效果</p>
+<p>初次登录会要求登录github, 现在github不支持密码登录了，只能通过token登录，去GitHub首页</p>
+<p> <img src="/2025/01/30/build-my-blog/image-20250128014633141.png" alt="image-20250128014633141"></p>
+<p>进入setting后拉到最下面的<code>Developer settings</code> 进行生成，期限选择永久。</p>
+<p>修改<code>&lt;folder&gt;</code>下的配置文件<code>_config.yml</code></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repo: &lt;repository url&gt; # 库地址</span><br><span class="line">  branch: [branch]  # 分支，如main</span><br><span class="line">  message: [message] # 缺省为创建时间</span><br></pre></td></tr></table></figure>
+<h4 id="5-发布文章"><a href="#5-发布文章" class="headerlink" title="5. 发布文章"></a>5. 发布文章</h4><p>进入site目录, 右键打开Git Bash, 创建博文:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo new &quot;My New Post&quot;</span><br></pre></td></tr></table></figure>
+<p>然后source文件夹中会出现一个My New Post.md 文件，可以使用Markdown写文章。写完之后运行下面代码将文章渲染到GitHub Pages 上完成发布。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo g # 生成静态页面</span><br><span class="line">hexo d # 部署页面</span><br></pre></td></tr></table></figure>
+<p>也可以不通过命令直接自己生成页面，但要在页面开始加入如下格式:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: Hello World # 标题</span><br><span class="line">date: 2019/3/26 hh:mm:ss # 时间</span><br><span class="line">categories: # 分类</span><br><span class="line">- Diary</span><br><span class="line">tags: # 标签</span><br><span class="line">- PS3</span><br><span class="line">- Games</span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">摘要</span><br><span class="line">&lt;!--more--&gt;</span><br><span class="line">正文</span><br></pre></td></tr></table></figure>
+<p>常用命令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo new &quot;name&quot;       # 新建文章</span><br><span class="line">hexo new page &quot;name&quot;  # 新建页面</span><br><span class="line">hexo g                # 生成页面</span><br><span class="line">hexo d                # 部署</span><br><span class="line">hexo g -d             # 生成页面并部署</span><br><span class="line">hexo s                # 本地预览</span><br><span class="line">hexo clean            # 清除缓存和已生成的静态文件</span><br><span class="line">hexo help             # 帮助</span><br></pre></td></tr></table></figure>
+<h4 id="6-访问"><a href="#6-访问" class="headerlink" title="6. 访问"></a>6. 访问</h4><p><a href="https://codezrq.github.io/">Hexo</a></p>
+<h4 id="8-更换主题"><a href="#8-更换主题" class="headerlink" title="8. 更换主题"></a>8. 更换主题</h4><p>在<a href="https://hexo.io/themes/">Themes | Hexo</a>上选择主题，进入网站目录下载主题、</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/iissnan/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
+<p>然后修改 _config.yml 中的 theme 为新主题名称 next，发布。（有的主题需要将 _config.yml 替换为主题自带的，参考主题说明。）</p>
+<h4 id="9-更改设置"><a href="#9-更改设置" class="headerlink" title="9. 更改设置"></a>9. 更改设置</h4><p>所有设置都在<code>_config.yml</code>目录下，参考官方文档<a href="https://hexo.io/zh-cn/docs/configuration">配置 | Hexo</a></p>
+<h4 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h4><h5 id="1-在执行-hexo-d-时报错"><a href="#1-在执行-hexo-d-时报错" class="headerlink" title="1. 在执行 hexo d 时报错"></a>1. 在执行 hexo d 时报错</h5><p>fatal: 无法访问 ‘<a href="https://github.com/chixinn/chixinn.github.io.git/">https://github.com/chixinn/chixinn.github.io.git/</a>‘</p>
+<p>解决办法： 其实时git push 的问题。先执行以下命令，再执行<code>hexo d</code></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git config --global --unset http.proxy</span><br></pre></td></tr></table></figure>
+<h5 id="2-在执行-hexo-d-时报错"><a href="#2-在执行-hexo-d-时报错" class="headerlink" title="2.在执行 hexo d 时报错"></a>2.在执行 hexo d 时报错</h5><p>ERROR Deployer not found: git</p>
+<p>解决办法: 没有安装<code>hexo-deployer-git</code></p>
+<p>使用以下命令安装</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+<h5 id="3-修改并部署后没有效果"><a href="#3-修改并部署后没有效果" class="headerlink" title="3. 修改并部署后没有效果"></a>3. 修改并部署后没有效果</h5><p>使用 <code>hexo clean</code>清理后重新部署</p>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
       </tags>
   </entry>
 </search>
