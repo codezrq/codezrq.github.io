@@ -1,7 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>build_my_blog</title>
+    <title>Docker安装以及Docker常用命令</title>
+    <url>/2025/02/03/Docker-install/</url>
+    <content><![CDATA[<p>Linux下的Docker安装过程，包括Docker的安装，卸载，更换软件源，配置用户组，已经Docker使用过程中的常见命令。</p>
+<span id="more"></span>
+<h3 id="Ubuntu-下-Docker-安装以及常见操作"><a href="#Ubuntu-下-Docker-安装以及常见操作" class="headerlink" title="Ubuntu 下 Docker 安装以及常见操作"></a><center>Ubuntu 下 Docker 安装以及常见操作</center></h3><h4 id="一-Docker-安装"><a href="#一-Docker-安装" class="headerlink" title="一. Docker 安装"></a>一. Docker 安装</h4><h5 id="1-卸载旧Docker"><a href="#1-卸载旧Docker" class="headerlink" title="1. 卸载旧Docker"></a>1. 卸载旧Docker</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get remove docker docker-engine docker.io containerd runc</span><br></pre></td></tr></table></figure>
+<h5 id="2-安装docker依赖"><a href="#2-安装docker依赖" class="headerlink" title="2. 安装docker依赖"></a>2. 安装docker依赖</h5><p>Docker在Ubuntu上依赖一些软件包。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt update sudo apt upgrade</span><br><span class="line">sudo apt-get install ca-certificates curl gnupg lsb-release</span><br></pre></td></tr></table></figure>
+<h5 id="3-添加秘钥"><a href="#3-添加秘钥" class="headerlink" title="3. 添加秘钥"></a>3. 添加秘钥</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">curl -fsSL http://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo apt-key add -</span><br></pre></td></tr></table></figure>
+<h5 id="4-添加软件源"><a href="#4-添加软件源" class="headerlink" title="4. 添加软件源"></a>4. 添加软件源</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo add-apt-repository &quot;deb [arch=amd64] http://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable&quot;</span><br></pre></td></tr></table></figure>
+<h5 id="5-安装Docker"><a href="#5-安装Docker" class="headerlink" title="5. 安装Docker"></a>5. 安装Docker</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">apt-get install docker-ce docker-ce-cli containerd.io</span><br></pre></td></tr></table></figure>
+<h4 id="二-配置用户组"><a href="#二-配置用户组" class="headerlink" title="二. 配置用户组"></a>二. 配置用户组</h4><p>默认情况下，只有root用户和docker组的用户才能运行Docker命令。我们可以将当前用户添加到docker组，以避免每次使用Docker时都需要使用sudo。</p>
+<p>如果出现“启动“docker.service”需要认证。Multiple identities can be used for authentication:”的报错，说明是没有将当前用户加入到docker用户组中。</p>
+<p><strong>创建docker组</strong>(如果已经有，则不用创建)</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo groupadd docker</span><br></pre></td></tr></table></figure>
+<p><strong>将用户加入用户组</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo usermod -aG docker $USER</span><br></pre></td></tr></table></figure>
+<p><strong>重新登陆</strong></p>
+<p><strong>刷新用户组</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">newgrp docker</span><br></pre></td></tr></table></figure>
+<p>可以通过一下命令查看存在的用户组</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">newgrp docker</span><br></pre></td></tr></table></figure>
+<p><strong>测试能否使用docker:</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run hello-world</span><br></pre></td></tr></table></figure>
+<h4 id="三-常用命令"><a href="#三-常用命令" class="headerlink" title="三.常用命令"></a>三.常用命令</h4><h5 id="1-基础命令"><a href="#1-基础命令" class="headerlink" title="1. 基础命令"></a>1. 基础命令</h5><p><strong>查看docker版本信息</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker version</span><br><span class="line">docker info</span><br></pre></td></tr></table></figure>
+<p><strong>启动 docker</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">systemctl start docker</span><br></pre></td></tr></table></figure>
+<p><strong>关闭 docker</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">systemctl stop docker</span><br></pre></td></tr></table></figure>
+<p><strong>重启 docker</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">systemctl restart docker</span><br></pre></td></tr></table></figure>
+<p><strong>设置docker随服务启动而启动</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">systemctl enable docker</span><br></pre></td></tr></table></figure>
+<p><strong>查看docker运行状态</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">systemctl status docker</span><br></pre></td></tr></table></figure>
+<p>如果在运行中，输入命令后会看到绿色的 active(running)</p>
+<h5 id="2-镜像命令"><a href="#2-镜像命令" class="headerlink" title="2. 镜像命令"></a>2. 镜像命令</h5><p><strong>查看镜像列表</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker images</span><br></pre></td></tr></table></figure>
+<p><strong>搜索镜像</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker search 镜像名</span><br><span class="line">docker search --filter=STARS=9000 mysql 搜索 STARS &gt;9000的 mysql 镜像</span><br></pre></td></tr></table></figure>
+<p><strong>拉取镜像</strong></p>
+<p><strong>拉取镜像</strong> 不加tag(版本号) 即拉取docker仓库中该镜像的最新版本latest，加:tag则是拉取指定版本</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull 镜像名 </span><br><span class="line">docker pull 镜像名:tag</span><br></pre></td></tr></table></figure>
+<p><strong>运行镜像</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run 镜像名</span><br><span class="line">docker run 镜像名:Tag</span><br></pre></td></tr></table></figure>
+<h5 id="3-容器命令"><a href="#3-容器命令" class="headerlink" title="3. 容器命令"></a>3. 容器命令</h5><p><strong>查看运行中的容器</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker ps</span><br></pre></td></tr></table></figure>
+<p><strong>查看所有容器</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker ps -a</span><br></pre></td></tr></table></figure>
+<p><strong>启动容器</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker start 容器id或容器名</span><br></pre></td></tr></table></figure>
+<p><strong>停止容器</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker stop 容器id或容器名</span><br></pre></td></tr></table></figure>
+<p><strong>查看容器的所有信息</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker inspect 容器id</span><br></pre></td></tr></table></figure>
+<p><strong>查看容器日志</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">doker container logs 容器id</span><br></pre></td></tr></table></figure>
+<p><strong>查看容器里的进程</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker top 容器id</span><br></pre></td></tr></table></figure>
+<p><strong>退出容器</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">exit</span><br></pre></td></tr></table></figure>
+<p><strong>删除已停止的容器</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker rm 容器id或name</span><br></pre></td></tr></table></figure>
+<p><strong>删除正在运行的容器</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker rm -f 容器id</span><br></pre></td></tr></table></figure>
+<p><strong>进入容器</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker exec -it 容器ID sh</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Linux下vim的使用</title>
+    <url>/2025/02/03/Linux%E4%B8%8Bvim%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
+    <content><![CDATA[<p>ubuntu 下 vim 的使用。包括下载命令，打开文件命令，修改文件命令。</p>
+<span id="more"></span>
+<h3 id="ubuntu-下-vim-的使用"><a href="#ubuntu-下-vim-的使用" class="headerlink" title="ubuntu 下 vim 的使用"></a><center>ubuntu 下 vim 的使用</center></h3><h4 id="1-vim-下载"><a href="#1-vim-下载" class="headerlink" title="1. vim 下载"></a>1. vim 下载</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install vim</span><br></pre></td></tr></table></figure>
+<h4 id="2-vim-使用命令"><a href="#2-vim-使用命令" class="headerlink" title="2. vim 使用命令"></a>2. vim 使用命令</h4><p>打开文件<br><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo vim /etc/apt/sources.list</span><br><span class="line">//格式为sudo vim 文件位置（精确到文件名称）</span><br></pre></td></tr></table></figure></p>
+<p>1.命令模式<br><code>i</code>   切换到输入模式，左下角出现–输入–<br><code>x</code>    删除当前光标所在处字符</p>
+<p>2.输入模式<br>删除、换行、上下移动翻页、退格、输入等和平时输入一样。<br><code>esc</code>    退出输入模式</p>
+<p>3.底线命令模式</p>
+<p>修改完后，按 <code>esc</code> 后，输入<br><code>:wq</code>  退出程序并保存文件<br><code>:w</code> 保存文件<br><code>:q</code> 退出程序</p>
+<p>如果加上 <code>!</code>，则表示强制命令，(<code>:!wq</code>，<code>:!w</code>，<code>:!q</code>)</p>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
+        <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Anaconda 常见命令</title>
+    <url>/2025/02/03/anaconda-opts/</url>
+    <content><![CDATA[<p>conda 常见命令，包括环境管理(创建，激活，退出，删除，导出配置)、包管理（查看、安装、更新、搜索、卸载）</p>
+<span id="more"></span>
+<h3 id="conda-常见命令"><a href="#conda-常见命令" class="headerlink" title="conda 常见命令"></a><center>conda 常见命令</center></h3><h4 id="一-环境管理"><a href="#一-环境管理" class="headerlink" title="一.环境管理"></a>一.环境管理</h4><h5 id="1-创建环境"><a href="#1-创建环境" class="headerlink" title="1. 创建环境"></a>1. 创建环境</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda create -n [your_env_name] python=x.x   #创建指定版本的python环境</span><br><span class="line">conda env create -n [your_env_name] -f environment.ymal # 从文件中创建环境</span><br><span class="line">conda create -n [your_env_name] --clone [source env] # 复制已有环境</span><br></pre></td></tr></table></figure>
+<h5 id="2-查看有哪些环境"><a href="#2-查看有哪些环境" class="headerlink" title="2. 查看有哪些环境"></a>2. 查看有哪些环境</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda info --env</span><br></pre></td></tr></table></figure>
+<h5 id="3-激活环境"><a href="#3-激活环境" class="headerlink" title="3. 激活环境"></a>3. 激活环境</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda activate [your_env_name]</span><br></pre></td></tr></table></figure>
+<h5 id="4-退出环境"><a href="#4-退出环境" class="headerlink" title="4. 退出环境"></a>4. 退出环境</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda deactivate</span><br></pre></td></tr></table></figure>
+<h5 id="5-删除环境"><a href="#5-删除环境" class="headerlink" title="5. 删除环境"></a>5. 删除环境</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda remove -n [your_env_name] --all</span><br></pre></td></tr></table></figure>
+<h5 id="6-导出环境配置"><a href="#6-导出环境配置" class="headerlink" title="6. 导出环境配置"></a>6. 导出环境配置</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda env export &gt; environment.yaml</span><br></pre></td></tr></table></figure>
+<h4 id="二-包管理"><a href="#二-包管理" class="headerlink" title="二.包管理"></a>二.包管理</h4><h5 id="1-查看安装了哪些包"><a href="#1-查看安装了哪些包" class="headerlink" title="1. 查看安装了哪些包"></a>1. 查看安装了哪些包</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda list</span><br></pre></td></tr></table></figure>
+<h5 id="2-安装包"><a href="#2-安装包" class="headerlink" title="2. 安装包"></a>2. 安装包</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda install [package_name] # 安装最新版本</span><br><span class="line">conda install [package_name] # 安装特定版本</span><br></pre></td></tr></table></figure>
+<h5 id="3-更新包"><a href="#3-更新包" class="headerlink" title="3. 更新包"></a>3. 更新包</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda remove [package_name] # 更新一个包</span><br><span class="line">conda update --all # 更新所有包</span><br></pre></td></tr></table></figure>
+<h5 id="4-搜索包"><a href="#4-搜索包" class="headerlink" title="4. 搜索包"></a>4. 搜索包</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda search [pachage_name]</span><br></pre></td></tr></table></figure>
+<h5 id="5-卸载包"><a href="#5-卸载包" class="headerlink" title="5. 卸载包"></a>5. 卸载包</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda remove [package_name]</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>使用hexo创建个人博客</title>
     <url>/2025/01/30/build-my-blog/</url>
     <content><![CDATA[<p>使用<code>github+hexo</code>创建个人博客</p>
 <span id="more"></span>
@@ -49,11 +170,50 @@
       </tags>
   </entry>
   <entry>
+    <title>Energy Efficient Real-time Task Scheduling on CPU-GPU Hybrid Clusters</title>
+    <url>/2025/02/03/scheduler-2/</url>
+    <content><![CDATA[<p>通过动态电压和频率缩放研究了新兴CPU-GPU混合集群的节能问题。</p>
+<span id="more"></span>
+<h4 id="Energy-Efficient-Real-time-Task-Scheduling-on-CPU-GPU-Hybrid-Clusters"><a href="#Energy-Efficient-Real-time-Task-Scheduling-on-CPU-GPU-Hybrid-Clusters" class="headerlink" title="Energy Efficient Real-time Task Scheduling on CPU-GPU Hybrid Clusters"></a>Energy Efficient Real-time Task Scheduling on CPU-GPU Hybrid Clusters</h4><ul>
+<li><p>出处：2017IEEE Xplore    <a href="https://ieeexplore.ieee.org/document/8057205">基于CPU-GPU混合集群的高效实时任务调度</a></p>
+</li>
+<li><p>主要工作：通过动态电压和频率缩放研究了新兴CPU-GPU混合集群的节能问题。</p>
+<ul>
+<li><p>首次分析GPU特定的DVFS模型。</p>
+</li>
+<li><p>设计了一种新的调度算法：1)利用GPU DVFS来节省能源而不违反任务期限；2)有效将一组任务打包到多个服务器上，以减少动态能耗；3)智能调节DVFS设定，更有效地节省能源。</p>
+</li>
+<li>仿真测试，可以节省多达36%的能耗。</li>
+</ul>
+</li>
+<li><p>做出的假设：<strong>集群中只有一种GPU/CPU，但不同服务器可能有不同数量的GPU-CPU对，且每个任务只能分配给一个CPU-GPU对，每个CPU-GPU对一次只能执行一个任务。</strong></p>
+</li>
+<li><p>目标：最小化在截止日期限制下处理一系列实时任务的总能耗。考虑了对任务执行时间和功耗有显著影响的三个缩放变量：GPU核心电压、CPU核心频率、GPU内存频率。</p>
+</li>
+<li><p>方法：通过数学优化计算每个任务的合适电压/频率设置，并使用启发式调度算法将多个任务分配给集群。</p>
+</li>
+<li><p>数据中心常用的两种节能技术：</p>
+<ul>
+<li>DVFS：dynamic voltage and frequency scaling(动态电压和频率缩放)</li>
+<li>DRS：dynamic resource sleep(动态资源休眠)</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>论文阅读笔记</category>
+        <category>调度</category>
+      </categories>
+      <tags>
+        <tag>scheduler</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention</title>
     <url>/2025/01/28/llm_1/</url>
     <content><![CDATA[<p>从虚拟内存的分页管理得到的灵感，用分页管理管理llm的kvcache，使其能够动态扩缩容，重用，碎片小。</p>
 <span id="more"></span>
-<p>出处: ACM-2023   <a href="https://arxiv.org/abs/2309.06180">[2309.06180] Efficient Memory Management for Large Language Model Serving with PagedAttention (arxiv.org)</a></p>
+<h3 id="【论文阅读】Efficient-Memory-Management-for-Large-Language-Model-Serving-with-PagedAttention"><a href="#【论文阅读】Efficient-Memory-Management-for-Large-Language-Model-Serving-with-PagedAttention" class="headerlink" title="【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention"></a>【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention</h3><p>出处: ACM-2023   <a href="https://arxiv.org/abs/2309.06180">[2309.06180] Efficient Memory Management for Large Language Model Serving with PagedAttention (arxiv.org)</a></p>
 <ul>
 <li>源码: <a href="https://github.com/vllm-project/vllm.git">项目地址</a></li>
 </ul>
@@ -147,13 +307,190 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 ]]></content>
       <categories>
         <category>论文阅读笔记</category>
+        <category>大语言模型</category>
       </categories>
       <tags>
         <tag>paper notes</tag>
+        <tag>llvm</tag>
       </tags>
   </entry>
   <entry>
-    <title>transformer_not</title>
+    <title>使用 torch.profiler记录模型训练轨迹</title>
+    <url>/2025/02/03/torchProfile/</url>
+    <content><![CDATA[<p>使用 torch.profiler记录模型训练轨迹，并使用Tensorboard进行可视化分析，首先导入需要的库，准备模型和数据集，设置记录器，生成json格式的文件，最后通过Tensorboard可视化。</p>
+<span id="more"></span>
+<h4 id="Steps"><a href="#Steps" class="headerlink" title="Steps"></a>Steps</h4><ol>
+<li>Prepare the data and model</li>
+<li>Use profiler to record execution events</li>
+<li>Run the profiler</li>
+<li>Use TensorBoard to view results and analyze model performance</li>
+<li>Improve performance with the help of profiler</li>
+<li>Analyze performance with other advanced features</li>
+<li>Additional Practices: Profiling PyTorch on AMD GPUs</li>
+</ol>
+<h4 id="1-Prepare-the-data-and-model"><a href="#1-Prepare-the-data-and-model" class="headerlink" title="1. Prepare the data and model"></a>1. Prepare the data and model</h4><p><strong>导入需要的库:</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn</span><br><span class="line"><span class="keyword">import</span> torch.optim</span><br><span class="line"><span class="keyword">import</span> torch.profiler</span><br><span class="line"><span class="keyword">import</span> torch.utils.data</span><br><span class="line"><span class="keyword">import</span> torchvision.datasets</span><br><span class="line"><span class="keyword">import</span> torchvision.models</span><br><span class="line"><span class="keyword">import</span> torchvision.transforms <span class="keyword">as</span> T</span><br></pre></td></tr></table></figure>
+<p><strong>准备数据集</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">transform = T.Compose(</span><br><span class="line">    [T.Resize(<span class="number">224</span>),</span><br><span class="line">     T.ToTensor(),</span><br><span class="line">     T.Normalize((<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">0.5</span>), (<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">0.5</span>))])</span><br><span class="line">train_set = torchvision.datasets.CIFAR10(root=<span class="string">&#x27;./data&#x27;</span>, train=<span class="literal">True</span>, download=<span class="literal">True</span>, transform=transform)</span><br><span class="line">train_loader = torch.utils.data.DataLoader(train_set, batch_size=<span class="number">32</span>, shuffle=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+<p><strong>模型定义</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">device = torch.device(<span class="string">&quot;cuda:0&quot;</span>)</span><br><span class="line">model = torchvision.models.resnet18(weights=<span class="string">&#x27;IMAGENET1K_V1&#x27;</span>).cuda(device)</span><br><span class="line">criterion = torch.nn.CrossEntropyLoss().cuda(device)</span><br><span class="line">optimizer = torch.optim.SGD(model.parameters(), lr=<span class="number">0.001</span>, momentum=<span class="number">0.9</span>)</span><br><span class="line">model.train()</span><br></pre></td></tr></table></figure>
+<p><strong>模型训练</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">train</span>(<span class="params">data</span>):</span><br><span class="line">    inputs, labels = data[<span class="number">0</span>].to(device=device), data[<span class="number">1</span>].to(device=device)</span><br><span class="line">    outputs = model(inputs)</span><br><span class="line">    loss = criterion(outputs, labels)</span><br><span class="line">    optimizer.zero_grad()</span><br><span class="line">    loss.backward()</span><br><span class="line">    optimizer.step()</span><br></pre></td></tr></table></figure>
+<h4 id="2-使用Profiler记录轨迹"><a href="#2-使用Profiler记录轨迹" class="headerlink" title="2. 使用Profiler记录轨迹"></a>2. 使用Profiler记录轨迹</h4><p>some useful parameters are as follow:</p>
+<p><code>schedule</code>: 参数例如<code>wait=1,warmup=1,active=3,repeat=1</code>(profiler 会跳过第一个step/iteration，在第二个iter热身，记录三个iter。). In total, the cycle repeats once. Each cycle is called a “span” in TensorBoard plugin.</p>
+<p>在<code>wait</code>阶段，profiler 不生效，在<code>warmup</code> 阶段，proliler 开始工作但不记录结果，是为了减少开销，proliling 的开始开销很大，会影响结果。</p>
+<p><code>on_trace_ready</code> :  在每个cylce结束时调用，例如使用<code>torch.profiler.tensorboard_trace_handler</code>来时生成Tensorboard使用的结果文件，在Profiling后，结果文件存储在<code>./log/resnet18</code>中。</p>
+<p><code>record_shapes</code>：是否记录输入张亮的形状</p>
+<p><code>profile_memory</code>: 追踪张量空间申请和释放。</p>
+<p><code>with_stack</code>：记录算子的代码信息，如果在vscode中集成TensorBoard, 单击可以跳转到特定行。</p>
+<p><a href="https://code.visualstudio.com/docs/datascience/pytorch-support#_tensorboard-integration">https://code.visualstudio.com/docs/datascience/pytorch-support#_tensorboard-integration</a></p>
+<p><strong>以上下文管理器启动/停止：</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">with</span> torch.profiler.profile(</span><br><span class="line">        schedule=torch.profiler.schedule(wait=<span class="number">1</span>, warmup=<span class="number">1</span>, active=<span class="number">3</span>, repeat=<span class="number">1</span>),</span><br><span class="line">        on_trace_ready=torch.profiler.tensorboard_trace_handler(<span class="string">&#x27;./log/resnet18&#x27;</span>),</span><br><span class="line">        record_shapes=<span class="literal">True</span>,</span><br><span class="line">        profile_memory=<span class="literal">True</span>,</span><br><span class="line">        with_stack=<span class="literal">True</span></span><br><span class="line">) <span class="keyword">as</span> prof:</span><br><span class="line">    <span class="keyword">for</span> step, batch_data <span class="keyword">in</span> <span class="built_in">enumerate</span>(train_loader):</span><br><span class="line">        prof.step()  <span class="comment"># Need to call this at each step to notify profiler of steps&#x27; boundary.</span></span><br><span class="line">        <span class="keyword">if</span> step &gt;= <span class="number">1</span> + <span class="number">1</span> + <span class="number">3</span>:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        train(batch_data)</span><br></pre></td></tr></table></figure>
+<p><strong>也可以以非上下文管理器启动/停止：</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">prof = torch.profiler.profile(</span><br><span class="line">        schedule=torch.profiler.schedule(wait=<span class="number">1</span>, warmup=<span class="number">1</span>, active=<span class="number">3</span>, repeat=<span class="number">1</span>),</span><br><span class="line">        on_trace_ready=torch.profiler.tensorboard_trace_handler(<span class="string">&#x27;./log/resnet18&#x27;</span>),</span><br><span class="line">        record_shapes=<span class="literal">True</span>,</span><br><span class="line">        with_stack=<span class="literal">True</span>)</span><br><span class="line">prof.start()</span><br><span class="line"><span class="keyword">for</span> step, batch_data <span class="keyword">in</span> <span class="built_in">enumerate</span>(train_loader):</span><br><span class="line">    prof.step()</span><br><span class="line">    <span class="keyword">if</span> step &gt;= <span class="number">1</span> + <span class="number">1</span> + <span class="number">3</span>:</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">    train(batch_data)</span><br><span class="line">prof.stop()</span><br></pre></td></tr></table></figure>
+<h4 id="3-运行profiler"><a href="#3-运行profiler" class="headerlink" title="3. 运行profiler"></a>3. 运行profiler</h4><h4 id="4-使用Tensorboard展示结果"><a href="#4-使用Tensorboard展示结果" class="headerlink" title="4. 使用Tensorboard展示结果"></a>4. 使用Tensorboard展示结果</h4><p>安装Pytorch Profiler TensorBoard Plugin</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pip install torch_tb_profiler</span><br></pre></td></tr></table></figure>
+<p>登录TensorBoard</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tensorboard --logdir=./log</span><br></pre></td></tr></table></figure>
+<p>打开TensorBoard</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">http://localhost:6006/#pytorch_profiler</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>【论文阅读】Characterization of Large Language Model Development in the Datacenter</title>
+    <url>/2025/02/03/scheduler_1/</url>
+    <content><![CDATA[<p>大语言模型（LLMs）在许多任务中表现出色。然而，要高效利用大规模集群资源开发LLM并非易事，常常伴随着频繁的硬件故障、复杂的并行化策略和资源利用不平衡等诸多挑战。为此，我们针对Acme GPU数据中心在为期六个月的LLM开发工作负载中所累积的跟踪数据，进行了一次深入的特征分析研究。我们特别探讨了LLM与以往深度学习（DL）工作负载之间的差异，研究了资源利用模式，分析了各种任务失败的影响，总结了所遇到的难题，并揭示了优化LLM系统的潜在机会。</p>
+<span id="more"></span>
+<h3 id="【论文阅读】Characterization-of-Large-Language-Model-Development-in-the-Datacenter"><a href="#【论文阅读】Characterization-of-Large-Language-Model-Development-in-the-Datacenter" class="headerlink" title="【论文阅读】Characterization of Large Language Model Development in the Datacenter"></a>【论文阅读】Characterization of Large Language Model Development in the Datacenter</h3><ul>
+<li>出处: NSDI-2024                                             <a href="https://www.usenix.org/system/files/nsdi24-hu.pdf">数据中心中大型语言模型开发的表征</a></li>
+<li><a href="https://github.com/InternLM/AcmeTrace">InternLM/AcmeTrace (github.com)</a></li>
+</ul>
+<h4 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h4><p>大语言模型（LLMs）在许多任务中表现出色。然而，要高效利用大规模集群资源开发LLM并非易事，常常伴随着频繁的硬件故障、复杂的并行化策略和资源利用不平衡等诸多挑战。为此，我们针对Acme GPU数据中心在为期六个月的LLM开发工作负载中所累积的跟踪数据，进行了一次深入的特征分析研究。</p>
+<p>我们特别探讨了LLM与以往深度学习（DL）工作负载之间的差异，研究了资源利用模式，分析了各种任务失败的影响，总结了所遇到的难题，并揭示了优化LLM系统的潜在机会。此外，我们介绍了改进措施：（1）预训练容错，通过LLM参与的故障诊断和自动恢复，增强了容错能力。(2)针对评估任务负载的解耦调度，通过任务分解和调度优化，实现即时的性能反馈。</p>
+<h4 id="1-Introduction"><a href="#1-Introduction" class="headerlink" title="1.Introduction"></a>1.Introduction</h4><p>近年来，大语言模型（LLMs）引起了学术界和工业界的广泛关注，例如ChatGPT和GitHub Copilot。然而，由于这些模型规模庞大且对数据需求量巨大，训练这些模型需要庞大的计算基础设施，通常需要成千上万的加速器。因此，科技公司和云服务提供商通常会构建大规模的GPU集群来促进LLM的开发，特别是在ChatGPT流行之后。然而，在如此高成本的基础设施上进行高效的LLM开发并非易事。<strong>开发人员常常面临诸多问题和挑战，包括频繁的硬件故障、复杂的并行化策略、不稳定的训练进度、长时间的排队延迟等。</strong></p>
+<p>LLM的开发在各个方面都与GPU集群的支持密不可分。<strong>对集群工作负载的全面分析对于理解挑战和发现为LLM量身定制系统设计的机会至关重要</strong>。然而，许多在LLM兴起之前提出的深度学习工作负载分析工作的结论和启示并不适用于LLM开发。这主要是由于LLM具有不同的特性和需求： </p>
+<p>1.<strong>范式转变</strong>：深度学习（DL）工作负载通常遵循特定任务的范式，在特定领域的数据上训练模型以解决特定任务（例如翻译）。相比之下，大语言模型（LLMs）采用一种新兴的范式，通过自监督训练在广泛的数据上生成基础模型，然后适应各种下游任务。<strong>这一转变标志着模型开发流程（如预训练、对齐）和工作负载特征与之前的深度学习工作负载存在显著差异。</strong></p>
+<p>2.<strong>定制软件栈</strong> ：为了适应LLMs庞大的模型规模，一系列系统实现了先进的技术来优化LLMs的执行。例如，Deepspeed、Megatron和Alpa通过混合并行或状态分片优化器加速训练。而在模型服务方面，Orca和vLLM通过迭代调度或内存管理来提高吞吐量。</p>
+<p>3.<strong>统一架构</strong> ：之前的深度学习工作负载通常采用各种模型架构（例如CNN、RNN）来解决不同的任务。相反，LLMs普遍采用Transformer架构，如BERT、GPT-3、LLaMA和PaLM。这种架构上的一致性表明LLM开发流程高度统一，不同数据中心之间具有很高的相似性。</p>
+<p><strong>为了解决这一差距，我们对上海人工智能实验室的数据中心Acme的运营经验进行了深入研究。</strong> 该中心拥有两个专门用于LLM开发的集群，Seren和Kalos，<strong>总共配备了4,704个A100 GPU</strong>。我们的分析基于从2023年3月到8月期间收集的日志数据，<strong>包括调度器日志、基础设施监控数据、故障日志和细粒度的性能分析数据</strong> 。我们的主要发现和识别的挑战总结如下：</p>
+<p><strong>1.更短的作业时长和不公平的排队延迟</strong> ：与传统的认知相反，<strong>我们数据中心的工作负载平均作业时长比以往的DL工作负载缩短了2.7到12.8倍</strong> 。这主要是由于大量短期任务（如评估任务）的存在。在作业排队延迟方面，我们的发现也与以往的DL工作负载不同，往的DL工作负载中规模较大的作业通常会有更长的等待时间。我们观察到，尽管评估任务是短期且小规模的，但它们却有最长的排队延迟。这一差异源于<strong>为了减少预训练作业的排队延迟，系统保留了大部分资源用于预训练作业，而评估作业则被安排在优先级较低的位置，使用有限的备用资源。</strong></p>
+<p><strong>2.资源使用不均衡</strong>：这种不平衡体现在两个方面。首先，在工作负载分布方面，<strong>预训练作业仅占总作业量的3.2%，但消耗了Kalos集群94.0%的计算资源</strong>（即GPU时间）。相反，<strong>评估作业虽然占所有作业的92.9%，却仅使用了0.8%的资源。</strong>其次，从基础设施利用率来看，我们发现包括CPU、主机内存和网络在内的相关资源经常处于未充分利用状态。相比之下，作为主要资源的GPU显示出很高的利用率。Kalos集群（LLMs负载）中<strong>GPU内存和GPU利用率的中位数分别高达75%（60GB）和99%</strong>，而在PAI集群（传统DL负载）中，这两个数值分别仅为10%和4%。<strong>这些观察结果证实了LLMs在计算和内存方面的高需求，也表明基于GPU共享的技术可能不适用于LLMs。</strong></p>
+<p><strong>3.评估任务负载GPU比较空闲</strong>：我们的<strong>评估任务负载分析显示，各个阶段的GPU资源利用率严重不足</strong>。例如，HumanEval评估作业有29.5%的时间用于模型加载和数据预处理，另有19.0%的时间用于合成程序正确性评估。因此，<strong>只有一半的时间用于GPU推理</strong>，导致评估试验的排队延迟时间较长。</p>
+<p><strong>4.频繁的作业失败</strong>：我们发现，<strong>LLM工作负载的各种错误主要发生在作业开始阶段，导致快速终止</strong>。然而，基础设施故障在长期预训练作业中很常见，严重影响训练效率。因此，及时诊断和恢复这些故障对于提高训练效率至关重要。</p>
+<p>根据我们的特征研究，我们发现了LLM开发过程中遇到的几个挑战，如<strong>训练进度不稳定、远程存储瓶颈和模型性能反馈延迟</strong>。为了解决这些问题，我们结合运营经验，构建了两个集成到LLM框架中的系统，以提高开发的稳健性和效率。</p>
+<p><strong>首先，为了缓解频繁的故障问题，我们建立了一个预训练容错系统</strong>。它包含三个关键设计：(1) 通过异步检查点实现频繁的模型保存，(2) 结合启发式规则和LLM识别各种故障的根本原因，(3) 使用综合检测工具包定位故障节点，并从适当保存的检查点自动重新开始训练。该系统使检查点速度提高了3.6至58.7倍，并显著减少了人工干预。</p>
+<p><strong>其次，我们开发了一个用于评估任务的解耦调度系统</strong>，为开发人员提供及时的模型质量反馈。它不仅通过解耦模型检索解决了远程模型加载争用问题，还通过解耦指标计算过程最小化了GPU空闲时间。该系统还利用数据集的先验知识和灵活性在所有GPU上平衡工作负载。实验表明，它可以将评估时间缩短最多达1.8倍。</p>
+<h4 id="2-Background"><a href="#2-Background" class="headerlink" title="2. Background"></a>2. Background</h4><h4 id="2-1-LLM-Development-Pipeline"><a href="#2-1-LLM-Development-Pipeline" class="headerlink" title="2.1 LLM Development Pipeline"></a>2.1 LLM Development Pipeline</h4><p>与传统的深度学习模型不同，大语言模型（LLM）采用一种新兴的自监督学习范式，在广泛的数据上进行训练，并进一步后训练适应各种下游任务。LLM的开发由于其庞大的<strong>模型规模（包含数十亿参数）和大量的训练数据</strong>，通常需要庞大的计算基础设施。图1展示了LLM开发的完整流程，包括从零开始到服务上线的五个不同阶段（蓝色方块），蓝色箭头表示流程顺序。灰色的循环箭头表示预训练阶段可以进行定期的对齐和评估，以评估中间模型并及时调整配置。各个阶段具体如下：</p>
+<p> <img src="/2025/02/03/scheduler_1/4f4dd76580e7490ab18120e1cba78cdb.png" alt="请添加图片描述"></p>
+<p><strong>数据准备</strong>：初始阶段包括数据的收集和预处理，可分为两个部分：（1）预训练数据，由从公共或私人来源获取的大量未标注语料组成，通过净化和去重等过程进行筛选；（2）对齐数据，由用于将模型对齐到特定任务的小规模高质量标注语料组成，这些数据通常通过昂贵的人力注释或标注获取。此外，所有数据必须进行分词处理，以确保与模型输入的兼容性。</p>
+<p><strong>预训练</strong>：这一阶段涉及在大规模精选数据上进行自监督训练，占据了整个开发流程中大部分资源。要在大规模上高效训练LLMs，需要采用多种系统创新技术，如状态分片优化器、数据并行、流水线并行和张量并行等精细的模型放置方法。</p>
+<p><strong>对齐</strong>：这一阶段旨在使LLMs能够适应用户意图，以应对各种下游任务。常用的两种对齐范式是：（1）提示工程，通过指定提示（即输入）而不修改模型参数。例如，在文本摘要中，在输入文章后添加提示“TL;DR”可以提高模型性能；（2）微调，通过在特定任务的数据集上更新模型参数来提高在特定领域的性能。此外，从人类反馈中进行的强化学习（RLHF）进一步增强了对齐效果，并且像LoRA这样的参数高效技术被提出以降低微调的成本。</p>
+<p><strong>评估</strong>：鉴于LLMs的广泛应用场景，仅依靠训练损失等单一指标来评估模型质量可能不准确。需要考虑的因素有很多，如准确性、公平性和毒性。因此，有必要采用多样的标准并在多个任务上衡量性能。此外，在预训练阶段进行定期评估，以提供关于模型质量的及时反馈也是至关重要的</p>
+<p><strong>部署</strong>：为了满足LLM应用的严格成本和延迟要求，已经开发了多种先进技术来实现高效的模型服务，包括量化、蒸馏、CUDA内核优化、模型并行和内存管理等。</p>
+<h5 id="2-2-Acme-Overview"><a href="#2-2-Acme-Overview" class="headerlink" title="2.2 Acme Overview"></a>2.2 Acme Overview</h5><p>Acme 是我们的私人 GPU 数据中心，支持研究人员和工程师在多个领域开发深度学习模型。<strong>在本文中，我们专注于分析两个专门用于开发大语言模型（LLM）的集群：Seren 和 Kalos。</strong>我们收集并分析了这两个集群中的所有作业。需要注意的是，Acme 中还有其他集群用于不同领域，如自动驾驶和科学研究中的人工智能，但这些集群因与本文无关而被排除在外。<br><img src="/2025/02/03/scheduler_1/aca92d57dd464d749030dfa64f2cca73.png" alt="在这里插入图片描述"></p>
+<p><strong>集群架构：</strong> 表1总结了这两个同质 LLM 集群的配置。Seren 和 Kalos 分别有 2,288 和 2,416 个 GPU。每个节点配备 8× NVIDIA A100-SXM 80GB GPU 和 2× Intel Xeon Platinum 8358P CPU（共128个线程）。GPU 通过 NVLink 和 NVSwitch 互连，节点间通信通过 NVIDIA Mellanox 200Gbps HDR InfiniBand 实现。相比 Seren，Kalos 是一个相对较新的集群，网络配置有所改进。Kalos 每个节点具有更大的主机内存（2TB），配备了四个专用于应用通信的 InfiniBand HCA 以及一个专用于存储的额外 HCA。</p>
+<p>此外，分布式存储系统对工作负载性能也至关重要。Acme 采用了全 NVMe 共享并行文件系统以实现快速数据访问和存储。随着时间的推移，我们的资源调度系统已经演变为支持多种集群环境。具体来说，Seren 和 Kalos 上的调度器分别基于 Slurm 和 Kubernetes 构建。为了为大规模预训练作业提供资源保证，我们的调度器实现了资源隔离和配额预留。此外，它还结合了尽力而为的作业机制以提高利用率。</p>
+<p><strong>LLM 工作负载：</strong> 我们开发了一系列 LLM，参数规模从 70 亿到超过 1230 亿不等。这些模型都采用基于 Transformer 的解码器架构，类似于 GPT 和 LLaMA 系列。Acme 涵盖了前述的一般 LLM 开发流程中的任务（见 §2.1）。需要注意的是，Acme 不涉及任何服务任务，因为我们的 LLM 被部署在专门用于服务的独立集群上。</p>
+<p><strong>软件栈：</strong> 为了支持在数千个 GPU 上训练亿级参数的模型，我们构建了一个名为 InternEvo 的系统，集成了多种系统优化技术，如 FlashAttention、3D 并行、零冗余优化、混合精度训练、选择性激活重计算以及细粒度通信重叠。此外，该系统还支持模型微调和评估等附加任务。</p>
+<h5 id="2-3-Traces-from-Acme"><a href="#2-3-Traces-from-Acme" class="headerlink" title="2.3 Traces from Acme"></a>2.3 Traces from Acme</h5><p>表2比较了Acme的规格和跟踪信息与由Microsoft、SenseTime和Alibaba进行的先前跟踪分析工作。与Acme专注于LLM开发不同，这些数据中心包含来自各个领域的通用深度学习工作负载。例如，Helios [38] 包含4个专用于计算机视觉和强化学习模型训练的集群，而PAI [97] 则包括用于训练和服务作业的多种服务器。</p>
+<p> <img src="/2025/02/03/scheduler_1/b62d91ae4ef045a8a11d4e55e5db2511.png" alt="在这里插入图片描述"></p>
+<p><strong>跟踪来源：</strong> 我们的特征化研究基于从Acme的两个LLM集群收集的跟踪数据。这些跟踪数据跨越2023年3月至8月的6个月时间。Seren集群包含了368K个CPU作业和664K个GPU作业，而Kalos集群的作业跟踪数据包含了42K个CPU作业和20K个GPU作业。此外，我们总结了我们研究中使用的跟踪数据来源：</p>
+<ol>
+<li><strong>作业日志</strong>：我们从调度数据库中收集作业日志，包括每个作业的执行时间（提交、开始和结束时间）、最终状态（完成、取消、失败）、请求的资源（CPU、GPU、内存）、工作目录以及其他相关数据。</li>
+<li><strong>硬件监控数据</strong>：这些数据来源广泛，来自多个维度长期采集。我们从Prometheus数据库获取CPU、内存和网络使用数据，从NVIDIA DCGM获取与GPU相关的指标，以及从IPMI获取与电源相关的数据。这些数据的采样间隔设置为15秒。</li>
+<li><strong>运行时日志</strong>：为了进行精确的作业失败分析，我们捕获LLM框架在作业执行期间的标准输出和标准错误日志。</li>
+<li><strong>性能分析数据</strong>：针对一部分具有代表性的作业，我们使用DCGM等工具进行深入的性能分析。这些跟踪维度的协同作用使我们能够全面了解数据中心中LLM作业的特性。</li>
+</ol>
+<h4 id="3-Datacenter-Characterization"><a href="#3-Datacenter-Characterization" class="headerlink" title="3. Datacenter Characterization"></a>3. Datacenter Characterization</h4><p>本节中，我们对Acme进行了深入分析，包括比较LLM与之前DL工作负载之间的工作负载分布（§3.1），调查不同LLM工作负载类型（§3.2），探索资源利用模式（§3.3），以及评估环境影响（§3.4）。</p>
+<h5 id="3-1-LLM与先前DL工作负载的对比"><a href="#3-1-LLM与先前DL工作负载的对比" class="headerlink" title="3.1 LLM与先前DL工作负载的对比"></a>3.1 LLM与先前DL工作负载的对比</h5><p>  <img src="/2025/02/03/scheduler_1/31cf84e94ceb421ea1100eef22dffe13.png" alt="在这里插入图片描述"></p>
+<p><strong>更短的作业持续时间：</strong> 如图2(a)所示，与普遍认为的LLM相关作业通常长时间运行的刻板印象相反，我们发现我们集群中的工作负载（蓝色和橙色线条）展示出较短的GPU作业持续时间（即作业运行时间，不包括排队延迟），与先前作业追踪中观察到的DL工作负载（虚线）相比。具体来说，Seren和Kalos的中位数作业持续时间为2分钟，比其他集群的中位数作业持续时间短了1.7∼7.2倍。此外，显然最近的追踪显示了较短的作业持续时间分布。特别是，在考虑到Philly集群的平均作业持续时间（2017年收集）时，它比Helios（2020年）和PAI（2020年）长了2.7∼3.8倍，比Acme（2023年）长了12.8倍。<strong>为了解释这一观察结果，我们概述了三个潜在因素：</strong>（1）硬件升级。GPU和网络的迭代带来了显著的效率提升。（2）资源丰富。用户通常请求更多资源（如表2所示），在Seren平均5.7个GPU和Kalos平均26.8个GPU。这可以显著加速训练过程。（3）广泛的关联工作负载：LLM开发流水线涉及许多小规模的关联作业，例如评估。我们将在§3.2中深入探讨这一点。（4）高未完成率：大约40%的作业失败，完成的作业只消耗GPU资源的20∼30%。这突显了需要一个容错系统的紧迫性。有关更多详细信息，请参见图17和附录A.1。</p>
+<p><strong>两极化的GPU利用率：</strong>图2(b)展示了各个集群中整体的GPU利用率分布。显然，我们两个集群中的GPU利用表现出两极化的模式，主要集中在两个明显的状态：0%和100%。这种两极化主要源于我们集群中的<strong>工作负载具有相似的模型架构</strong>，即基于transformer的LLMs。相比之下，Philly和PAI则涵盖了更广泛的利用率范围。此外，当比较中位数GPU利用率时，Seren和Kalos分别表现出97%和99%的显著高值，而Philly和PAI的观察值分别为48%和4%。这一观察结果符合LLMs计算密集的普遍理解。它还表示，基于GPU共享的调度技术[40,98,99,106]可能不适合LLM的开发。需要注意的是，“GPU利用率”有时可能是一个较弱的利用率指标[8, 94]。我们将在§3.3中提供更精确的利用率分析。</p>
+<p> <img src="/2025/02/03/scheduler_1/9ea3fdddc4574ec998dda10c73f6acd4.png" alt="在这里插入图片描述"></p>
+<p><strong>高度倾斜的工作负载分布：</strong> 我们进一步研究了与作业数量相关的GPU需求的累积分布函数（图3(a)）和GPU时间（图3(b)）。在作业数量方面，所有集群都显示出类似的模式，即大多数作业为单GPU作业，少于7%的作业请求超过8个GPU。然而，当考虑GPU时间时，单GPU作业仅占我们两个集群不到2%的资源，而在PAI中却占据了超过68%的GPU时间。与之形成鲜明对比的是，Kalos集群中大规模作业（≥256个GPU）主导了GPU时间，占据了超过96%的资源。</p>
+<p>这种更为陡峭的分布给集群调度器的设计带来了重大挑战。<strong>大部分资源被分配给少数预训练作业，可能导致头部阻塞问题，从而造成严重的排队延迟。</strong>现有的DL集群调度器通常依赖于抢占机制，但是考虑到恢复的巨大开销，这些机制并不适用于LLM工作负载。这凸显了迫切需要为LLM集群量身定制调度系统的重要性，需要考虑整个流程的工作负载特征。</p>
+<h5 id="3-2-Workload-Categories"><a href="#3-2-Workload-Categories" class="headerlink" title="3.2 Workload Categories"></a>3.2 Workload Categories</h5><p>为了深入了解LLM开发流程（§2.1）中不同工作负载的特征，我们根据它们的生产分工和元数据（如作业名称），进一步将作业分类为特定类型。</p>
+<p> <img src="/2025/02/03/scheduler_1/c3861282fe424f81a3c1194420dc8ddd.png" alt="在这里插入图片描述"></p>
+<p><strong>作业数和资源利用的不相关性：</strong> 图4展示了各种工作负载类型的作业数量和GPU时间分布，其中只有Seren包含SFT和MLLM工作负载。此外，MLLM作业包含自己的开发流程（如预训练），并采用较小规模的模型进行探索。我们的分析主要集中在LLM作业上。显而易见，评估作业在总作业计数中占据了大多数，然而它们在资源消耗方面相对较小（Kalos中为0.8%）。相反，预训练作业仅占总作业计数的0.9%和3.2%，但在Seren和Kalos中分别消耗了69.5%和94.0%的总GPU时间</p>
+<p>  <img src="/2025/02/03/scheduler_1/ed4dfdb7f82c48c7882fee37ab2bcc67.png" alt="在这里插入图片描述"></p>
+<p><strong>作业类型与GPU需求相关性：</strong> 我们进一步在图5中描述了各种工作负载类型的GPU需求分布。每个箱子由第一四分位数和第三四分位数框定，箱内黑线表示中位数值。两个“须”在1.5倍四分位距（IQR）处定义。与通常需要少于4个GPU的评估作业相比，预训练作业通常需要超过100个GPU。这一观察部分解释了为什么图4(d)中Kalos中的评估作业消耗的资源很少。此外，我们注意到调试作业的GPU请求范围很广，这与评估作业通常需要各种类型任务的事实相一致。<br><img src="/2025/02/03/scheduler_1/28d5061e5b9b4bdba07e2f2938329257.png" alt="在这里插入图片描述"></p>
+<p><strong>相同的时间分布：</strong> 图6展示了不同工作负载的作业持续时间和排队延迟分布。就作业持续时间而言，尽管预训练作业持续时间最长，但它们在中位数上超过其他工作负载一个数量级，并且在两个集群中不到5%的作业持续时间超过1天。这可以归因于预训练过程中频繁的失败，这将在§5中进一步探讨。至于作业排队延迟，与之前的报告[38, 45, 97]建议的大规模作业经历更长等待时间不同，我们观察到<strong>尽管评估作业的GPU需求最低，作业持续时间最短，但它们的排队延迟最长。</strong>这种差异是因为大多数资源都被保留用于预训练作业，以最小化它们的排队延迟。评估作业通常作为低优先级的批量同时提交，利用有限的备用资源。</p>
+<h5 id="3-3-Infrastructure"><a href="#3-3-Infrastructure" class="headerlink" title="3.3 Infrastructure"></a>3.3 Infrastructure</h5><p>除了负载特性分析外，我们进一步对基础设施利用情况进行了全面分析。</p>
+<p> <img src="/2025/02/03/scheduler_1/bcc0520bd99a486ab69f4f8e4c0e4d51.png" alt="在这里插入图片描述"></p>
+<p><strong>更高的GPU利用率：</strong> 如图7(a, b)所示，考虑到GPU在LLM开发中的关键作用，我们从DCGM [7]中收集了细粒度的性能计数器指标，包括SM活动（PROF_SM_ACTIVE）张量核心活动（PROF_PIPE_TENSOR_ACTIVE）和GPU内存占用（DEV_FB_USED）。与PAI [97]中大部分GPU内存未充分利用（内存利用率低于25%）不同，我们在Kalos中的观察表明，<strong>50%的GPU占用了超过75%的GPU内存（60 GB）</strong>。此外，我们观察到两个集群的中位数SM活动约为40%，是PAI报告的20%的两倍。这些发现与LLM的内存密集型和计算密集型特性一致。</p>
+<p><strong>未充分利用的关联资源：</strong>我们还深入研究了与LLM开发密切相关的CPU、主机内存和网络方面。在图7(b)中，我们比较了主机端和GPU端的内存占用情况。显而易见，CPU内存利用率保持在50%以下。需要注意的是，Kalos相比Seren拥有两倍的内存容量（2TB）（见表1）。这显示了<strong>CPU内存的显著未充分利用</strong>。附录A.2提供了更详细的分析。尽管GPU内存卸载技术[80,81]提高了CPU内存利用率并缓解了GPU内存限制，但由于有限的PCIe带宽，它也会影响训练吞吐量。因此，我们不采用卸载机制。此外，由于高CPU与GPU比例（每GPU 16个CPU），CPU通常处于低利用状态，如图7(c)所示。此外，在图7(d)中，我们测量了Seren中IB的网络发送和接收带宽。两条线重叠良好，IB在LLM执行期间用于对称通信。我们观察到NIC在超过60%的时间内保持空闲状态，并且活动带宽很少超过IB提供的最大带宽的25%。</p>
+<h5 id="3-4-Environemntal-Impact"><a href="#3-4-Environemntal-Impact" class="headerlink" title="3.4 Environemntal Impact"></a>3.4 Environemntal Impact</h5><p> <img src="/2025/02/03/scheduler_1/1de8768282ca4e0ea101fcf1f1c921c1.png" alt="在这里插入图片描述"></p>
+<p>图8(a)展示了GPU能耗的分布情况。我们观察到约30%的GPU处于空闲状态，但仍需消耗60W的电力。此外，由于计算需求强烈，我们发现在Seren和Kalos中，有22.1%和12.5%的GPU消耗超过400W（TDP），甚至有些达到600W，可能引发一些亚稳态问题[41]。图8(b)呈现了Seren中所有GPU服务器以及额外6台仅CPU服务器的能耗分布情况。我们发现<strong>GPU服务器的平均能耗是CPU服务器的5倍</strong>。</p>
+<h4 id="4-Workload-Profilling"><a href="#4-Workload-Profilling" class="headerlink" title="4.Workload Profilling"></a>4.Workload Profilling</h4><p>在本节中，我们对代表性任务的资源利用进行了细粒度分析。我们关注预训练和评估任务，因为它们是最消耗资源或数量密集的工作负载。</p>
+<h5 id="4-1-Pretraining-Workload"><a href="#4-1-Pretraining-Workload" class="headerlink" title="4.1 Pretraining Workload"></a>4.1 Pretraining Workload</h5><p> <img src="/2025/02/03/scheduler_1/26f8299ab7a34a24a99eed47ae1be892.png" alt="在这里插入图片描述"></p>
+<p>如前所述，预训练LLMs需要大量的计算资源。为了提高训练效率，我们的预训练框架InternEvo [25] 在系统设计上进行了持续的优化和迭代。如图10所示，InternEvo的初始版本（早期作业采用的版本）分别如下：(a) 主要采用类似于MegatronLM [68] 的3D并行，(b) 使用分层的ZeRO机制 [25]，实现模型状态的选择性冗余分片。举例说明，我们对一个拥有1230亿参数的LLM在2048个GPU上的性能进行了详细的分析。我们也在附录A.4中提供了1024个GPU的分析结果。(a) 3D并行方法，我们采用了管道并行ism配置= 4，张量并行ism= 8。我们对第一个管道秩的第一个GPU进行了性能分析。(b) 分层ZeRO方法，我们将参数分片限制为每组64个GPU，并启用了重新计算。我们以1毫秒间隔采集了像DCGM指标这样的GPU性能计数器。</p>
+<p><strong>GPU SM利用率</strong>：图10展示了相同LLM在不同训练策略下的GPU SM利用率。这两个版本保持了相同的全局批处理大小，并根据各自的配置进行了优化。显然，相比于InternEvo V1，InternEvo V2呈现出更优秀的峰值SM利用率，并减少了空闲时期，实现了约16%的加速。<strong>3D并行的相对低利用率主要是由于混合并行引入的通信对关键路径的影响，例如管道并行中的气泡。</strong>需要注意的是，不同的节点内和节点间通信硬件设置可能导致不同的最佳配置。</p>
+<p> <img src="/2025/02/03/scheduler_1/a64d3c829d184d0caa34b4f89d64ba7d.png" alt="在这里插入图片描述"></p>
+<p><strong>GPU内存占用：</strong> 对于一个包含Ψ个参数的模型，在使用Adam [48]优化器进行主流混合精度训练时，参数、梯度和优化器状态的内存占用分别为2Ψ、2Ψ和12Ψ。为了降低内存成本，ZeRO [79]有效地将这些元素的冗余内存分片到全局GPU工作进程中。图11展示了使用Pytorch内存快照工具 [11]捕获的GPU随时间的实际内存使用情况。上部动态部分代表激活和梯度，而下部静态部分代表参数和优化器状态所占用的内存。需要注意的是，图中仅展示已分配的内存，而保留的内存未呈现。<strong>我们的分析显示，与分层ZeRO相比，3D并行中激活内存的需求显著更高。这一观察强调了高效的激活内存管理作为提升3D并行批处理大小和吞吐量的关键因素</strong>。</p>
+<p> <img src="/2025/02/03/scheduler_1/225aed6035df48e7adfff6e131e7b4f3.png" alt="在这里插入图片描述"></p>
+<p><strong>激活大小的不平衡：</strong> 在使用管道并行时，每个等级需要持有不同数量的激活，因为在各个管道等级上，待进行反向计算的微批次数量各不相同。图12展示了这种不平衡问题在不同管道等级上的情况。<strong>这表明我们应该采用专门的分区机制来解决管道并行中不同等级之间的内存使用不平衡问题，以实现更高的效率，比如重新计算激活。</strong></p>
+<h5 id="4-2-Evilatopm-Workload"><a href="#4-2-Evilatopm-Workload" class="headerlink" title="4.2 Evilatopm Workload"></a>4.2 Evilatopm Workload</h5><p><strong>在LLM预训练过程中，定期评估生成的检查点对指导LLM预训练的演进至关重要</strong> 。因此，LLM评估作业占据了大多数作业，每个作业在不同的LLM基准数据集上执行指标计算。我们分析整个评估工作流程，并结合细粒度的资源使用信息定量地展示两个即将到来的资源利用问题。我们还将在第6.2节讨论相应的解决方案</p>
+<p> <img src="/2025/02/03/scheduler_1/e744bd43d4324fc19ac1422361be39bd.png" alt="在这里插入图片描述"></p>
+<p><strong>模型加载和数据预处理高开销：</strong> 在评估作业的初始化阶段，为每个任务加载模型检查点至关重要。此外，数据预处理阶段，特别是标记化，构成了显著的时间开销。这些因素导致了分配的GPU资源在相对较长时间内的低利用率。如图13所示，在实际GPU推理之前，评估任务消耗超过1分钟，占评估持续时间的29.5%。这种开销可能会随着模型或数据集规模的增大而增加。为了解决预处理开销，一个有效的策略是缓存标记化数据。此外，评估作业具有灵活性，可以将多个评估任务（数据集）合并为单个作业。这种合并可以有效减少评估过程中模型加载阶段的相对时间开销。</p>
+<p><strong>指标计算高开销：</strong>评估过程经常涉及复杂且耗时的指标计算。例如，需要在编码数据集（如HumanEval [24]和MBPP [17]）上执行合成程序正确性测试。此外，还会调用OpenAI GPT-4 API评估模型对话的表现（例如Chatbot Arena [112]）。这些过程可能需要长达30分钟的时间，在此期间GPU保持空闲状态。因此，我们可以观察到GPU使用的不同阶段，包括需要GPU进行推理和生成的阶段，以及不需要GPU进行指标计算和验证的阶段。以HumanEval基准测试为例，如图13所示，GPU在最后42秒处于空闲状态，浪费了总GPU时间的约19.0%。</p>
+<h4 id="5-Failure-Analysis"><a href="#5-Failure-Analysis" class="headerlink" title="5 Failure Analysis"></a>5 Failure Analysis</h4><p>本节我们将基于我们两个集群的运行日志和硬件监控数据，对作业失败进行全面分析。在Kalos集群中，我们收集了32,500个任务的日志，其中包括31,293个（96.3%）推理任务，647个（2.0%）预训练任务和调试任务（1.7%）。在Seren集群中，我们仅收集了675个预训练任务的日志。此外，针对预训练任务，我们提取了所有相关信息和元数据，包括实际训练步骤、冷启动开销、恢复时间戳等。我们希望通过我们的分析为未来LLM开发中的容错研究提供深刻见解。</p>
+<h5 id="5-1-故障分类"><a href="#5-1-故障分类" class="headerlink" title="5.1 故障分类"></a>5.1 故障分类</h5><p>我们采用了一种故障诊断系统，结合基于规则和LLM技术的方法，从运行时日志中提取错误信息。我们在第6.1节详细解释了这个系统。此外，为确保准确识别故障类型和根本原因，进行了手动检查和修正。表3总结了Acme中常见故障的发生频率和重启时间。基本上，它们可以分为以下三类。请注意，这些分类可能有重叠，对特定错误类型分类的主要标准是其最频繁发生的情况</p>
+<p> <img src="/2025/02/03/scheduler_1/1f41f9b81f1347aaa27ec152d5cab774.png" alt="在这里插入图片描述"></p>
+<ul>
+<li><strong>基础设施：</strong> 基础设施相关的故障源于底层计算平台或远程存储的问题。这些故障主要发生在作业执行过程的中途阶段，尤其是在预训练任务中。它们由于复杂且耗时的恢复过程严重影响训练进度。</li>
+<li><strong>框架：</strong> 多种类型的运行时错误，如RuntimeError、ValueError和AttributeError，可能与张量操作、形状、数据类型或意外行为有关。它们通常出现在作业的初始阶段，并且通常通过修复配置来解决。</li>
+<li><strong>脚本：</strong> 脚本错误通常源于编程错误或用户疏忽。它们占据了大多数的故障，并且通常通过修订代码来解决.</li>
+</ul>
+<h5 id="5-2-Failure-Characterization"><a href="#5-2-Failure-Characterization" class="headerlink" title="5.2 Failure Characterization"></a>5.2 Failure Characterization</h5><p>我们从分析中得出了几个关键观察：<strong>基础设施故障造成的影响最为严重</strong>。如表3所示，由于基础设施问题导致的作业失败往往使用大量GPU资源（GPU需求），并且重新启动需要相当大的工作量（重启时间）。它们占用了超过82%的GPU时间（GPU时间），但失败作业数量仅占11%（数量）。这些作业大多是长期的预训练任务，可能多次遭遇硬件故障，如GPU问题（例如CUDAError、ECCError）、NVLink问题（NVLinkError）以及网络系统问题（NCCLRemoteError、S3StorageError）。需要注意的是，NodeFailure表示由于不明确的硬件问题而导致的未分类错误。解决这些基础设施故障需要精细的诊断工作，以准确定位问题的根源，通常需要对有缺陷的硬件进行维护或更换，这导致了显著的重启成本。</p>
+<p><strong>高温引起的故障：</strong> 另一个显著的观察是，在Kalos训练7B模型往往会导致GPU过热，可能引发NVLinkError或ECCError。这种现象主要是由于高度优化的通信成本，导致GPU空闲率异常低。我们观察到，在训练这些模型时，整个集群服务器室内的温度大约上升了5°C。此外，我们发现大多数这类故障发生在2023年7月，这是有记录以来最炎热的月份[63]。这种异常的气候可能是这些故障的潜在原因，这与微软最近的研究结果相一致[100]。我们在附录A.5中提供了关于GPU温度的更详细数据。随后，我们的团队增强了集群的冷却能力，显著减少了这类故障的发生频率。</p>
+<p><strong>许多故障由辅助服务引起：</strong> 在我们的预训练框架中，我们连接到外部组件或服务进行指标报告、日志记录、监控和警报。这些辅助服务容易受到网络不稳定性的影响，可能导致超时或故障，从而减缓或中断训练过程。大量的ConnectionError和NetworkError事件源自这些辅助服务。</p>
+<p><strong>评估作业很少遇到错误：</strong> 在Kalos中，仅有6.7%的评估任务遇到错误，特别地，并未记录GPU或NVLink的故障情况。低错误率可能归因于评估任务持续时间较短，对GPU和NVLink连接的压力较小。因此，这降低了硬件和操作故障在评估作业中更频繁发生的可能性<br><img src="/2025/02/03/scheduler_1/f138dab1049d4e2f912c929c509fa958.png" alt="在这里插入图片描述"></p>
+<h5 id="5-3-Failure-Characterization"><a href="#5-3-Failure-Characterization" class="headerlink" title="5.3 Failure Characterization"></a>5.3 Failure Characterization</h5><p>我们在以下三种情况下会重新启动作业：(1) 当作业内部发生错误时，(2) 当训练指标异常，如损失急剧上升时，以及(3) 当训练过程陷入停滞时。所谓的“损失急剧上升”指的是先前正常下降的损失突然增加，并且在一定时间内无法恢复。重新启动时，作业会回到上一个检查点，导致训练进度的损失。由于现有的LLM框架缺乏自动恢复支持，开发人员通常需要手动重新启动中断的训练作业。开发人员经常需要轮流值班，以确保预训练模型及时完成。</p>
+<p>如图14所示，在我们手动处理所有故障的早期阶段（3月至4月），我们选择了两个预训练作业。我们从两个集群大规模模型训练过程的日志中提取信息，包括每次提交的运行持续时间、开始和结束时间，以及训练的初始和最终迭代次数。104B模型是在框架还在开发初期时的早期尝试。因此，加载之前的模型检查点导致了整体训练过程中的重大损失。相比之下，一个月后123B模型的训练中，我们改进了框架并采用了更小的检查点保存间隔。此外，我们增加了一个优雅终止作业的功能，在结束作业之前允许保存当前的训练结果。显然，123B模型的训练过程更为稳定，由于回滚而造成的损失更少。然而，这一进展是有代价的，因为不同时间中断的作业必须迅速重新启动。</p>
+<h4 id="6-Deployed-LLM-Systems"><a href="#6-Deployed-LLM-Systems" class="headerlink" title="6. Deployed LLM Systems"></a>6. Deployed LLM Systems</h4><p>正如前文所强调的，LLM的开发过程面临重重障碍，但也揭示了克服这些问题的可行策略。本节将分两个阶段介绍我们的工作：(1) 预训练阶段：通过LLM相关的故障诊断和自动恢复来增强容错能力。(2) 评估阶段：通过任务分解实现及时的性能响应。</p>
+<h5 id="6-1-Fault-tolerant-Pretraining"><a href="#6-1-Fault-tolerant-Pretraining" class="headerlink" title="6.1 Fault-tolerant Pretraining"></a>6.1 Fault-tolerant Pretraining</h5><p><strong>动机：</strong> 在LLM预训练过程中，由于涉及大量GPU和训练过程的长时间持续性，故障不可避免且经常发生 [15, 44, 88, 96]。这些故障会严重阻碍训练进度，导致资源利用效率低下（§5）。因此，为了最小化基础设施的停机时间，通常采用轮值值班的方式手动处理故障。这给工程师和研究人员带来了重大负担，正如Meta OPT [110]和BigScience BLOOM [1]团队所抱怨的那样。我们的团队也面临这个问题。为了减轻这一负担并提升硬件效率，我们开发了一个系统，自动检测故障根本原因并促进恢复。</p>
+<p><strong>系统设计：</strong> 我们的容错系统无缝集成到LLM预训练框架中，包括三个关键模块：(1) 检查点：增加频繁的模型保存，以最小化训练进度的损失；(2) 诊断：使用启发式规则和LLM结合，准确识别不同故障的根本原因；(3) 恢复：采用全面的检测工具包，确定故障节点，并从适当保存的检查点自动重新启动训练。我们将详细讨论这些模块。</p>
+<p><strong>1.异步检查点</strong>：频繁的检查点有效减少了由意外故障引起的浪费时间 [32]。然而，由于LLM可以生成TB级别的模型状态（即跨所有GPU的总模型状态），保存检查点本身可能会引入显著的开销，导致训练时间减慢高达43% [60]。为了解决这个问题，我们采用了异步检查点策略 [64, 69]，有效地将检查点过程与训练过程分离。我们的观察表明，CPU内存（参见图7 (b)）能够容纳多个检查点。通过利用这一点，我们可以将模型状态存储在内存中，并利用单独的线程定期将这些状态保存到远程持久存储。这种简单的策略显著减少了检查点的开销。</p>
+<p> <img src="/2025/02/03/scheduler_1/1638a6ca0b3e4e91b107242e268430dc.png" alt="在这里插入图片描述"></p>
+<p><strong>2.故障诊断.：</strong> 正如我们在§5讨论的那样，故障可能源自多种复杂因素，包括用户脚本或框架的错误，以及处于高压条件下的硬件问题。确定故障是否可恢复对于自动恢复至关重要。一种常见的方法是利用启发式规则的组合，对故障作业的日志进行过滤和正则表达式匹配 [23, 45, 52, 53, 66]。然而，由于错误日志的广泛多样性和复杂性，这种方法经常表现不准确。许多情况下可能没有特定的错误声明，而是多种错误同时存在。例如，一个作业可能因包含NCCLTimeoutError、CUDAError和多种RuntimeError的消息而失败，而根本原因可能是CUDAError。尝试用特定规则集匹配每种错误场景可能变得不切实际。</p>
+<p><strong>➤Real-time Log Compression</strong>：由预训练作业生成的大量日志文件主要包含训练指标记录，其大小可达数百MB。为了加速诊断并满足LLM的上下文长度限制，首先进行日志压缩。系统持续更新一组正则表达式集合，称为过滤规则。这些规则高效地移除常规的日志输出，如初始化信息、训练指标记录、框架输出和调试信息。系统的关键组成部分是基于LLM的日志代理，负责分析实时生成的日志片段，并识别符合固定模式的行。通过这种方式，基于LLM的日志代理动态地编写正则表达式，更新过滤规则，有效地减小日志文件的大小。此外，日志代理将识别的错误消息转发给后续的诊断模块。</p>
+<p>此外，我们采用自一致性方法来确保日志代理结果的稳健性和这些结果的格式化 [95]。这包括对每个日志片段进行多次处理，并让另一个LLM对日志代理的多个结果进行投票，通过正则表达式确保匹配的准确性。随着时间的推移，过滤规则对当前任务变得更加全面，使日志过滤过程更加高效。此外，系统可以利用任务的元数据识别重复或相似的任务，直接应用现有的过滤规则进行日志过滤，从而避免冗余工作。在大型模型集群环境中，这一特性尤其有益，因为较少的租户和任务重新提交是常见的。</p>
+<p>➤ <strong>LLM-assisted Automated Diagnosis</strong>：日志代理高效压缩运行时日志，隔离像CUDA错误或运行时异常等关键错误日志。尽管日志在抵达该模块时已经压缩，但错误日志可能仍然很长。我们采用两步方法来解决这个问题。首先，将错误日志与在过去多失败作业错误的诊断定义的规则进行比较。如果预定义的规则无法诊断问题，压缩日志将通过嵌入模型进行向量化，并存储在向量存储库中，作为检索库。然后，故障代理介入。它利用查询引擎 [55] 搜索向量存储库。通过这种搜索，故障代理可以识别反映作业中断根本原因的日志行，提取错误类型，并指示错误是否源自用户错误或基础设施故障，为恢复过程提供线索。此外，它还为用户或运维团队生成缓解建议。</p>
+<p>故障代理还对故障诊断系统的持续学习做出贡献。对于每一个新的故障，一旦诊断并解决完成，故障代理会编写相应的正则表达式，并将其添加到基于规则的诊断模块中。这个过程是迭代的，确保故障诊断系统不断进化，能够更加熟练地诊断并提出故障的缓解方法。为了实现更加稳健的性能，目前我们使用GPT-4 [2] 进行诊断，计划逐步过渡到我们的LLM模型。</p>
+<p><strong>3. 快速故障检测与恢复：</strong> 根据故障诊断结果，如果属于某种基础设施故障，我们会进行相应的检测测试以识别问题节点。例如，为了迅速解决频繁出现的NVLinkError问题，我们采用了两轮NCCL测试[5]方法。首先，我们将所有节点分成多个两节点组，并在每对节点间执行allgather任务。如果服务器总数为奇数，我们将一个组设为三节点。如果某个组中的allgather任务失败，则该组中的节点可能是故障节点。在第二轮中，我们将可能的故障节点与正常节点配对，形成新的组。每组中的节点继续执行allgather任务，从而识别出故障节点并隔离它们。另一方面，如果故障归因于损失的突然增加（即‘loss spike’[27, 110]），这会自动由我们的预训练框架触发，我们选择恢复到较早的健康检查点并跳过后续的数据批次。此方法有效维护了模型质量。</p>
+<p><strong>系统性能：</strong> 我们的异步检查点策略大幅减少了检查点开销，因为检查点过程不会阻塞训练过程。7B和123B模型大小的检查点时间和开销比例分别减少了3.6到58.7倍（间隔=30分钟）。请注意，持久化存储所需的时间不包含在异步检查点测量中。此外，我们的故障诊断系统显著减少了约90%的人工干预，从而减轻了开发人员的负担。请注意，由于系统的某些组件仍在改进中，这不是严格的评估。</p>
+<p><strong>动机：</strong> 仅凭单一指标（如训练损失）来评估LLM的质量可能无法提供准确的评估[58]。因此，必须结合多种标准并在一系列任务中评估性能[22]。我们的LLM框架在预训练阶段的每个检查点都会进行定期评估。这使开发人员能够跟踪模型训练的进展，并识别出最佳的模型检查点。我们旨在提供快速反馈，以便及时调整。然而，如图6所示，由于资源有限和大量试验的同时提交，评估任务经历了最长的排队延迟。尽管面临这些挑战，我们还是发现了几种加速评估过程的机会。</p>
+<p><strong>系统设计：</strong> 我们开发了一个试验协调器，以协调集群调度器和LLM框架的操作。该设计包括以下三种关键技术，旨在提高评估过程的效率。</p>
+<p> <img src="/2025/02/03/scheduler_1/4789cf2ae27f4ad1a4ef2d28d7f165d7.png" alt="在这里插入图片描述"></p>
+<p><strong>1. 解耦远程模型加载</strong>：由于LLM的规模庞大，从远程存储检索和加载它们可能是一个漫长的过程。此外，同时执行大量评估任务（约60个数据集）会因争用增加而使加载过程更加复杂。如图16（左）所示，在Seren中并行评估试验时，单个节点上单GPU试验的数量从1增加到8时，模型加载速度显著下降，这是由于存储NIC的带宽限制（25Gb/s）。另一方面，当试验数量在8到256 GPU之间时，加载速度趋于稳定。这个观察启发了我们采用一种战略方法。我们将模型加载过程与评估过程分离，而不是将每个评估数据集作为一个单独的试验提交，如图16（右）所示。具体来说，试验协调器首先从集群调度器获取可用节点列表，然后为每个节点生成一系列前置任务。这些任务将模型从远程存储加载到本地共享内存。接着，协调器将评估任务提交给调度器，评估任务通过高带宽PCIe加载模型。该方法有效地利用了空闲的主机内存。在评估完成后，协调器清理文件。</p>
+<p><strong>2. 解耦指标计算</strong>：如图13所示，评估过程通常涉及复杂且耗时的指标计算。例如，在编码数据集如HumanEval [24] 和MBPP [17]上，必须执行合成程序正确性测试。为了解决这一问题，我们将指标计算过程与评估试验分离开来。当模型推理在GPU上完成后，其输出会迅速保存到文件中，从而终止推理任务。由于输出通常是基于文本的，体积较小，这个文件转储过程非常迅速。然后，我们生成CPU任务来进行指标计算。这种方法有效地减少了GPU的空闲时间，加快了评估过程。</p>
+<p><strong>3. 基于优先级的弹性调度：</strong> 除了解耦方法外，我们注意到，对于每个评估数据集的近似试验运行时间，我们已有相当可靠的先验知识。此外，这些数据集是灵活的，我们可以将多个数据集批量合并到一个试验中，以规避模型加载。我们还可以拆分大型数据集并解耦指标计算。因此，试验协调器能够通过分解最大化GPU的占用率，利用先验信息平衡每个GPU的工作负载，并在排序的作业队列中采用轮循分配策略。此外，我们优先处理作业队列中CPU指标计算时间较长的评估试验，以更好地重叠其计算过程。此方法不仅增强了工作负载平衡，还最小化了试验切换的开销。</p>
+<p><strong>系统性能：</strong> 我们对试验协调器进行了代表性测试，使用了一个典型的7B规模LLM评估任务，涉及在63个数据集上的工作负载评估。我们分别在两种不同条件下测量了完成所有评估试验所需的总时间：单节点（代表资源有限）和四节点（代表资源相对充足）。结果显示，试验协调器能够分别将总时间减少1.3倍和1.8倍。</p>
+<p><strong>7 Discussion</strong></p>
+<p><strong>范围限制：</strong> 尽管我们尽最大努力分析了Acme的工作负载，但我们无法覆盖所有类型的工作负载。具体限制包括：</p>
+<ol>
+<li>我们的分析集中在模型服务之前的开发过程，而Acme不包含任何服务作业（即部署阶段的工作负载）。</li>
+<li>我们的分析主要集中在GPU作业，对CPU作业的关注较少。</li>
+<li>我们主要描述了基于Transformer的、仅包含解码器架构的模型（如GPT-3和LLaMA 2）。对于新型的模型架构，我们在附录A.6中简单描述了专家混合（MoE）模型。其他模型架构，如多模态LLM，不在我们的分析范围内。</li>
+</ol>
+<p><strong>持续系统改进：</strong>随着大模型的快速发展，本文所述的系统可能无法满足未来工作负载的需求。对此，我们正在积极优化我们的系统，以适应更先进的训练工作负载，包括长序列预训练、MoE预训练和高效的RLHF。此外，我们正在升级基础设施，特别关注网络接口控制器（NIC），并扩展计算集群，以促进更大规模的预训练。我们还在探索一些有前景的方向，例如通过使用Hydro进行超参数优化来提高LLM的质量，以及为新兴模型架构（如Diffusion和Mamba）提供高效的系统支持。</p>
+<h4 id="8-Conclusion"><a href="#8-Conclusion" class="headerlink" title="8.Conclusion"></a>8.Conclusion</h4><p>总之，我们分析了数据中心Acme中LLM的工作负载和资源利用情况，揭示了LLM开发的独特特点和挑战，例如资源低效和故障影响。我们还发现了一些为LLM系统优化的潜在机会，并介绍了我们在预训练和评估工作负载方面的努力。我们相信，这些经验和见解具有广泛的适用性，能够为后续研究带来显著益处。</p>
+]]></content>
+      <categories>
+        <category>论文阅读笔记</category>
+        <category>调度</category>
+      </categories>
+      <tags>
+        <tag>scheduler</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>transformer学习笔记</title>
     <url>/2025/02/03/transformer-not/</url>
     <content><![CDATA[<p>介绍Transformer的两个阶段，以及如何控制推理过程中的KV-Cach缓存大小来优化推理速度，最后分析Transformer的性能瓶颈和优化策略。</p>
 <span id="more"></span>
@@ -229,6 +566,190 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
       </categories>
       <tags>
         <tag>notes</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ubuntu_git</title>
+    <url>/2025/02/03/ubuntu-git/</url>
+    <content><![CDATA[<p>ubuntu 下git常用指令，后续遇到新的指令会持续更新</p>
+<span id="more"></span>
+<h4 id="ubuntu-下git常用指令【持续更新中】"><a href="#ubuntu-下git常用指令【持续更新中】" class="headerlink" title="ubuntu 下git常用指令【持续更新中】"></a><center>ubuntu 下git常用指令【持续更新中】</center></h4><h5 id="1-下载"><a href="#1-下载" class="headerlink" title="1.下载"></a>1.下载</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt install git		</span><br></pre></td></tr></table></figure>
+<h5 id="2-查看版本"><a href="#2-查看版本" class="headerlink" title="2. 查看版本"></a>2. 查看版本</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git --version</span><br></pre></td></tr></table></figure>
+<h5 id="3-登录git账号"><a href="#3-登录git账号" class="headerlink" title="3. 登录git账号"></a>3. 登录git账号</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git config --global user.email &quot;you@example.com&quot;</span><br><span class="line">git config --global user.name &quot;Your Name&quot;</span><br></pre></td></tr></table></figure>
+<h5 id="4-生成密钥对"><a href="#4-生成密钥对" class="headerlink" title="4.生成密钥对"></a>4.生成密钥对</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ssh-keygen -t rsa -C &quot;your_email@youremail.com&quot;</span><br></pre></td></tr></table></figure>
+<p>复制公钥</p>
+<h5 id="5-复制公钥到github"><a href="#5-复制公钥到github" class="headerlink" title="5. 复制公钥到github"></a>5. 复制公钥到github</h5><p><img src="/2025/02/03/ubuntu-git/91800e522e0020909564e868640d31a5.png" alt="请添加图片描述"></p>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
+        <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ubuntu创建新用户，添加用户权限，删除用户</title>
+    <url>/2025/02/03/ubuntu-opts/</url>
+    <content><![CDATA[<p>ubuntu创建新用户，添加用户权限，删除用户</p>
+<span id="more"></span>
+<p><strong>进入root用户</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">su root</span><br></pre></td></tr></table></figure>
+<p><strong>创建新用户</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo useradd -r -m -s /bin/bash abcd #abcd是用户名称</span><br></pre></td></tr></table></figure>
+<p><strong>设置密码</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo passwd abcd</span><br></pre></td></tr></table></figure>
+<p>来设置新用户的密码。</p>
+<p>其中参数的意义如下：<br>-r：建立系统账号<br>-m：自动建立用户的登入目录<br>-s：指定用户登入后所使用的shell</p>
+<p><strong>修改用户权限</strong></p>
+<p>修改 /etc/sudoers 文件，该文件为只读文件，所以先修改为w权限，再改写，再改回r权限。</p>
+<p>修改文件权限</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo chmod +w /etc/sudoers</span><br></pre></td></tr></table></figure>
+<p>改写文件</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/sudoers</span><br></pre></td></tr></table></figure>
+<p>在文件最后一行加入下列语句<br>有关 vim  的操作可参考 ：<a href="https://blog.csdn.net/weixin_46091520/article/details/138215969">ubuntu 下 vim 的使用-CSDN博客</a></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">用户名(这里是abcd)  ALL=(ALL:ALL) ALL</span><br></pre></td></tr></table></figure>
+<p>改回文件权限：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo chmod -w /etc/sudoers</span><br></pre></td></tr></table></figure>
+<p><strong>删除用户</strong></p>
+<p>分三步：</p>
+<ol>
+<li>删除用户</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo userdel 用户名(这里是abcd)</span><br></pre></td></tr></table></figure>
+<ol>
+<li>删除用户目录</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo rm -rf /home/用户名(这里是abcd)</span><br></pre></td></tr></table></figure>
+<ol>
+<li>删除用户权限相关配置：删除或者注释掉/etc/sudoers中关于要删除用户的配置，否则无法再次创建同名用户</li>
+</ol>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
+        <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>vscode 使用code runner 运行代码输出乱码原因及解决办法</title>
+    <url>/2025/02/03/vscode-codeRunner/</url>
+    <content><![CDATA[<p>解决vscode使用code runner 乱码的问题，主要保持代码的编码方式和终端编码方式一致。可以通过设置终端默认编码方式或代码文件默认编码方式解决。</p>
+<span id="more"></span>
+<h3 id="vscode-使用code-runner-运行代码输出乱码"><a href="#vscode-使用code-runner-运行代码输出乱码" class="headerlink" title="vscode 使用code runner 运行代码输出乱码"></a><center>vscode 使用code runner 运行代码输出乱码</center></h3><h4 id="问题所在："><a href="#问题所在：" class="headerlink" title="问题所在："></a>问题所在：</h4><p><strong>代码文件使用的编码格式</strong>和<strong>终端使用的编码格式不一致</strong>，查看代码文件右下角，会显示代码文件的编码格式。</p>
+<p>测试代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;你好！&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此时输出乱码：</p>
+<p> <img src="/2025/02/03/vscode-codeRunner/484d36f4669b9f38c499083d5143ca98.png" alt="请添加图片描述"></p>
+<p>查看右下角的代码文件编码格式，显示为 <code>utf-8</code><br><img src="/2025/02/03/vscode-codeRunner/cbe03b81b7f64a96dc12c1d89acaf026.png" alt="请添加图片描述"></p>
+<p>终端输入<code>chcp</code>, 显示当前终端编码为 <code>936</code>，即为<code>gbk</code>。<code>utf-8</code>为<code>65001</code>。<br><img src="/2025/02/03/vscode-codeRunner/94714c7fe347e014f04d4f257293dcf5.png" alt="请添加图片描述"></p>
+<h4 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h4><p>可以点击文件右下角，通过编码保存，选择<code>gbk</code>保存；也可以在终端输入<code>chcp 65001</code>将终端编码改为<code>utf-8</code>。这里选择第二种，输入<code>chcp 65001</code> 则代码和终端编码都为<code>utf-8</code>。</p>
+<p>重新运行，正常输出：<br> <img src="/2025/02/03/vscode-codeRunner/2241e55ddc5800fb6022e892c3eb9553.png" alt="请添加图片描述"></p>
+<p>但这种方式只是暂时的，如果终端重新打开，则又得重新改。可以在<code>settings.json</code>中配置终端信息。</p>
+<p>点击扩张-&gt;设置-&gt;在settings.json中设置。</p>
+<p><img src="/2025/02/03/vscode-codeRunner/217f6db2953a80c63dbacb8a046b4f54.png" alt="请添加图片描述"></p>
+<p>在<code>&#123;&#125;</code>中输入以下代码</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 设置终端的参数，编码格式等</span></span><br><span class="line"><span class="string">&quot;terminal.integrated.profiles.windows&quot;</span>: &#123;</span><br><span class="line">    <span class="string">&quot;Command Prompt&quot;</span>: &#123;</span><br><span class="line">        <span class="string">&quot;path&quot;</span>: <span class="string">&quot;C:\\Windows\\System32\\cmd.exe&quot;</span>,</span><br><span class="line">        <span class="string">&quot;args&quot;</span>: [<span class="string">&quot;-NoExit&quot;</span>, <span class="string">&quot;/K&quot;</span>, <span class="string">&quot;chcp 65001&quot;</span>]</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&quot;PowerShell&quot;</span>: &#123;</span><br><span class="line">        <span class="string">&quot;source&quot;</span>: <span class="string">&quot;PowerShell&quot;</span>,</span><br><span class="line">        <span class="string">&quot;args&quot;</span>: [<span class="string">&quot;-NoExit&quot;</span>, <span class="string">&quot;/C&quot;</span>, <span class="string">&quot;chcp 65001&quot;</span>]</span><br><span class="line">    &#125;</span><br><span class="line">&#125;,</span><br><span class="line"><span class="string">&quot;terminal.integrated.defaultProfile.windows&quot;</span>: <span class="string">&quot;PowerShell&quot;</span>,   <span class="comment">//使用PowerShell 或者Command Prompt作为终端</span></span><br></pre></td></tr></table></figure>
+<p><img src="/2025/02/03/vscode-codeRunner/2f59fab9df71d38d711c86059862222c.png" alt="请添加图片描述"></p>
+<p>注意前后的<code>,</code>否则会影响其他设置。现在，每次打开终端都会设置编码为UTF-8</p>
+<p><img src="/2025/02/03/vscode-codeRunner/4af924d125c0be037bd0137122579235.png" alt="请添加图片描述"></p>
+]]></content>
+  </entry>
+  <entry>
+    <title>【论文阅读】Predictive Scheduling for GPU Based Cloud Servers Using Machine Learning</title>
+    <url>/2025/02/03/scheduler-4/</url>
+    <content><![CDATA[<p>提出一个干扰感知调度器Mystic，用于在基于GPU 的集群和云服务器上高效地协同执行应用程序。Mystic识别新应用程序和正在执行的应用程序之间的相似之处，并指导调度器将干扰最小化并提高系统吞吐量。</p>
+<span id="more"></span>
+<h4 id="7-Mystic-Predictive-Scheduling-for-GPU-Based-Cloud-Servers-Using-Machine-Learning"><a href="#7-Mystic-Predictive-Scheduling-for-GPU-Based-Cloud-Servers-Using-Machine-Learning" class="headerlink" title="7.Mystic: Predictive Scheduling for GPU Based Cloud Servers Using Machine Learning"></a>7.Mystic: Predictive Scheduling for GPU Based Cloud Servers Using Machine Learning</h4><ul>
+<li><p>出处：2016IEEE IPDPS  <a href="https://ieeexplore.ieee.org/document/7516031">使用机器学习的基于GPU的云服务器的预测调度</a></p>
+</li>
+<li><p>背景：</p>
+<ul>
+<li>在同一GPU上共同执行的应用程序之间的资源争用会产生干扰，从而导致性能下降，影响应用程序的QoS要求，降低系统整体吞吐率。现有解决方案要么是为了CPU集群开发的，要么是使用静态分析方法，这可能是计算密集型的，并且不能很好地扩展。</li>
+</ul>
+</li>
+<li><p>主要工作：提出一个干扰感知调度器Mystic，用于在基于GPU 的集群和云服务器上高效地协同执行应用程序。Mystic识别新应用程序和正在执行的应用程序之间的相似之处，并指导调度器将干扰最小化并提高系统吞吐量。</p>
+<ul>
+<li>使用<strong>协同过滤</strong>来识别新任务和其他正在执行的任务的相似性。协同过滤广泛应用于推荐系统，通过分析用户的购买历史，并根据用户的兴趣提供个性化的推荐。协同过滤中有两种常用方法——基于邻域的方法和潜在因素模型。</li>
+<li>争用的影响：多上下文GPU上的资源争用可能导致多个协同执行的应用程序之间的干扰，如流多处理器SMS、内存资源、纹理缓存、全局DRAM和互联网络。</li>
+</ul>
+</li>
+<li><p>模型：</p>
+<ul>
+<li><p>Stage I: 初始化器和配置文件生成器。</p>
+<ul>
+<li>初始化程序：查询集群状态表MAST，获取每个计算节点的IP地址、CPU核数、GPU核数和系统内存量，同时为每个传入的应用程序创建状态项。</li>
+<li>Mysitc为每个传入的应用程序启动连个简短的分析，已获得两个随机选择的COI(干扰的原因：流多处理器SMS、内存资源、纹理缓存、全局DRAM和互联网络。)，并存在PIT(概要信息表)中。PIT用PID(进程ID)索引。</li>
+<li>TRM(评级矩阵)：维护离线分析阶段的几个应用程序的完整配置文件。</li>
+</ul>
+</li>
+<li><p>Stage II: 基于协同过滤(CF)的预测</p>
+<ul>
+<li>CF将PIT和TRM作为输入。首先根据PID返回一个稀疏的PIT向量v(不包含所有COI信息)并附加到TRM上，然后执行基于svd的协同过滤填充TRM中所有缺失的值(只有一行缺少值),补全后将该行添加到PRT(预测表)中。知道调度。</li>
+</ul>
+</li>
+<li><p>Stage III: 干扰感知的调度程序</p>
+<p>以MAST和PRT作为输入，生成应用程序对之间的相似度，决定传入的程序A0是否不会与同一GPU上正在执行的应用程序A1并发执行。首先检查是否有空闲GPU，如果有，则分配到最靠近头节点的GPU，如果没有，获取正在执行的PRT条目，干扰分数并分配到干扰分数最低的GPU。</p>
+</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>论文阅读笔记</category>
+        <category>调度</category>
+      </categories>
+      <tags>
+        <tag>scheduler</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>【论文阅读】MICCO:An Enhanced Multi-GPU Scheduling Framework for Many-Body Correlation Functions</title>
+    <url>/2025/02/03/scheduler-3/</url>
+    <content><![CDATA[<p>首先对数据重用和负载平衡的相互作用进行了全面的研究，并提出了局部重用模式和重用边界两个新概念，研究两者之间实现最佳权衡的机会。在此基础上，MICCO提出了一种启发式调度算法和一种基于机器学习的回归模型来生成重用边界的最优设置。</p>
+<span id="more"></span>
+<h4 id="MICCO-An-Enhanced-Multi-GPU-Scheduling-Framework-for-Many-Body-Correlation-Functions"><a href="#MICCO-An-Enhanced-Multi-GPU-Scheduling-Framework-for-Many-Body-Correlation-Functions" class="headerlink" title="MICCO: An Enhanced Multi-GPU Scheduling Framework for Many-Body Correlation Functions"></a>MICCO: An Enhanced Multi-GPU Scheduling Framework for Many-Body Correlation Functions</h4><ul>
+<li><p>出处：2022IEEE    <a href="https://ieeexplore.ieee.org/document/9820666">MICCO:多体关联函数的增强型多GPU调度框架</a></p>
+</li>
+<li><p>主要工作：首先对数据重用和负载平衡的相互作用进行了全面的研究，并提出了局部重用模式和重用边界两个新概念，研究两者之间实现最佳权衡的机会。在此基础上，MICCO提出了一种启发式调度算法和一种基于机器学习的回归模型来生成重用边界的最优设置。</p>
+</li>
+<li><p>动机：</p>
+<ul>
+<li>多体相关函数是计算和内存密集型，现有的基于图的多GPU调度器无法捕获这些以数据为中心的特征，从而导致多体相关函数计算性能不佳。</li>
+<li>数据重用和负载均衡形成了一种权衡关系。</li>
+</ul>
+</li>
+<li><p>影响负载均衡和数据重用均衡的因素：多体相关函数计算的执行主要包括三个部分：内核计算、内存分配和数据通信，后两者称为内存操作。数据重用主要降低内存操作成本。</p>
+<ul>
+<li>局部重用的影响：如果调度程序能够捕获所有的数据重用，并以最佳的数据重用-负载均衡组合为目标进行穷举搜索，则可以找到最优的任务调度方案。但是实际存在两个问题：许多情况下可能全局信息不可用(特别是动态生成收缩图时)；搜索空间太大，NP难问题。本文提出<strong>利用局部重用模式信息动态搜索局部最优调度方案</strong>。</li>
+<li>重用边界：数据重用时允许的负载不均衡的级别。</li>
+</ul>
+</li>
+<li><p>多GPU调度框架</p>
+<p>MICCO的设计侧重于这些方面：</p>
+<ul>
+<li>探索重复张量的数据重用机会。</li>
+<li>改善负载均衡以保持GPU繁忙。</li>
+<li>在考虑内存调出的情况下实现最佳的数据重用-负载均衡权衡。</li>
+</ul>
+<p>主要由两部分组成</p>
+<p> <img src="/2025/02/03/scheduler-3/7e5dfcc212b47c4b6a4ea85225cc1abf.png" alt="在这里插入图片描述"></p>
+</li>
+</ul>
+<p>  MICCO将每个向量的数据特征提取到回归模型中(①)。回归模型生成最优复用边界(②)。启发式算法对张量对进行分类(③)，共同管理三条策略</p>
+<ul>
+<li>启发式调度算法</li>
+<li>预训练的轻量级回归模型</li>
+</ul>
+]]></content>
+      <categories>
+        <category>论文阅读笔记</category>
+        <category>调度</category>
+      </categories>
+      <tags>
+        <tag>scheduler</tag>
       </tags>
   </entry>
 </search>
