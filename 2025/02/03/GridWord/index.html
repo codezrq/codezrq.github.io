@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="使用Q-Learning 和Sara算法解决GridWorld炸弹环境，分为两个类：gridWorld.py和Agent.py:环境类：继承gym.Wrapper，主要实现了render（显示每次的地图）。step（和环境交互，计算奖励值）Agent类：包括两种算法，主要实现了learn（学习方法，每次更新Q-table）predict（根据输入的观察值，预测输出的动作）。sample(根据输入的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GridWord">
+<meta property="og:url" content="http://example.com/2025/02/03/GridWord/index.html">
+<meta property="og:site_name" content="Coderq">
+<meta property="og:description" content="使用Q-Learning 和Sara算法解决GridWorld炸弹环境，分为两个类：gridWorld.py和Agent.py:环境类：继承gym.Wrapper，主要实现了render（显示每次的地图）。step（和环境交互，计算奖励值）Agent类：包括两种算法，主要实现了learn（学习方法，每次更新Q-table）predict（根据输入的观察值，预测输出的动作）。sample(根据输入的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/02/03/GridWord/04e5b899e940ca476855b8887e213762.jpeg">
+<meta property="og:image" content="http://example.com/2025/02/03/GridWord/793e378b13782198478fda89df29b6c6.jpeg">
+<meta property="og:image" content="http://example.com/2025/02/03/GridWord/ba98fb145409026de633a655bc35b888.png">
+<meta property="og:image" content="http://example.com/2025/02/03/GridWord/273454ab8ab09281e8b7c7f0bb4a075d.png">
+<meta property="og:image" content="http://example.com/2025/02/03/GridWord/0f6386cdc0acc2073eca6a7830036471.png">
+<meta property="og:image" content="http://example.com/2025/02/03/GridWord/a9f0ce1ce2c8062bdf3f4fc4ce18a2c4.png">
+<meta property="og:image" content="http://example.com/2025/02/03/GridWord/47ec8bf94b00d507ca26c5e727c9bbc1.png">
+<meta property="og:image" content="http://example.com/2025/02/03/GridWord/104970e1031dc61755d4695e9ed002f9.png">
+<meta property="og:image" content="http://example.com/2025/02/03/GridWord/1b4a2076b2ecb3fa7d1d37c02d97f182.png">
+<meta property="og:image" content="http://example.com/2025/02/03/GridWord/b20f1709936a58223cc3b109b3028859.png">
+<meta property="article:published_time" content="2025-02-03T14:50:07.000Z">
+<meta property="article:modified_time" content="2025-02-03T14:52:17.647Z">
+<meta property="article:author" content="zheng rq">
+<meta property="article:tag" content="Mechine learning">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/02/03/GridWord/04e5b899e940ca476855b8887e213762.jpeg">
+
+<link rel="canonical" href="http://example.com/2025/02/03/GridWord/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>GridWord | Coderq</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Coderq</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/02/03/GridWord/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Coderq">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          GridWord
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-02-03 22:50:07 / 修改时间：22:52:17" itemprop="dateCreated datePublished" datetime="2025-02-03T22:50:07+08:00">2025-02-03</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BD%9C%E4%B8%9A/" itemprop="url" rel="index"><span itemprop="name">作业</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BD%9C%E4%B8%9A/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">机器学习</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>使用Q-Learning 和Sara算法解决GridWorld炸弹环境，分为两个类：gridWorld.py和Agent.py:<br>环境类：继承gym.Wrapper，主要实现了render（显示每次的地图）。step（和环境交互，计算奖励值）<br>Agent类：包括两种算法，主要实现了learn（学习方法，每次更新Q-table）predict（根据输入的观察值，预测输出的动作）。sample(根据输入的观察值，采样输入的动作)<br>整体步骤为，首先根据grdiWordl创建出环境，每次机器人根据环境选择动作并更新。</p>
+<span id="more"></span>
+<h3 id="使用Q-Learning-和-Sara-解决GridWorld-炸弹环境"><a href="#使用Q-Learning-和-Sara-解决GridWorld-炸弹环境" class="headerlink" title="使用Q-Learning 和 Sara 解决GridWorld 炸弹环境"></a><center>使用Q-Learning 和 Sara 解决GridWorld 炸弹环境</center></h3><h4 id="代码链接"><a href="#代码链接" class="headerlink" title="代码链接"></a>代码链接</h4><p><a target="_blank" rel="noopener" href="https://download.csdn.net/download/weixin_46091520/88788389">代码连接</a></p>
+<h4 id="一-实验原理"><a href="#一-实验原理" class="headerlink" title="一.实验原理"></a>一.实验原理</h4><h5 id="1-1-Q-learning-和-Sara-的异同"><a href="#1-1-Q-learning-和-Sara-的异同" class="headerlink" title="1.1 Q-learning 和 Sara 的异同"></a>1.1 Q-learning 和 Sara 的异同</h5><h6 id="1-1-1-相似之处"><a href="#1-1-1-相似之处" class="headerlink" title="1.1.1 相似之处"></a>1.1.1 相似之处</h6><ol>
+<li>两种算法本质都是通过策略迭代得到最优策略。</li>
+<li>两种算法都是基于时序差分法进行更新，可以看作蒙特卡洛仿真和动态规划的结合。</li>
+<li>在选择策略时，都使用 $\epsilon - greedy$ 算法，即以$\epsilon$ 的概率选择使得动作-值函数最大的动作，以$1-\epsilon$的概率随机选择。</li>
+</ol>
+<h6 id="1-1-2-不同之处"><a href="#1-1-2-不同之处" class="headerlink" title="1.1.2 不同之处"></a>1.1.2 不同之处</h6><p>Q-Learning是强化学习算法中value-based的算法，Q即为Q（s,a）就是在某一时刻的 s 状态下(s∈S)，采取 动作a (a∈A)动作能够获得收益的期望，环境会根据agent的动作反馈相应的回报reward r，所以算法的主要思想就是将State与Action构建成一张Q-table来存储Q值，然后根据Q值来选取能够获得最大的收益的动作。<br>Q-learing 算法可用如下伪代码表示：</p>
+<p><img src="/2025/02/03/GridWord/04e5b899e940ca476855b8887e213762.jpeg" alt="在这里插入图片描述"></p>
+<pre><code>Sara和Q-Learning基本一致，可用如下伪代码表示：
+</code></pre><p> <img src="/2025/02/03/GridWord/793e378b13782198478fda89df29b6c6.jpeg" alt="在这里插入图片描述"></p>
+<p>从两个算法的伪代码可以看出，两者的最大区别在于Q-table的更新方式不同：</p>
+<p>Q-Learning更新Q值的公式为：</p>
+<p>$Q(S_t,A_t) \leftarrow Q(S_t, A_t) + \alpha[R_{t+1}+\gamma \underset{a}{max}Q(S_{t+1},a)-Q(S_t,A_t)]$</p>
+<p>Sara更新Q值的公式为：</p>
+<p>$Q(S_t,A_t)\leftarrow Q(S_t,A_t)+\alpha[R_{t+1}+\gamma Q(S_{t+1},A_{t+1})-Q(S_t,A_t)]$</p>
+<ol>
+<li><strong>Q-learning：</strong>在状态$S_t$下，根据 $\epsilon-greedy$策略选择动作$A_{t}$ 到达$S_{t+1}$后，利用状态$S_{t+1}$下的最佳Q值$Q(S_{t+1},a)$来更新$Q(S_t,A_{t})$，但并不真正采取动作$(S_{t+1},a)$ 。更新Q-table用到的值有$<S_t,A_t,reward,S_{t+1}>$</S_t,A_t,reward,S_{t+1}></li>
+<li><strong>Sara:</strong> 在状态$S_t$下,根据 $\epsilon-greedy$ 策略选择动作$A_t$到达$S_{t+1}$之后，选择最大的$(S_{t+1},a)$并真正采取该动作。更新Q-table用到的值有$<S_t,A_t,reward,S_{t+1},A_{t+1}>$ </S_t,A_t,reward,S_{t+1},A_{t+1}></li>
+<li>Q−learning选取动作和更新Q表值的方法不同，而Sarsa选取动作和更新Q表值的方法相同。Q-Learning算法，先假设下一步选取最大奖赏的动作，更新值函数。然后再通过ε-greedy策略选择动作。Sarsa算法，先通过ε-greedy策略执行动作，然后根据所执行的动作，更新值函数。</li>
+<li>可以看出Q-Learning使用的更新方法更激进，即直接选择下一个状态下的最大值进行更新。而Sara算法更保守，基于现有的步骤进行更新，整体上来说Sara更偏向于避免陷阱。</li>
+</ol>
+<h5 id="1-2-算法图解"><a href="#1-2-算法图解" class="headerlink" title="1.2 算法图解"></a>1.2 算法图解</h5><p>两种算法的基本流程出了训练过程中更新参数的方法不同，其余流程相同。可用下图表示：</p>
+<p><img src="/2025/02/03/GridWord/ba98fb145409026de633a655bc35b888.png" alt="在这里插入图片描述"></p>
+<p>​                                                              </p>
+<h4 id="二-算法实现"><a href="#二-算法实现" class="headerlink" title="二.算法实现"></a>二.算法实现</h4><p>整体分为环境类和代码类。</p>
+<h5 id="2-1-环境"><a href="#2-1-环境" class="headerlink" title="2.1 环境"></a>2.1 环境</h5><p>定义类<code>FronzenLakeWapper(gym.Wrapper)</code>，主要实现以下接口：</p>
+<p><code>draw_box</code>: 绘制一个坐标处的矩形框，并做以下填充：</p>
+<ul>
+<li><p>起点：红色</p>
+</li>
+<li><p>出口：黄色</p>
+</li>
+<li>炸弹：黑色</li>
+<li>平地：白色</li>
+</ul>
+<p><code>move_player(self, x, y)</code>:将智能体移动到对应的坐标</p>
+<p><code>render(self)</code>:渲染一帧图像</p>
+<p><code>step(self,action)</code>:根据传入的动作，计算智能体的新坐标，以及对应的返回值。为了训练智能体避免炸弹并且尽量减少路径长度，将奖励值设置如下：</p>
+<ul>
+<li>起点或空地: <code>reward = -2</code></li>
+<li>炸弹：<code>reward = -20</code></li>
+<li>终点：<code>reward = 10</code></li>
+</ul>
+<h5 id="2-2-智能体"><a href="#2-2-智能体" class="headerlink" title="2.2 智能体"></a>2.2 智能体</h5><p>根据使用的算法不同，分别创建类<code>QLearningAgent(object)</code> 和 <code>SaraAgent(object)</code> 。</p>
+<p>两个类有以下相同接口：</p>
+<p><code>sample(self, obs)</code>：根据输入的观察值，使用$\epsilon-greedy$ 策略选择动作。</p>
+<p><code>predict(self, obs)</code>: 根据输入的观察值，预测输出的动作值。</p>
+<p><code>save(self, npy_file)</code>: 将Q表保存到文件中。</p>
+<p><code>restore(self, npy_file)</code>: 从文件中读取Q表数据。</p>
+<p>根据Q表更新公式的不同，实现不同的学习函数。</p>
+<p><code>QLearningAgent.learn(self,obs,action,next_obs,reward,done)</code>:根据当前状态和动作以及下个状态更新Q表。</p>
+<p><code>QLearningAgent.learn(self,obs,action,next_obs,next_action,reward,done)</code>:根据当前状态和动作以及下个状态和下个动作更新Q表。</p>
+<h4 id="三-实验结果及分析"><a href="#三-实验结果及分析" class="headerlink" title="三.实验结果及分析"></a>三.实验结果及分析</h4><h5 id="3-1-输入"><a href="#3-1-输入" class="headerlink" title="3.1 输入"></a>3.1 输入</h5><p>使用文件输入，在<code>input.txt</code>中输入矩阵，例如下图，输入一个$7\times 17$ 的矩阵，其中S表示起点，F表示空地，H表示炸弹，G表示出口。</p>
+<p>   <img src="/2025/02/03/GridWord/273454ab8ab09281e8b7c7f0bb4a075d.png" alt="在这里插入图片描述"></p>
+<h5 id="3-2-可视化环境及移动轨迹"><a href="#3-2-可视化环境及移动轨迹" class="headerlink" title="3.2 可视化环境及移动轨迹"></a>3.2 可视化环境及移动轨迹</h5><p>运行结果，使用乌龟模拟机器人，从起点出发到达终点需要六步，分别如下：</p>
+<p><img src="/2025/02/03/GridWord/0f6386cdc0acc2073eca6a7830036471.png" alt="在这里插入图片描述"></p>
+<h5 id="3-3-学习参数对策略收敛的影响"><a href="#3-3-学习参数对策略收敛的影响" class="headerlink" title="3.3 学习参数对策略收敛的影响"></a>3.3 学习参数对策略收敛的影响</h5><p>训练过程中，当连续五局游戏都成功且总奖励值不变时，认为模型已经收敛</p>
+<h6 id="3-3-1-Q-Learning-算法"><a href="#3-3-1-Q-Learning-算法" class="headerlink" title="3.3.1 Q-Learning 算法"></a>3.3.1 Q-Learning 算法</h6><p>模型的收敛速度随着回报衰减系数变化如下图：</p>
+<p> <img src="/2025/02/03/GridWord/a9f0ce1ce2c8062bdf3f4fc4ce18a2c4.png" alt="在这里插入图片描述"></p>
+<p>从图中可以看出，随着gamma值的增大，模型收敛速度越来越快，从Q-Learning的Q表更新公式可以看出，gamma值越大，更新程度越大，所需的训练次数也越小。</p>
+<p>对各个gmma值下的收敛模型进行1000次测试，所得的成功率和平均步数如下：</p>
+<p>从图中可以看出，当gamma=0.6时，模型的成功率最高并且平均步数最少。原因可能是：gamma值教小时，无法充分学习每步的未来收益，而gamma值过大时，模型采取的策略过于激进，可能出现过拟合。</p>
+<h6 id="3-3-2-Sara-算法"><a href="#3-3-2-Sara-算法" class="headerlink" title="3.3.2 Sara 算法"></a>3.3.2 Sara 算法</h6><p>模型的收敛速度随着回报衰减系数变化如下图：</p>
+<p> <img src="/2025/02/03/GridWord/47ec8bf94b00d507ca26c5e727c9bbc1.png" alt="在这里插入图片描述"></p>
+<p>可以看出，整体来说，随着gamma值的变大，模型收敛所需的训练次数逐渐减少。但gamma从0.1变为0.2时，训练次数显著增加，可能是gamma=0.1时模型陷入局部最优。</p>
+<p>对各个gmma值下的收敛模型进行1000次测试，所得的成功率和平均步数如下：</p>
+<p> <img src="/2025/02/03/GridWord/104970e1031dc61755d4695e9ed002f9.png" alt="在这里插入图片描述"></p>
+<p>从图中可以看出，当 gamma=0.7时，模型的成功率最高并且平均步数最少，原因可能是取一个适中的gamma值更能平衡当前收益和未来收益。同时可以看出，当gamma值由0.1变为0.2时，平均步数显著减少，可能是gamma=0.1时模型陷入局部最优。</p>
+<h5 id="3-4-探究模型鲁棒性"><a href="#3-4-探究模型鲁棒性" class="headerlink" title="3.4 探究模型鲁棒性"></a>3.4 探究模型鲁棒性</h5><p>选取五个规模的地图，分别如下：</p>
+<p><img src="/2025/02/03/GridWord/1b4a2076b2ecb3fa7d1d37c02d97f182.png" alt="在这里插入图片描述"></p>
+<p>分别统计训练到收敛所需回合数以及成功率和平均步数(测试1000回合)：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>地图规模</th>
+<th>收敛所需回合数</th>
+<th>成功率</th>
+<th>平均步数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$2\times2$</td>
+<td>44</td>
+<td>97.2%</td>
+<td>2.17</td>
+</tr>
+<tr>
+<td>$4\times4$</td>
+<td>48</td>
+<td>91.5%</td>
+<td>2.22</td>
+</tr>
+<tr>
+<td>$6\times6$</td>
+<td>403</td>
+<td>93%</td>
+<td>3.50</td>
+</tr>
+<tr>
+<td>$8\times8$</td>
+<td>115</td>
+<td>96.4%</td>
+<td>3.32</td>
+</tr>
+<tr>
+<td>$10\times10$</td>
+<td>998</td>
+<td>91.6%</td>
+<td>6.50</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>从结果可以看出，随着地图的变大，均能保持较高的准确率，说明模型鲁棒性较高。</p>
+<h5 id="3-5-可视化Q表"><a href="#3-5-可视化Q表" class="headerlink" title="3.5 可视化Q表"></a>3.5 可视化Q表</h5><p>从3.3可以看出，Q-learning算法效果较好，下面以Q-learning算法为例，当gamma=0.6时，每训练500个episode输出一次Q表中间结果：</p>
+<p><img src="/2025/02/03/GridWord/b20f1709936a58223cc3b109b3028859.png" alt="在这里插入图片描述"></p>
+<p>可以看出Q表中部分坐标的值始终为0（这些点包括炸弹，出口，以及距离出口较远的点），同时可以看出episode=1500时的对应Q表和episode=2000时对应的Q表几乎没有变化，这也和3.3.1中”当gamma=0.6时，模型训练1136个episode达到收敛“相符合。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Mechine-learning/" rel="tag"># Mechine learning</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/02/03/ubuntu-conda-torch/" rel="prev" title="Ubuntu20.04安装conda和pytorch">
+      <i class="fa fa-chevron-left"></i> Ubuntu20.04安装conda和pytorch
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8Q-Learning-%E5%92%8C-Sara-%E8%A7%A3%E5%86%B3GridWorld-%E7%82%B8%E5%BC%B9%E7%8E%AF%E5%A2%83"><span class="nav-number">1.</span> <span class="nav-text">使用Q-Learning 和 Sara 解决GridWorld 炸弹环境</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E9%93%BE%E6%8E%A5"><span class="nav-number">1.1.</span> <span class="nav-text">代码链接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E5%AE%9E%E9%AA%8C%E5%8E%9F%E7%90%86"><span class="nav-number">1.2.</span> <span class="nav-text">一.实验原理</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-1-Q-learning-%E5%92%8C-Sara-%E7%9A%84%E5%BC%82%E5%90%8C"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.1 Q-learning 和 Sara 的异同</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#1-1-1-%E7%9B%B8%E4%BC%BC%E4%B9%8B%E5%A4%84"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">1.1.1 相似之处</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-1-2-%E4%B8%8D%E5%90%8C%E4%B9%8B%E5%A4%84"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">1.1.2 不同之处</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-%E7%AE%97%E6%B3%95%E5%9B%BE%E8%A7%A3"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2 算法图解</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.</span> <span class="nav-text">二.算法实现</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-%E7%8E%AF%E5%A2%83"><span class="nav-number">1.3.1.</span> <span class="nav-text">2.1 环境</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-%E6%99%BA%E8%83%BD%E4%BD%93"><span class="nav-number">1.3.2.</span> <span class="nav-text">2.2 智能体</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C%E5%8F%8A%E5%88%86%E6%9E%90"><span class="nav-number">1.4.</span> <span class="nav-text">三.实验结果及分析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-%E8%BE%93%E5%85%A5"><span class="nav-number">1.4.1.</span> <span class="nav-text">3.1 输入</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-%E5%8F%AF%E8%A7%86%E5%8C%96%E7%8E%AF%E5%A2%83%E5%8F%8A%E7%A7%BB%E5%8A%A8%E8%BD%A8%E8%BF%B9"><span class="nav-number">1.4.2.</span> <span class="nav-text">3.2 可视化环境及移动轨迹</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-%E5%AD%A6%E4%B9%A0%E5%8F%82%E6%95%B0%E5%AF%B9%E7%AD%96%E7%95%A5%E6%94%B6%E6%95%9B%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="nav-number">1.4.3.</span> <span class="nav-text">3.3 学习参数对策略收敛的影响</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#3-3-1-Q-Learning-%E7%AE%97%E6%B3%95"><span class="nav-number">1.4.3.1.</span> <span class="nav-text">3.3.1 Q-Learning 算法</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-3-2-Sara-%E7%AE%97%E6%B3%95"><span class="nav-number">1.4.3.2.</span> <span class="nav-text">3.3.2 Sara 算法</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-4-%E6%8E%A2%E7%A9%B6%E6%A8%A1%E5%9E%8B%E9%B2%81%E6%A3%92%E6%80%A7"><span class="nav-number">1.4.4.</span> <span class="nav-text">3.4 探究模型鲁棒性</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-5-%E5%8F%AF%E8%A7%86%E5%8C%96Q%E8%A1%A8"><span class="nav-number">1.4.5.</span> <span class="nav-text">3.5 可视化Q表</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

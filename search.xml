@@ -77,24 +77,136 @@
       </tags>
   </entry>
   <entry>
-    <title>Linux下vim的使用</title>
-    <url>/2025/02/03/Linux%E4%B8%8Bvim%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
-    <content><![CDATA[<p>ubuntu 下 vim 的使用。包括下载命令，打开文件命令，修改文件命令。</p>
+    <title>GridWord</title>
+    <url>/2025/02/03/GridWord/</url>
+    <content><![CDATA[<p>使用Q-Learning 和Sara算法解决GridWorld炸弹环境，分为两个类：gridWorld.py和Agent.py:<br>环境类：继承gym.Wrapper，主要实现了render（显示每次的地图）。step（和环境交互，计算奖励值）<br>Agent类：包括两种算法，主要实现了learn（学习方法，每次更新Q-table）predict（根据输入的观察值，预测输出的动作）。sample(根据输入的观察值，采样输入的动作)<br>整体步骤为，首先根据grdiWordl创建出环境，每次机器人根据环境选择动作并更新。</p>
 <span id="more"></span>
-<h3 id="ubuntu-下-vim-的使用"><a href="#ubuntu-下-vim-的使用" class="headerlink" title="ubuntu 下 vim 的使用"></a><center>ubuntu 下 vim 的使用</center></h3><h4 id="1-vim-下载"><a href="#1-vim-下载" class="headerlink" title="1. vim 下载"></a>1. vim 下载</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install vim</span><br></pre></td></tr></table></figure>
-<h4 id="2-vim-使用命令"><a href="#2-vim-使用命令" class="headerlink" title="2. vim 使用命令"></a>2. vim 使用命令</h4><p>打开文件<br><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo vim /etc/apt/sources.list</span><br><span class="line">//格式为sudo vim 文件位置（精确到文件名称）</span><br></pre></td></tr></table></figure></p>
-<p>1.命令模式<br><code>i</code>   切换到输入模式，左下角出现–输入–<br><code>x</code>    删除当前光标所在处字符</p>
-<p>2.输入模式<br>删除、换行、上下移动翻页、退格、输入等和平时输入一样。<br><code>esc</code>    退出输入模式</p>
-<p>3.底线命令模式</p>
-<p>修改完后，按 <code>esc</code> 后，输入<br><code>:wq</code>  退出程序并保存文件<br><code>:w</code> 保存文件<br><code>:q</code> 退出程序</p>
-<p>如果加上 <code>!</code>，则表示强制命令，(<code>:!wq</code>，<code>:!w</code>，<code>:!q</code>)</p>
+<h3 id="使用Q-Learning-和-Sara-解决GridWorld-炸弹环境"><a href="#使用Q-Learning-和-Sara-解决GridWorld-炸弹环境" class="headerlink" title="使用Q-Learning 和 Sara 解决GridWorld 炸弹环境"></a><center>使用Q-Learning 和 Sara 解决GridWorld 炸弹环境</center></h3><h4 id="代码链接"><a href="#代码链接" class="headerlink" title="代码链接"></a>代码链接</h4><p><a href="https://download.csdn.net/download/weixin_46091520/88788389">代码连接</a></p>
+<h4 id="一-实验原理"><a href="#一-实验原理" class="headerlink" title="一.实验原理"></a>一.实验原理</h4><h5 id="1-1-Q-learning-和-Sara-的异同"><a href="#1-1-Q-learning-和-Sara-的异同" class="headerlink" title="1.1 Q-learning 和 Sara 的异同"></a>1.1 Q-learning 和 Sara 的异同</h5><h6 id="1-1-1-相似之处"><a href="#1-1-1-相似之处" class="headerlink" title="1.1.1 相似之处"></a>1.1.1 相似之处</h6><ol>
+<li>两种算法本质都是通过策略迭代得到最优策略。</li>
+<li>两种算法都是基于时序差分法进行更新，可以看作蒙特卡洛仿真和动态规划的结合。</li>
+<li>在选择策略时，都使用 $\epsilon - greedy$ 算法，即以$\epsilon$ 的概率选择使得动作-值函数最大的动作，以$1-\epsilon$的概率随机选择。</li>
+</ol>
+<h6 id="1-1-2-不同之处"><a href="#1-1-2-不同之处" class="headerlink" title="1.1.2 不同之处"></a>1.1.2 不同之处</h6><p>Q-Learning是强化学习算法中value-based的算法，Q即为Q（s,a）就是在某一时刻的 s 状态下(s∈S)，采取 动作a (a∈A)动作能够获得收益的期望，环境会根据agent的动作反馈相应的回报reward r，所以算法的主要思想就是将State与Action构建成一张Q-table来存储Q值，然后根据Q值来选取能够获得最大的收益的动作。<br>Q-learing 算法可用如下伪代码表示：</p>
+<p><img src="/2025/02/03/GridWord/04e5b899e940ca476855b8887e213762.jpeg" alt="在这里插入图片描述"></p>
+<pre><code>Sara和Q-Learning基本一致，可用如下伪代码表示：
+</code></pre><p> <img src="/2025/02/03/GridWord/793e378b13782198478fda89df29b6c6.jpeg" alt="在这里插入图片描述"></p>
+<p>从两个算法的伪代码可以看出，两者的最大区别在于Q-table的更新方式不同：</p>
+<p>Q-Learning更新Q值的公式为：</p>
+<p>$Q(S_t,A_t) \leftarrow Q(S_t, A_t) + \alpha[R_{t+1}+\gamma \underset{a}{max}Q(S_{t+1},a)-Q(S_t,A_t)]$</p>
+<p>Sara更新Q值的公式为：</p>
+<p>$Q(S_t,A_t)\leftarrow Q(S_t,A_t)+\alpha[R_{t+1}+\gamma Q(S_{t+1},A_{t+1})-Q(S_t,A_t)]$</p>
+<ol>
+<li><strong>Q-learning：</strong>在状态$S_t$下，根据 $\epsilon-greedy$策略选择动作$A_{t}$ 到达$S_{t+1}$后，利用状态$S_{t+1}$下的最佳Q值$Q(S_{t+1},a)$来更新$Q(S_t,A_{t})$，但并不真正采取动作$(S_{t+1},a)$ 。更新Q-table用到的值有$<S_t,A_t,reward,S_{t+1}>$</S_t,A_t,reward,S_{t+1}></li>
+<li><strong>Sara:</strong> 在状态$S_t$下,根据 $\epsilon-greedy$ 策略选择动作$A_t$到达$S_{t+1}$之后，选择最大的$(S_{t+1},a)$并真正采取该动作。更新Q-table用到的值有$<S_t,A_t,reward,S_{t+1},A_{t+1}>$ </S_t,A_t,reward,S_{t+1},A_{t+1}></li>
+<li>Q−learning选取动作和更新Q表值的方法不同，而Sarsa选取动作和更新Q表值的方法相同。Q-Learning算法，先假设下一步选取最大奖赏的动作，更新值函数。然后再通过ε-greedy策略选择动作。Sarsa算法，先通过ε-greedy策略执行动作，然后根据所执行的动作，更新值函数。</li>
+<li>可以看出Q-Learning使用的更新方法更激进，即直接选择下一个状态下的最大值进行更新。而Sara算法更保守，基于现有的步骤进行更新，整体上来说Sara更偏向于避免陷阱。</li>
+</ol>
+<h5 id="1-2-算法图解"><a href="#1-2-算法图解" class="headerlink" title="1.2 算法图解"></a>1.2 算法图解</h5><p>两种算法的基本流程出了训练过程中更新参数的方法不同，其余流程相同。可用下图表示：</p>
+<p><img src="/2025/02/03/GridWord/ba98fb145409026de633a655bc35b888.png" alt="在这里插入图片描述"></p>
+<p>​                                                              </p>
+<h4 id="二-算法实现"><a href="#二-算法实现" class="headerlink" title="二.算法实现"></a>二.算法实现</h4><p>整体分为环境类和代码类。</p>
+<h5 id="2-1-环境"><a href="#2-1-环境" class="headerlink" title="2.1 环境"></a>2.1 环境</h5><p>定义类<code>FronzenLakeWapper(gym.Wrapper)</code>，主要实现以下接口：</p>
+<p><code>draw_box</code>: 绘制一个坐标处的矩形框，并做以下填充：</p>
+<ul>
+<li><p>起点：红色</p>
+</li>
+<li><p>出口：黄色</p>
+</li>
+<li>炸弹：黑色</li>
+<li>平地：白色</li>
+</ul>
+<p><code>move_player(self, x, y)</code>:将智能体移动到对应的坐标</p>
+<p><code>render(self)</code>:渲染一帧图像</p>
+<p><code>step(self,action)</code>:根据传入的动作，计算智能体的新坐标，以及对应的返回值。为了训练智能体避免炸弹并且尽量减少路径长度，将奖励值设置如下：</p>
+<ul>
+<li>起点或空地: <code>reward = -2</code></li>
+<li>炸弹：<code>reward = -20</code></li>
+<li>终点：<code>reward = 10</code></li>
+</ul>
+<h5 id="2-2-智能体"><a href="#2-2-智能体" class="headerlink" title="2.2 智能体"></a>2.2 智能体</h5><p>根据使用的算法不同，分别创建类<code>QLearningAgent(object)</code> 和 <code>SaraAgent(object)</code> 。</p>
+<p>两个类有以下相同接口：</p>
+<p><code>sample(self, obs)</code>：根据输入的观察值，使用$\epsilon-greedy$ 策略选择动作。</p>
+<p><code>predict(self, obs)</code>: 根据输入的观察值，预测输出的动作值。</p>
+<p><code>save(self, npy_file)</code>: 将Q表保存到文件中。</p>
+<p><code>restore(self, npy_file)</code>: 从文件中读取Q表数据。</p>
+<p>根据Q表更新公式的不同，实现不同的学习函数。</p>
+<p><code>QLearningAgent.learn(self,obs,action,next_obs,reward,done)</code>:根据当前状态和动作以及下个状态更新Q表。</p>
+<p><code>QLearningAgent.learn(self,obs,action,next_obs,next_action,reward,done)</code>:根据当前状态和动作以及下个状态和下个动作更新Q表。</p>
+<h4 id="三-实验结果及分析"><a href="#三-实验结果及分析" class="headerlink" title="三.实验结果及分析"></a>三.实验结果及分析</h4><h5 id="3-1-输入"><a href="#3-1-输入" class="headerlink" title="3.1 输入"></a>3.1 输入</h5><p>使用文件输入，在<code>input.txt</code>中输入矩阵，例如下图，输入一个$7\times 17$ 的矩阵，其中S表示起点，F表示空地，H表示炸弹，G表示出口。</p>
+<p>   <img src="/2025/02/03/GridWord/273454ab8ab09281e8b7c7f0bb4a075d.png" alt="在这里插入图片描述"></p>
+<h5 id="3-2-可视化环境及移动轨迹"><a href="#3-2-可视化环境及移动轨迹" class="headerlink" title="3.2 可视化环境及移动轨迹"></a>3.2 可视化环境及移动轨迹</h5><p>运行结果，使用乌龟模拟机器人，从起点出发到达终点需要六步，分别如下：</p>
+<p><img src="/2025/02/03/GridWord/0f6386cdc0acc2073eca6a7830036471.png" alt="在这里插入图片描述"></p>
+<h5 id="3-3-学习参数对策略收敛的影响"><a href="#3-3-学习参数对策略收敛的影响" class="headerlink" title="3.3 学习参数对策略收敛的影响"></a>3.3 学习参数对策略收敛的影响</h5><p>训练过程中，当连续五局游戏都成功且总奖励值不变时，认为模型已经收敛</p>
+<h6 id="3-3-1-Q-Learning-算法"><a href="#3-3-1-Q-Learning-算法" class="headerlink" title="3.3.1 Q-Learning 算法"></a>3.3.1 Q-Learning 算法</h6><p>模型的收敛速度随着回报衰减系数变化如下图：</p>
+<p> <img src="/2025/02/03/GridWord/a9f0ce1ce2c8062bdf3f4fc4ce18a2c4.png" alt="在这里插入图片描述"></p>
+<p>从图中可以看出，随着gamma值的增大，模型收敛速度越来越快，从Q-Learning的Q表更新公式可以看出，gamma值越大，更新程度越大，所需的训练次数也越小。</p>
+<p>对各个gmma值下的收敛模型进行1000次测试，所得的成功率和平均步数如下：</p>
+<p>从图中可以看出，当gamma=0.6时，模型的成功率最高并且平均步数最少。原因可能是：gamma值教小时，无法充分学习每步的未来收益，而gamma值过大时，模型采取的策略过于激进，可能出现过拟合。</p>
+<h6 id="3-3-2-Sara-算法"><a href="#3-3-2-Sara-算法" class="headerlink" title="3.3.2 Sara 算法"></a>3.3.2 Sara 算法</h6><p>模型的收敛速度随着回报衰减系数变化如下图：</p>
+<p> <img src="/2025/02/03/GridWord/47ec8bf94b00d507ca26c5e727c9bbc1.png" alt="在这里插入图片描述"></p>
+<p>可以看出，整体来说，随着gamma值的变大，模型收敛所需的训练次数逐渐减少。但gamma从0.1变为0.2时，训练次数显著增加，可能是gamma=0.1时模型陷入局部最优。</p>
+<p>对各个gmma值下的收敛模型进行1000次测试，所得的成功率和平均步数如下：</p>
+<p> <img src="/2025/02/03/GridWord/104970e1031dc61755d4695e9ed002f9.png" alt="在这里插入图片描述"></p>
+<p>从图中可以看出，当 gamma=0.7时，模型的成功率最高并且平均步数最少，原因可能是取一个适中的gamma值更能平衡当前收益和未来收益。同时可以看出，当gamma值由0.1变为0.2时，平均步数显著减少，可能是gamma=0.1时模型陷入局部最优。</p>
+<h5 id="3-4-探究模型鲁棒性"><a href="#3-4-探究模型鲁棒性" class="headerlink" title="3.4 探究模型鲁棒性"></a>3.4 探究模型鲁棒性</h5><p>选取五个规模的地图，分别如下：</p>
+<p><img src="/2025/02/03/GridWord/1b4a2076b2ecb3fa7d1d37c02d97f182.png" alt="在这里插入图片描述"></p>
+<p>分别统计训练到收敛所需回合数以及成功率和平均步数(测试1000回合)：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>地图规模</th>
+<th>收敛所需回合数</th>
+<th>成功率</th>
+<th>平均步数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$2\times2$</td>
+<td>44</td>
+<td>97.2%</td>
+<td>2.17</td>
+</tr>
+<tr>
+<td>$4\times4$</td>
+<td>48</td>
+<td>91.5%</td>
+<td>2.22</td>
+</tr>
+<tr>
+<td>$6\times6$</td>
+<td>403</td>
+<td>93%</td>
+<td>3.50</td>
+</tr>
+<tr>
+<td>$8\times8$</td>
+<td>115</td>
+<td>96.4%</td>
+<td>3.32</td>
+</tr>
+<tr>
+<td>$10\times10$</td>
+<td>998</td>
+<td>91.6%</td>
+<td>6.50</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>从结果可以看出，随着地图的变大，均能保持较高的准确率，说明模型鲁棒性较高。</p>
+<h5 id="3-5-可视化Q表"><a href="#3-5-可视化Q表" class="headerlink" title="3.5 可视化Q表"></a>3.5 可视化Q表</h5><p>从3.3可以看出，Q-learning算法效果较好，下面以Q-learning算法为例，当gamma=0.6时，每训练500个episode输出一次Q表中间结果：</p>
+<p><img src="/2025/02/03/GridWord/b20f1709936a58223cc3b109b3028859.png" alt="在这里插入图片描述"></p>
+<p>可以看出Q表中部分坐标的值始终为0（这些点包括炸弹，出口，以及距离出口较远的点），同时可以看出episode=1500时的对应Q表和episode=2000时对应的Q表几乎没有变化，这也和3.3.1中”当gamma=0.6时，模型训练1136个episode达到收敛“相符合。</p>
 ]]></content>
       <categories>
-        <category>配置</category>
+        <category>作业</category>
+        <category>机器学习</category>
       </categories>
       <tags>
-        <tag>configure</tag>
-        <tag>Linux</tag>
+        <tag>Mechine learning</tag>
       </tags>
   </entry>
   <entry>
@@ -122,90 +234,24 @@
       </tags>
   </entry>
   <entry>
-    <title>使用hexo创建个人博客</title>
-    <url>/2025/01/30/build-my-blog/</url>
-    <content><![CDATA[<p>使用<code>github+hexo</code>创建个人博客</p>
+    <title>Linux下vim的使用</title>
+    <url>/2025/02/03/Linux%E4%B8%8Bvim%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
+    <content><![CDATA[<p>ubuntu 下 vim 的使用。包括下载命令，打开文件命令，修改文件命令。</p>
 <span id="more"></span>
-<h4 id="1-下载工具"><a href="#1-下载工具" class="headerlink" title="1. 下载工具"></a>1. 下载工具</h4><p>自行下载node.js npm ,使用以下命令检查是否正确安装</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">node -v</span><br><span class="line">npm -v</span><br></pre></td></tr></table></figure>
-<h4 id="2-在github上创建仓库"><a href="#2-在github上创建仓库" class="headerlink" title="2. 在github上创建仓库"></a>2. 在github上创建仓库</h4><p><img src="/2025/01/30/build-my-blog/image-20250128013605341.png" alt="image-20250128013605341"></p>
-<h4 id="3-安装hexo"><a href="#3-安装hexo" class="headerlink" title="3.  安装hexo"></a>3.  安装hexo</h4><p>使用以下命令暗转hexo</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install -g hexo -cli</span><br></pre></td></tr></table></figure>
-<h4 id="4-创建Hexo文件夹"><a href="#4-创建Hexo文件夹" class="headerlink" title="4. 创建Hexo文件夹"></a>4. 创建Hexo文件夹</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
-<p>使用以下命令可以本地查看效果</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo server</span><br></pre></td></tr></table></figure>
-<p>网页浏览: localhost:4000查看效果</p>
-<p>初次登录会要求登录github, 现在github不支持密码登录了，只能通过token登录，去GitHub首页</p>
-<p> <img src="/2025/01/30/build-my-blog/image-20250128014633141.png" alt="image-20250128014633141"></p>
-<p>进入setting后拉到最下面的<code>Developer settings</code> 进行生成，期限选择永久。</p>
-<p>修改<code>&lt;folder&gt;</code>下的配置文件<code>_config.yml</code></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repo: &lt;repository url&gt; # 库地址</span><br><span class="line">  branch: [branch]  # 分支，如main</span><br><span class="line">  message: [message] # 缺省为创建时间</span><br></pre></td></tr></table></figure>
-<h4 id="5-发布文章"><a href="#5-发布文章" class="headerlink" title="5. 发布文章"></a>5. 发布文章</h4><p>进入site目录, 右键打开Git Bash, 创建博文:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo new &quot;My New Post&quot;</span><br></pre></td></tr></table></figure>
-<p>然后source文件夹中会出现一个My New Post.md 文件，可以使用Markdown写文章。写完之后运行下面代码将文章渲染到GitHub Pages 上完成发布。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo g # 生成静态页面</span><br><span class="line">hexo d # 部署页面</span><br></pre></td></tr></table></figure>
-<p>也可以不通过命令直接自己生成页面，但要在页面开始加入如下格式:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: Hello World # 标题</span><br><span class="line">date: 2019/3/26 hh:mm:ss # 时间</span><br><span class="line">categories: # 分类</span><br><span class="line">- Diary</span><br><span class="line">tags: # 标签</span><br><span class="line">- PS3</span><br><span class="line">- Games</span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">摘要</span><br><span class="line">&lt;!--more--&gt;</span><br><span class="line">正文</span><br></pre></td></tr></table></figure>
-<p>常用命令</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo new &quot;name&quot;       # 新建文章</span><br><span class="line">hexo new page &quot;name&quot;  # 新建页面</span><br><span class="line">hexo g                # 生成页面</span><br><span class="line">hexo d                # 部署</span><br><span class="line">hexo g -d             # 生成页面并部署</span><br><span class="line">hexo s                # 本地预览</span><br><span class="line">hexo clean            # 清除缓存和已生成的静态文件</span><br><span class="line">hexo help             # 帮助</span><br></pre></td></tr></table></figure>
-<h4 id="6-访问"><a href="#6-访问" class="headerlink" title="6. 访问"></a>6. 访问</h4><p><a href="https://codezrq.github.io/">Hexo</a></p>
-<h4 id="8-更换主题"><a href="#8-更换主题" class="headerlink" title="8. 更换主题"></a>8. 更换主题</h4><p>在<a href="https://hexo.io/themes/">Themes | Hexo</a>上选择主题，进入网站目录下载主题、</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/iissnan/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
-<p>然后修改 _config.yml 中的 theme 为新主题名称 next，发布。（有的主题需要将 _config.yml 替换为主题自带的，参考主题说明。）</p>
-<h4 id="9-更改设置"><a href="#9-更改设置" class="headerlink" title="9. 更改设置"></a>9. 更改设置</h4><p>所有设置都在<code>_config.yml</code>目录下，参考官方文档<a href="https://hexo.io/zh-cn/docs/configuration">配置 | Hexo</a></p>
-<h4 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h4><h5 id="1-在执行-hexo-d-时报错"><a href="#1-在执行-hexo-d-时报错" class="headerlink" title="1. 在执行 hexo d 时报错"></a>1. 在执行 hexo d 时报错</h5><p>fatal: 无法访问 ‘<a href="https://github.com/chixinn/chixinn.github.io.git/">https://github.com/chixinn/chixinn.github.io.git/</a>‘</p>
-<p>解决办法： 其实时git push 的问题。先执行以下命令，再执行<code>hexo d</code></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git config --global --unset http.proxy</span><br></pre></td></tr></table></figure>
-<h5 id="2-在执行-hexo-d-时报错"><a href="#2-在执行-hexo-d-时报错" class="headerlink" title="2.在执行 hexo d 时报错"></a>2.在执行 hexo d 时报错</h5><p>ERROR Deployer not found: git</p>
-<p>解决办法: 没有安装<code>hexo-deployer-git</code></p>
-<p>使用以下命令安装</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
-<h5 id="3-修改并部署后没有效果"><a href="#3-修改并部署后没有效果" class="headerlink" title="3. 修改并部署后没有效果"></a>3. 修改并部署后没有效果</h5><p>使用 <code>hexo clean</code>清理后重新部署</p>
+<h3 id="ubuntu-下-vim-的使用"><a href="#ubuntu-下-vim-的使用" class="headerlink" title="ubuntu 下 vim 的使用"></a><center>ubuntu 下 vim 的使用</center></h3><h4 id="1-vim-下载"><a href="#1-vim-下载" class="headerlink" title="1. vim 下载"></a>1. vim 下载</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install vim</span><br></pre></td></tr></table></figure>
+<h4 id="2-vim-使用命令"><a href="#2-vim-使用命令" class="headerlink" title="2. vim 使用命令"></a>2. vim 使用命令</h4><p>打开文件<br><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo vim /etc/apt/sources.list</span><br><span class="line">//格式为sudo vim 文件位置（精确到文件名称）</span><br></pre></td></tr></table></figure></p>
+<p>1.命令模式<br><code>i</code>   切换到输入模式，左下角出现–输入–<br><code>x</code>    删除当前光标所在处字符</p>
+<p>2.输入模式<br>删除、换行、上下移动翻页、退格、输入等和平时输入一样。<br><code>esc</code>    退出输入模式</p>
+<p>3.底线命令模式</p>
+<p>修改完后，按 <code>esc</code> 后，输入<br><code>:wq</code>  退出程序并保存文件<br><code>:w</code> 保存文件<br><code>:q</code> 退出程序</p>
+<p>如果加上 <code>!</code>，则表示强制命令，(<code>:!wq</code>，<code>:!w</code>，<code>:!q</code>)</p>
 ]]></content>
       <categories>
         <category>配置</category>
       </categories>
       <tags>
         <tag>configure</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Energy Efficient Real-time Task Scheduling on CPU-GPU Hybrid Clusters</title>
-    <url>/2025/02/03/scheduler-2/</url>
-    <content><![CDATA[<p>通过动态电压和频率缩放研究了新兴CPU-GPU混合集群的节能问题。</p>
-<span id="more"></span>
-<h4 id="Energy-Efficient-Real-time-Task-Scheduling-on-CPU-GPU-Hybrid-Clusters"><a href="#Energy-Efficient-Real-time-Task-Scheduling-on-CPU-GPU-Hybrid-Clusters" class="headerlink" title="Energy Efficient Real-time Task Scheduling on CPU-GPU Hybrid Clusters"></a>Energy Efficient Real-time Task Scheduling on CPU-GPU Hybrid Clusters</h4><ul>
-<li><p>出处：2017IEEE Xplore    <a href="https://ieeexplore.ieee.org/document/8057205">基于CPU-GPU混合集群的高效实时任务调度</a></p>
-</li>
-<li><p>主要工作：通过动态电压和频率缩放研究了新兴CPU-GPU混合集群的节能问题。</p>
-<ul>
-<li><p>首次分析GPU特定的DVFS模型。</p>
-</li>
-<li><p>设计了一种新的调度算法：1)利用GPU DVFS来节省能源而不违反任务期限；2)有效将一组任务打包到多个服务器上，以减少动态能耗；3)智能调节DVFS设定，更有效地节省能源。</p>
-</li>
-<li>仿真测试，可以节省多达36%的能耗。</li>
-</ul>
-</li>
-<li><p>做出的假设：<strong>集群中只有一种GPU/CPU，但不同服务器可能有不同数量的GPU-CPU对，且每个任务只能分配给一个CPU-GPU对，每个CPU-GPU对一次只能执行一个任务。</strong></p>
-</li>
-<li><p>目标：最小化在截止日期限制下处理一系列实时任务的总能耗。考虑了对任务执行时间和功耗有显著影响的三个缩放变量：GPU核心电压、CPU核心频率、GPU内存频率。</p>
-</li>
-<li><p>方法：通过数学优化计算每个任务的合适电压/频率设置，并使用启发式调度算法将多个任务分配给集群。</p>
-</li>
-<li><p>数据中心常用的两种节能技术：</p>
-<ul>
-<li>DVFS：dynamic voltage and frequency scaling(动态电压和频率缩放)</li>
-<li>DRS：dynamic resource sleep(动态资源休眠)</li>
-</ul>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>论文阅读笔记</category>
-        <category>调度</category>
-      </categories>
-      <tags>
-        <tag>scheduler</tag>
+        <tag>Linux</tag>
       </tags>
   </entry>
   <entry>
@@ -315,51 +361,1080 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
       </tags>
   </entry>
   <entry>
-    <title>使用 torch.profiler记录模型训练轨迹</title>
-    <url>/2025/02/03/torchProfile/</url>
-    <content><![CDATA[<p>使用 torch.profiler记录模型训练轨迹，并使用Tensorboard进行可视化分析，首先导入需要的库，准备模型和数据集，设置记录器，生成json格式的文件，最后通过Tensorboard可视化。</p>
+    <title>Energy Efficient Real-time Task Scheduling on CPU-GPU Hybrid Clusters</title>
+    <url>/2025/02/03/scheduler-2/</url>
+    <content><![CDATA[<p>通过动态电压和频率缩放研究了新兴CPU-GPU混合集群的节能问题。</p>
 <span id="more"></span>
-<h4 id="Steps"><a href="#Steps" class="headerlink" title="Steps"></a>Steps</h4><ol>
-<li>Prepare the data and model</li>
-<li>Use profiler to record execution events</li>
-<li>Run the profiler</li>
-<li>Use TensorBoard to view results and analyze model performance</li>
-<li>Improve performance with the help of profiler</li>
-<li>Analyze performance with other advanced features</li>
-<li>Additional Practices: Profiling PyTorch on AMD GPUs</li>
-</ol>
-<h4 id="1-Prepare-the-data-and-model"><a href="#1-Prepare-the-data-and-model" class="headerlink" title="1. Prepare the data and model"></a>1. Prepare the data and model</h4><p><strong>导入需要的库:</strong></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn</span><br><span class="line"><span class="keyword">import</span> torch.optim</span><br><span class="line"><span class="keyword">import</span> torch.profiler</span><br><span class="line"><span class="keyword">import</span> torch.utils.data</span><br><span class="line"><span class="keyword">import</span> torchvision.datasets</span><br><span class="line"><span class="keyword">import</span> torchvision.models</span><br><span class="line"><span class="keyword">import</span> torchvision.transforms <span class="keyword">as</span> T</span><br></pre></td></tr></table></figure>
-<p><strong>准备数据集</strong></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">transform = T.Compose(</span><br><span class="line">    [T.Resize(<span class="number">224</span>),</span><br><span class="line">     T.ToTensor(),</span><br><span class="line">     T.Normalize((<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">0.5</span>), (<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">0.5</span>))])</span><br><span class="line">train_set = torchvision.datasets.CIFAR10(root=<span class="string">&#x27;./data&#x27;</span>, train=<span class="literal">True</span>, download=<span class="literal">True</span>, transform=transform)</span><br><span class="line">train_loader = torch.utils.data.DataLoader(train_set, batch_size=<span class="number">32</span>, shuffle=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
-<p><strong>模型定义</strong></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">device = torch.device(<span class="string">&quot;cuda:0&quot;</span>)</span><br><span class="line">model = torchvision.models.resnet18(weights=<span class="string">&#x27;IMAGENET1K_V1&#x27;</span>).cuda(device)</span><br><span class="line">criterion = torch.nn.CrossEntropyLoss().cuda(device)</span><br><span class="line">optimizer = torch.optim.SGD(model.parameters(), lr=<span class="number">0.001</span>, momentum=<span class="number">0.9</span>)</span><br><span class="line">model.train()</span><br></pre></td></tr></table></figure>
-<p><strong>模型训练</strong></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">train</span>(<span class="params">data</span>):</span><br><span class="line">    inputs, labels = data[<span class="number">0</span>].to(device=device), data[<span class="number">1</span>].to(device=device)</span><br><span class="line">    outputs = model(inputs)</span><br><span class="line">    loss = criterion(outputs, labels)</span><br><span class="line">    optimizer.zero_grad()</span><br><span class="line">    loss.backward()</span><br><span class="line">    optimizer.step()</span><br></pre></td></tr></table></figure>
-<h4 id="2-使用Profiler记录轨迹"><a href="#2-使用Profiler记录轨迹" class="headerlink" title="2. 使用Profiler记录轨迹"></a>2. 使用Profiler记录轨迹</h4><p>some useful parameters are as follow:</p>
-<p><code>schedule</code>: 参数例如<code>wait=1,warmup=1,active=3,repeat=1</code>(profiler 会跳过第一个step/iteration，在第二个iter热身，记录三个iter。). In total, the cycle repeats once. Each cycle is called a “span” in TensorBoard plugin.</p>
-<p>在<code>wait</code>阶段，profiler 不生效，在<code>warmup</code> 阶段，proliler 开始工作但不记录结果，是为了减少开销，proliling 的开始开销很大，会影响结果。</p>
-<p><code>on_trace_ready</code> :  在每个cylce结束时调用，例如使用<code>torch.profiler.tensorboard_trace_handler</code>来时生成Tensorboard使用的结果文件，在Profiling后，结果文件存储在<code>./log/resnet18</code>中。</p>
-<p><code>record_shapes</code>：是否记录输入张亮的形状</p>
-<p><code>profile_memory</code>: 追踪张量空间申请和释放。</p>
-<p><code>with_stack</code>：记录算子的代码信息，如果在vscode中集成TensorBoard, 单击可以跳转到特定行。</p>
-<p><a href="https://code.visualstudio.com/docs/datascience/pytorch-support#_tensorboard-integration">https://code.visualstudio.com/docs/datascience/pytorch-support#_tensorboard-integration</a></p>
-<p><strong>以上下文管理器启动/停止：</strong></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">with</span> torch.profiler.profile(</span><br><span class="line">        schedule=torch.profiler.schedule(wait=<span class="number">1</span>, warmup=<span class="number">1</span>, active=<span class="number">3</span>, repeat=<span class="number">1</span>),</span><br><span class="line">        on_trace_ready=torch.profiler.tensorboard_trace_handler(<span class="string">&#x27;./log/resnet18&#x27;</span>),</span><br><span class="line">        record_shapes=<span class="literal">True</span>,</span><br><span class="line">        profile_memory=<span class="literal">True</span>,</span><br><span class="line">        with_stack=<span class="literal">True</span></span><br><span class="line">) <span class="keyword">as</span> prof:</span><br><span class="line">    <span class="keyword">for</span> step, batch_data <span class="keyword">in</span> <span class="built_in">enumerate</span>(train_loader):</span><br><span class="line">        prof.step()  <span class="comment"># Need to call this at each step to notify profiler of steps&#x27; boundary.</span></span><br><span class="line">        <span class="keyword">if</span> step &gt;= <span class="number">1</span> + <span class="number">1</span> + <span class="number">3</span>:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        train(batch_data)</span><br></pre></td></tr></table></figure>
-<p><strong>也可以以非上下文管理器启动/停止：</strong></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">prof = torch.profiler.profile(</span><br><span class="line">        schedule=torch.profiler.schedule(wait=<span class="number">1</span>, warmup=<span class="number">1</span>, active=<span class="number">3</span>, repeat=<span class="number">1</span>),</span><br><span class="line">        on_trace_ready=torch.profiler.tensorboard_trace_handler(<span class="string">&#x27;./log/resnet18&#x27;</span>),</span><br><span class="line">        record_shapes=<span class="literal">True</span>,</span><br><span class="line">        with_stack=<span class="literal">True</span>)</span><br><span class="line">prof.start()</span><br><span class="line"><span class="keyword">for</span> step, batch_data <span class="keyword">in</span> <span class="built_in">enumerate</span>(train_loader):</span><br><span class="line">    prof.step()</span><br><span class="line">    <span class="keyword">if</span> step &gt;= <span class="number">1</span> + <span class="number">1</span> + <span class="number">3</span>:</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">    train(batch_data)</span><br><span class="line">prof.stop()</span><br></pre></td></tr></table></figure>
-<h4 id="3-运行profiler"><a href="#3-运行profiler" class="headerlink" title="3. 运行profiler"></a>3. 运行profiler</h4><h4 id="4-使用Tensorboard展示结果"><a href="#4-使用Tensorboard展示结果" class="headerlink" title="4. 使用Tensorboard展示结果"></a>4. 使用Tensorboard展示结果</h4><p>安装Pytorch Profiler TensorBoard Plugin</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pip install torch_tb_profiler</span><br></pre></td></tr></table></figure>
-<p>登录TensorBoard</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tensorboard --logdir=./log</span><br></pre></td></tr></table></figure>
-<p>打开TensorBoard</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">http://localhost:6006/#pytorch_profiler</span><br></pre></td></tr></table></figure>
+<h4 id="Energy-Efficient-Real-time-Task-Scheduling-on-CPU-GPU-Hybrid-Clusters"><a href="#Energy-Efficient-Real-time-Task-Scheduling-on-CPU-GPU-Hybrid-Clusters" class="headerlink" title="Energy Efficient Real-time Task Scheduling on CPU-GPU Hybrid Clusters"></a>Energy Efficient Real-time Task Scheduling on CPU-GPU Hybrid Clusters</h4><ul>
+<li><p>出处：2017IEEE Xplore    <a href="https://ieeexplore.ieee.org/document/8057205">基于CPU-GPU混合集群的高效实时任务调度</a></p>
+</li>
+<li><p>主要工作：通过动态电压和频率缩放研究了新兴CPU-GPU混合集群的节能问题。</p>
+<ul>
+<li><p>首次分析GPU特定的DVFS模型。</p>
+</li>
+<li><p>设计了一种新的调度算法：1)利用GPU DVFS来节省能源而不违反任务期限；2)有效将一组任务打包到多个服务器上，以减少动态能耗；3)智能调节DVFS设定，更有效地节省能源。</p>
+</li>
+<li>仿真测试，可以节省多达36%的能耗。</li>
+</ul>
+</li>
+<li><p>做出的假设：<strong>集群中只有一种GPU/CPU，但不同服务器可能有不同数量的GPU-CPU对，且每个任务只能分配给一个CPU-GPU对，每个CPU-GPU对一次只能执行一个任务。</strong></p>
+</li>
+<li><p>目标：最小化在截止日期限制下处理一系列实时任务的总能耗。考虑了对任务执行时间和功耗有显著影响的三个缩放变量：GPU核心电压、CPU核心频率、GPU内存频率。</p>
+</li>
+<li><p>方法：通过数学优化计算每个任务的合适电压/频率设置，并使用启发式调度算法将多个任务分配给集群。</p>
+</li>
+<li><p>数据中心常用的两种节能技术：</p>
+<ul>
+<li>DVFS：dynamic voltage and frequency scaling(动态电压和频率缩放)</li>
+<li>DRS：dynamic resource sleep(动态资源休眠)</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>论文阅读笔记</category>
+        <category>调度</category>
+      </categories>
+      <tags>
+        <tag>scheduler</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>使用hexo创建个人博客</title>
+    <url>/2025/01/30/build-my-blog/</url>
+    <content><![CDATA[<p>使用<code>github+hexo</code>创建个人博客</p>
+<span id="more"></span>
+<h4 id="1-下载工具"><a href="#1-下载工具" class="headerlink" title="1. 下载工具"></a>1. 下载工具</h4><p>自行下载node.js npm ,使用以下命令检查是否正确安装</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">node -v</span><br><span class="line">npm -v</span><br></pre></td></tr></table></figure>
+<h4 id="2-在github上创建仓库"><a href="#2-在github上创建仓库" class="headerlink" title="2. 在github上创建仓库"></a>2. 在github上创建仓库</h4><p><img src="/2025/01/30/build-my-blog/image-20250128013605341.png" alt="image-20250128013605341"></p>
+<h4 id="3-安装hexo"><a href="#3-安装hexo" class="headerlink" title="3.  安装hexo"></a>3.  安装hexo</h4><p>使用以下命令暗转hexo</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install -g hexo -cli</span><br></pre></td></tr></table></figure>
+<h4 id="4-创建Hexo文件夹"><a href="#4-创建Hexo文件夹" class="headerlink" title="4. 创建Hexo文件夹"></a>4. 创建Hexo文件夹</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
+<p>使用以下命令可以本地查看效果</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo server</span><br></pre></td></tr></table></figure>
+<p>网页浏览: localhost:4000查看效果</p>
+<p>初次登录会要求登录github, 现在github不支持密码登录了，只能通过token登录，去GitHub首页</p>
+<p> <img src="/2025/01/30/build-my-blog/image-20250128014633141.png" alt="image-20250128014633141"></p>
+<p>进入setting后拉到最下面的<code>Developer settings</code> 进行生成，期限选择永久。</p>
+<p>修改<code>&lt;folder&gt;</code>下的配置文件<code>_config.yml</code></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repo: &lt;repository url&gt; # 库地址</span><br><span class="line">  branch: [branch]  # 分支，如main</span><br><span class="line">  message: [message] # 缺省为创建时间</span><br></pre></td></tr></table></figure>
+<h4 id="5-发布文章"><a href="#5-发布文章" class="headerlink" title="5. 发布文章"></a>5. 发布文章</h4><p>进入site目录, 右键打开Git Bash, 创建博文:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo new &quot;My New Post&quot;</span><br></pre></td></tr></table></figure>
+<p>然后source文件夹中会出现一个My New Post.md 文件，可以使用Markdown写文章。写完之后运行下面代码将文章渲染到GitHub Pages 上完成发布。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo g # 生成静态页面</span><br><span class="line">hexo d # 部署页面</span><br></pre></td></tr></table></figure>
+<p>也可以不通过命令直接自己生成页面，但要在页面开始加入如下格式:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: Hello World # 标题</span><br><span class="line">date: 2019/3/26 hh:mm:ss # 时间</span><br><span class="line">categories: # 分类</span><br><span class="line">- Diary</span><br><span class="line">tags: # 标签</span><br><span class="line">- PS3</span><br><span class="line">- Games</span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">摘要</span><br><span class="line">&lt;!--more--&gt;</span><br><span class="line">正文</span><br></pre></td></tr></table></figure>
+<p>常用命令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo new &quot;name&quot;       # 新建文章</span><br><span class="line">hexo new page &quot;name&quot;  # 新建页面</span><br><span class="line">hexo g                # 生成页面</span><br><span class="line">hexo d                # 部署</span><br><span class="line">hexo g -d             # 生成页面并部署</span><br><span class="line">hexo s                # 本地预览</span><br><span class="line">hexo clean            # 清除缓存和已生成的静态文件</span><br><span class="line">hexo help             # 帮助</span><br></pre></td></tr></table></figure>
+<h4 id="6-访问"><a href="#6-访问" class="headerlink" title="6. 访问"></a>6. 访问</h4><p><a href="https://codezrq.github.io/">Hexo</a></p>
+<h4 id="8-更换主题"><a href="#8-更换主题" class="headerlink" title="8. 更换主题"></a>8. 更换主题</h4><p>在<a href="https://hexo.io/themes/">Themes | Hexo</a>上选择主题，进入网站目录下载主题、</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/iissnan/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
+<p>然后修改 _config.yml 中的 theme 为新主题名称 next，发布。（有的主题需要将 _config.yml 替换为主题自带的，参考主题说明。）</p>
+<h4 id="9-更改设置"><a href="#9-更改设置" class="headerlink" title="9. 更改设置"></a>9. 更改设置</h4><p>所有设置都在<code>_config.yml</code>目录下，参考官方文档<a href="https://hexo.io/zh-cn/docs/configuration">配置 | Hexo</a></p>
+<h4 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h4><h5 id="1-在执行-hexo-d-时报错"><a href="#1-在执行-hexo-d-时报错" class="headerlink" title="1. 在执行 hexo d 时报错"></a>1. 在执行 hexo d 时报错</h5><p>fatal: 无法访问 ‘<a href="https://github.com/chixinn/chixinn.github.io.git/">https://github.com/chixinn/chixinn.github.io.git/</a>‘</p>
+<p>解决办法： 其实时git push 的问题。先执行以下命令，再执行<code>hexo d</code></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git config --global --unset http.proxy</span><br></pre></td></tr></table></figure>
+<h5 id="2-在执行-hexo-d-时报错"><a href="#2-在执行-hexo-d-时报错" class="headerlink" title="2.在执行 hexo d 时报错"></a>2.在执行 hexo d 时报错</h5><p>ERROR Deployer not found: git</p>
+<p>解决办法: 没有安装<code>hexo-deployer-git</code></p>
+<p>使用以下命令安装</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+<h5 id="3-修改并部署后没有效果"><a href="#3-修改并部署后没有效果" class="headerlink" title="3. 修改并部署后没有效果"></a>3. 修改并部署后没有效果</h5><p>使用 <code>hexo clean</code>清理后重新部署</p>
 ]]></content>
       <categories>
         <category>配置</category>
       </categories>
       <tags>
         <tag>configure</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>【论文阅读】MICCO:An Enhanced Multi-GPU Scheduling Framework for Many-Body Correlation Functions</title>
+    <url>/2025/02/03/scheduler-3/</url>
+    <content><![CDATA[<p>首先对数据重用和负载平衡的相互作用进行了全面的研究，并提出了局部重用模式和重用边界两个新概念，研究两者之间实现最佳权衡的机会。在此基础上，MICCO提出了一种启发式调度算法和一种基于机器学习的回归模型来生成重用边界的最优设置。</p>
+<span id="more"></span>
+<h4 id="MICCO-An-Enhanced-Multi-GPU-Scheduling-Framework-for-Many-Body-Correlation-Functions"><a href="#MICCO-An-Enhanced-Multi-GPU-Scheduling-Framework-for-Many-Body-Correlation-Functions" class="headerlink" title="MICCO: An Enhanced Multi-GPU Scheduling Framework for Many-Body Correlation Functions"></a>MICCO: An Enhanced Multi-GPU Scheduling Framework for Many-Body Correlation Functions</h4><ul>
+<li><p>出处：2022IEEE    <a href="https://ieeexplore.ieee.org/document/9820666">MICCO:多体关联函数的增强型多GPU调度框架</a></p>
+</li>
+<li><p>主要工作：首先对数据重用和负载平衡的相互作用进行了全面的研究，并提出了局部重用模式和重用边界两个新概念，研究两者之间实现最佳权衡的机会。在此基础上，MICCO提出了一种启发式调度算法和一种基于机器学习的回归模型来生成重用边界的最优设置。</p>
+</li>
+<li><p>动机：</p>
+<ul>
+<li>多体相关函数是计算和内存密集型，现有的基于图的多GPU调度器无法捕获这些以数据为中心的特征，从而导致多体相关函数计算性能不佳。</li>
+<li>数据重用和负载均衡形成了一种权衡关系。</li>
+</ul>
+</li>
+<li><p>影响负载均衡和数据重用均衡的因素：多体相关函数计算的执行主要包括三个部分：内核计算、内存分配和数据通信，后两者称为内存操作。数据重用主要降低内存操作成本。</p>
+<ul>
+<li>局部重用的影响：如果调度程序能够捕获所有的数据重用，并以最佳的数据重用-负载均衡组合为目标进行穷举搜索，则可以找到最优的任务调度方案。但是实际存在两个问题：许多情况下可能全局信息不可用(特别是动态生成收缩图时)；搜索空间太大，NP难问题。本文提出<strong>利用局部重用模式信息动态搜索局部最优调度方案</strong>。</li>
+<li>重用边界：数据重用时允许的负载不均衡的级别。</li>
+</ul>
+</li>
+<li><p>多GPU调度框架</p>
+<p>MICCO的设计侧重于这些方面：</p>
+<ul>
+<li>探索重复张量的数据重用机会。</li>
+<li>改善负载均衡以保持GPU繁忙。</li>
+<li>在考虑内存调出的情况下实现最佳的数据重用-负载均衡权衡。</li>
+</ul>
+<p>主要由两部分组成</p>
+<p> <img src="/2025/02/03/scheduler-3/7e5dfcc212b47c4b6a4ea85225cc1abf.png" alt="在这里插入图片描述"></p>
+</li>
+</ul>
+<p>  MICCO将每个向量的数据特征提取到回归模型中(①)。回归模型生成最优复用边界(②)。启发式算法对张量对进行分类(③)，共同管理三条策略</p>
+<ul>
+<li>启发式调度算法</li>
+<li>预训练的轻量级回归模型</li>
+</ul>
+]]></content>
+      <categories>
+        <category>论文阅读笔记</category>
+        <category>调度</category>
+      </categories>
+      <tags>
+        <tag>scheduler</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>【论文阅读】Predictive Scheduling for GPU Based Cloud Servers Using Machine Learning</title>
+    <url>/2025/02/03/scheduler-4/</url>
+    <content><![CDATA[<p>提出一个干扰感知调度器Mystic，用于在基于GPU 的集群和云服务器上高效地协同执行应用程序。Mystic识别新应用程序和正在执行的应用程序之间的相似之处，并指导调度器将干扰最小化并提高系统吞吐量。</p>
+<span id="more"></span>
+<h4 id="7-Mystic-Predictive-Scheduling-for-GPU-Based-Cloud-Servers-Using-Machine-Learning"><a href="#7-Mystic-Predictive-Scheduling-for-GPU-Based-Cloud-Servers-Using-Machine-Learning" class="headerlink" title="7.Mystic: Predictive Scheduling for GPU Based Cloud Servers Using Machine Learning"></a>7.Mystic: Predictive Scheduling for GPU Based Cloud Servers Using Machine Learning</h4><ul>
+<li><p>出处：2016IEEE IPDPS  <a href="https://ieeexplore.ieee.org/document/7516031">使用机器学习的基于GPU的云服务器的预测调度</a></p>
+</li>
+<li><p>背景：</p>
+<ul>
+<li>在同一GPU上共同执行的应用程序之间的资源争用会产生干扰，从而导致性能下降，影响应用程序的QoS要求，降低系统整体吞吐率。现有解决方案要么是为了CPU集群开发的，要么是使用静态分析方法，这可能是计算密集型的，并且不能很好地扩展。</li>
+</ul>
+</li>
+<li><p>主要工作：提出一个干扰感知调度器Mystic，用于在基于GPU 的集群和云服务器上高效地协同执行应用程序。Mystic识别新应用程序和正在执行的应用程序之间的相似之处，并指导调度器将干扰最小化并提高系统吞吐量。</p>
+<ul>
+<li>使用<strong>协同过滤</strong>来识别新任务和其他正在执行的任务的相似性。协同过滤广泛应用于推荐系统，通过分析用户的购买历史，并根据用户的兴趣提供个性化的推荐。协同过滤中有两种常用方法——基于邻域的方法和潜在因素模型。</li>
+<li>争用的影响：多上下文GPU上的资源争用可能导致多个协同执行的应用程序之间的干扰，如流多处理器SMS、内存资源、纹理缓存、全局DRAM和互联网络。</li>
+</ul>
+</li>
+<li><p>模型：</p>
+<ul>
+<li><p>Stage I: 初始化器和配置文件生成器。</p>
+<ul>
+<li>初始化程序：查询集群状态表MAST，获取每个计算节点的IP地址、CPU核数、GPU核数和系统内存量，同时为每个传入的应用程序创建状态项。</li>
+<li>Mysitc为每个传入的应用程序启动连个简短的分析，已获得两个随机选择的COI(干扰的原因：流多处理器SMS、内存资源、纹理缓存、全局DRAM和互联网络。)，并存在PIT(概要信息表)中。PIT用PID(进程ID)索引。</li>
+<li>TRM(评级矩阵)：维护离线分析阶段的几个应用程序的完整配置文件。</li>
+</ul>
+</li>
+<li><p>Stage II: 基于协同过滤(CF)的预测</p>
+<ul>
+<li>CF将PIT和TRM作为输入。首先根据PID返回一个稀疏的PIT向量v(不包含所有COI信息)并附加到TRM上，然后执行基于svd的协同过滤填充TRM中所有缺失的值(只有一行缺少值),补全后将该行添加到PRT(预测表)中。知道调度。</li>
+</ul>
+</li>
+<li><p>Stage III: 干扰感知的调度程序</p>
+<p>以MAST和PRT作为输入，生成应用程序对之间的相似度，决定传入的程序A0是否不会与同一GPU上正在执行的应用程序A1并发执行。首先检查是否有空闲GPU，如果有，则分配到最靠近头节点的GPU，如果没有，获取正在执行的PRT条目，干扰分数并分配到干扰分数最低的GPU。</p>
+</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>论文阅读笔记</category>
+        <category>调度</category>
+      </categories>
+      <tags>
+        <tag>scheduler</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>markdown_note“</title>
+    <url>/2025/02/03/markdown-note/</url>
+    <content><![CDATA[<p>markdown 常用符号大全，包括数学符号，逻辑符号，运算符号，多行公式，希腊字母，矩阵，括号，表格，真值表、流程图</p>
+<span id="more"></span>
+<h3 id="markdown-常用符号大全"><a href="#markdown-常用符号大全" class="headerlink" title="markdown 常用符号大全"></a><center>markdown 常用符号大全</center></h3><h4 id="标题符号"><a href="#标题符号" class="headerlink" title="标题符号"></a>标题符号</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>语法</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>#</td>
+<td>一级标题</td>
+</tr>
+<tr>
+<td>##</td>
+<td>二级标题(# 越多，级数越多，依次类推)</td>
+</tr>
+<tr>
+<td>+</td>
+<td>无序列表(可嵌套)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="数学符号"><a href="#数学符号" class="headerlink" title="数学符号"></a>数学符号</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>含义</th>
+<th>语法</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>点乘</td>
+<td>a \times b</td>
+<td>$a\times b$</td>
+</tr>
+<tr>
+<td>叉乘</td>
+<td>a \cdot b</td>
+<td>$a \cdot b$</td>
+</tr>
+<tr>
+<td>内积</td>
+<td>\langle a,b \rangle</td>
+<td>$\langle a, b\rangle$</td>
+</tr>
+<tr>
+<td>外积</td>
+<td>a \otimes b</td>
+<td>$a\otimes b$</td>
+</tr>
+<tr>
+<td>任意</td>
+<td>\forall</td>
+<td>$\forall$</td>
+</tr>
+<tr>
+<td>存在</td>
+<td>\exists</td>
+<td>$\exists$</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="花体字母"><a href="#花体字母" class="headerlink" title="花体字母"></a>花体字母</h4><p>以字母A为例，其他字母类似</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>语法</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\mathbb{A}</td>
+<td>$\mathbb{R}$</td>
+</tr>
+<tr>
+<td>\mathcal{A}</td>
+<td>$\mathcal{A}$</td>
+</tr>
+<tr>
+<td>\mathscr{A}</td>
+<td>$\mathscr{A}$</td>
+</tr>
+<tr>
+<td>\mathrm{A}</td>
+<td>$\mathrm{A}$</td>
+</tr>
+<tr>
+<td>\mathbf{A}</td>
+<td>$\mathbf{A}$</td>
+</tr>
+<tr>
+<td>\mathit{A}</td>
+<td>$\mathit{A}$</td>
+</tr>
+<tr>
+<td>\mathtt{A}</td>
+<td>$\mathtt{A}$</td>
+</tr>
+<tr>
+<td>\mathfrak{A}</td>
+<td>$\mathfrak{A}$</td>
+</tr>
+<tr>
+<td>\mathsf{A}</td>
+<td>$\mathsf{A}$</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="分段函数"><a href="#分段函数" class="headerlink" title="分段函数"></a>分段函数</h4><figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">$f(x) = \begin&#123;cases&#125;  </span><br><span class="line">x^2 + 2x + 1, &amp; \text&#123;当 &#125; x &lt; 0 \text&#123; 时&#125; \\  </span><br><span class="line">3x + 2, &amp; \text&#123;当 &#125; 0 \leq x &lt; 1 \text&#123; 时&#125; \\  </span><br><span class="line">x + 3, &amp; \text&#123;当 &#125; x \geq 1 \text&#123; 时&#125;  </span><br><span class="line">\end&#123;cases&#125;$</span><br></pre></td></tr></table></figure>
+<p>$f(x) = \begin{cases}<br>x^2 + 2x + 1, &amp; \text{当 } x &lt; 0 \text{ 时} \\<br>3x + 2, &amp; \text{当 } 0 \leq x &lt; 1 \text{ 时} \\<br>x + 3, &amp; \text{当 } x \geq 1 \text{ 时}<br>\end{cases}$</p>
+<h4 id="多行公式"><a href="#多行公式" class="headerlink" title="多行公式"></a>多行公式</h4><figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">$\begin&#123;aligned&#125;</span><br><span class="line">s&amp;=\frac&#123;1&#125;&#123;2&#125;(a+b)h\\</span><br><span class="line">&amp;=\frac&#123;1&#125;&#123;2&#125;(8+12)·6\\</span><br><span class="line">&amp;=10·6=60</span><br><span class="line">\end&#123;aligned&#125;$</span><br></pre></td></tr></table></figure>
+<p>$\begin{aligned}<br>s&amp;=\frac{1}{2}(a+b)h\\<br>&amp;=\frac{1}{2}(8+12)·6\\<br>&amp;=10·6=60<br>\end{aligned}$</p>
+<h4 id="数学符号-1"><a href="#数学符号-1" class="headerlink" title="数学符号"></a>数学符号</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>含义</th>
+<th>语法</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>底端对齐省略号</td>
+<td>1, 2, \ldots , n</td>
+<td>$1, 2, \ldots , n$</td>
+</tr>
+<tr>
+<td>中线对齐省略号</td>
+<td>1, 2, \cdots, n</td>
+<td>$1,2,\cdots,n$</td>
+</tr>
+<tr>
+<td>竖直省略号</td>
+<td>\vdots</td>
+<td>$\vdots$</td>
+</tr>
+<tr>
+<td>斜对齐省略号</td>
+<td>\ddots</td>
+<td>$\ddots$</td>
+</tr>
+<tr>
+<td>虚数集合</td>
+<td>\imath</td>
+<td>$\imath$</td>
+</tr>
+<tr>
+<td>实数集合</td>
+<td>\mathbb{R}</td>
+<td>$\mathbb{R}$</td>
+</tr>
+<tr>
+<td>自然数集合</td>
+<td>\mathbb{Z}</td>
+<td>$\mathbb{Z}$</td>
+</tr>
+<tr>
+<td>空集</td>
+<td>$\emptyset</td>
+<td>$</td>
+<td></td>
+</tr>
+<tr>
+<td>上标</td>
+<td>\hat{x}</td>
+<td>$\hat{x}$</td>
+</tr>
+<tr>
+<td>上标</td>
+<td>\check{x}</td>
+<td>$\check{x}$</td>
+</tr>
+<tr>
+<td>上标</td>
+<td>\breve{x}</td>
+<td>$\breve{x}$</td>
+</tr>
+<tr>
+<td>上标</td>
+<td>\tilde{x}</td>
+<td>$\tilde{x}$</td>
+</tr>
+<tr>
+<td>上标</td>
+<td>\bar{x}</td>
+<td>$\bar{a}$</td>
+</tr>
+<tr>
+<td>向量</td>
+<td>\vec{x}</td>
+<td>$\vec{x}$</td>
+</tr>
+<tr>
+<td>上标</td>
+<td>\acute{x}</td>
+<td>$\acute{x}$</td>
+</tr>
+<tr>
+<td>上标</td>
+<td>\mathring{x}</td>
+<td>$\mathring{x}$</td>
+</tr>
+<tr>
+<td>一阶导</td>
+<td>\dot{a}</td>
+<td>$\dot{a}$</td>
+</tr>
+<tr>
+<td>二阶导</td>
+<td>\ddot{a}</td>
+<td>$\ddot{a}$</td>
+</tr>
+<tr>
+<td>上箭头</td>
+<td>\uparrow</td>
+<td>$\uparrow$</td>
+</tr>
+<tr>
+<td>上箭头</td>
+<td>\Uparrow</td>
+<td>$\Uparrow$</td>
+</tr>
+<tr>
+<td>下箭头</td>
+<td>\downarrow</td>
+<td>$\downarrow$</td>
+</tr>
+<tr>
+<td>下箭头</td>
+<td>\Downarrow</td>
+<td>$\Downarrow$</td>
+</tr>
+<tr>
+<td>左箭头</td>
+<td>\leftarrow</td>
+<td>$\leftarrow$</td>
+</tr>
+<tr>
+<td>左箭头</td>
+<td>\Leftarrow</td>
+<td>$\Leftarrow$</td>
+</tr>
+<tr>
+<td>右箭头</td>
+<td>\rightarrow</td>
+<td>$\rightarrow$</td>
+</tr>
+<tr>
+<td>右箭头</td>
+<td>\Rightarrow</td>
+<td>$\Rightarrow$</td>
+</tr>
+<tr>
+<td>上划线</td>
+<td>\overline{AB}</td>
+<td>$\overline{AB}$</td>
+</tr>
+<tr>
+<td>下划线</td>
+<td>\underline{AB}</td>
+<td>$\underline{AB}$</td>
+</tr>
+<tr>
+<td>上括号</td>
+<td>\overbrace{1+2+\cdots+n}</td>
+<td>$\overbrace{1+2+\cdots+n}$</td>
+</tr>
+<tr>
+<td>下括号</td>
+<td>\underbrace{1+2+\cdots+n}</td>
+<td>$\underbrace{1+2+\cdots+n}$</td>
+</tr>
+<tr>
+<td>在字母下添加字母</td>
+<td>\mathop{Max}\limits_{x \in X}</td>
+<td>$\mathop{Max}\limits_{x \in X}$</td>
+</tr>
+<tr>
+<td>上取整</td>
+<td>\lceil x \rceil</td>
+<td>$\lceil x \rceil$</td>
+</tr>
+<tr>
+<td>下取整</td>
+<td>\lfloor x \rfloor</td>
+<td>$\lfloor x \rfloor$</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="常用微分符号"><a href="#常用微分符号" class="headerlink" title="常用微分符号"></a>常用微分符号</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>语法</th>
+<th>效果</th>
+<th>语法</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\nabla</td>
+<td>$\nabla$</td>
+<td>\partial x</td>
+<td>$\partial x$</td>
+</tr>
+<tr>
+<td>\mathrm{d}x</td>
+<td>$\mathrm{d}x$</td>
+<td>\dot x</td>
+<td>$\dot x$</td>
+</tr>
+<tr>
+<td>\ddot y</td>
+<td>$\ddot y$</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="希腊字母"><a href="#希腊字母" class="headerlink" title="希腊字母"></a>希腊字母</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>字母</th>
+<th>实现</th>
+<th>字母</th>
+<th>实现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>A</td>
+<td>α</td>
+<td>\alhpa</td>
+</tr>
+<tr>
+<td>B</td>
+<td>B</td>
+<td>β</td>
+<td>\beta</td>
+</tr>
+<tr>
+<td>Γ</td>
+<td>\Gamma</td>
+<td>γ</td>
+<td>\gamma</td>
+</tr>
+<tr>
+<td>Δ</td>
+<td>\Delta</td>
+<td>δ</td>
+<td>\delta</td>
+</tr>
+<tr>
+<td>E</td>
+<td>E</td>
+<td>ϵ</td>
+<td>\epsilon</td>
+</tr>
+<tr>
+<td>Z</td>
+<td>Z</td>
+<td>ζ</td>
+<td>\zet</td>
+</tr>
+<tr>
+<td>H</td>
+<td>H</td>
+<td>η</td>
+<td>\eta</td>
+</tr>
+<tr>
+<td>Θ</td>
+<td>\Theta</td>
+<td>θ</td>
+<td>\theta</td>
+</tr>
+<tr>
+<td>I</td>
+<td>I</td>
+<td>ι</td>
+<td>\iota</td>
+</tr>
+<tr>
+<td>K</td>
+<td>K</td>
+<td>κ</td>
+<td>\kappa</td>
+</tr>
+<tr>
+<td>Λ</td>
+<td>\Lambda</td>
+<td>λ</td>
+<td>\lambda</td>
+</tr>
+<tr>
+<td>M</td>
+<td>M</td>
+<td>μ</td>
+<td>\mu</td>
+</tr>
+<tr>
+<td>N</td>
+<td>N</td>
+<td>ν</td>
+<td>\nu</td>
+</tr>
+<tr>
+<td>Ξ</td>
+<td>\X</td>
+<td>ξ</td>
+<td>\xi</td>
+</tr>
+<tr>
+<td>O</td>
+<td>O</td>
+<td>ο</td>
+<td>\omicron</td>
+</tr>
+<tr>
+<td>Π</td>
+<td>\Pi</td>
+<td>π</td>
+<td>\pi</td>
+</tr>
+<tr>
+<td>P</td>
+<td>P</td>
+<td>ρ</td>
+<td>\rho</td>
+</tr>
+<tr>
+<td>Σ</td>
+<td>\Sigma</td>
+<td>σ</td>
+<td>\sigma</td>
+</tr>
+<tr>
+<td>T</td>
+<td>T</td>
+<td>τ</td>
+<td>\tau</td>
+</tr>
+<tr>
+<td>Υ</td>
+<td>\Upsilon</td>
+<td>υ</td>
+<td>\upsilon</td>
+</tr>
+<tr>
+<td>Φ</td>
+<td>\Phi</td>
+<td>ϕ</td>
+<td>\phi</td>
+</tr>
+<tr>
+<td>X</td>
+<td>X</td>
+<td>χ</td>
+<td>\chi</td>
+</tr>
+<tr>
+<td>Ψ</td>
+<td>\Psi</td>
+<td>ψ</td>
+<td>\psi</td>
+</tr>
+<tr>
+<td>Ω</td>
+<td>\v</td>
+<td>ω</td>
+<td>\omega</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="运算符号"><a href="#运算符号" class="headerlink" title="运算符号"></a>运算符号</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>含义</th>
+<th>语法</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>求和</td>
+<td>\sum_{x&gt;1}f(x)</td>
+<td>$\sum_{x&gt;1}f(x)$</td>
+</tr>
+<tr>
+<td>求和</td>
+<td>\sum\limits_{n=1}^{n&lt;10}n</td>
+<td>$\sum\limits_{n=1}^{n&lt;10}n$</td>
+</tr>
+<tr>
+<td>乘积</td>
+<td>\prod_{i=1}^N x_i</td>
+<td>$\prod_{i=1}^N x_i$</td>
+</tr>
+<tr>
+<td>乘积</td>
+<td>\prod\limits_{i=1}^N x_i</td>
+<td>$\prod\limits_{i=1}^N x_i$</td>
+</tr>
+<tr>
+<td>极限</td>
+<td>\lim^{x \to \infty}_{y \to 0}{\frac{x}{y}}</td>
+<td>$\lim^{x \to \infty}_{y \to 0}{\frac{x}{y}}$</td>
+</tr>
+<tr>
+<td>极限</td>
+<td>\lim\limits_{x \to \infty}^{y\to 0} \frac{x}{y}</td>
+<td>$\lim\limits_{x \to \infty}^{y\to 0} \frac{x}{y}$</td>
+</tr>
+<tr>
+<td>一重积分</td>
+<td>\int_{a}^{b}f(x)dx</td>
+<td>$\int_{a}^{b}f(x)dx$</td>
+</tr>
+<tr>
+<td>二重积分</td>
+<td>\iint_\Omega f(x,y)dS</td>
+<td>$\iint_\Omega f(x,y)dS$</td>
+</tr>
+<tr>
+<td>三重积分</td>
+<td>\iiint_\Omega f(x,y,z)dV</td>
+<td>$\iiint_\Omega f(x,y,z)dV$</td>
+</tr>
+<tr>
+<td>加减</td>
+<td>a \pm b</td>
+<td>$a\pm b$</td>
+</tr>
+<tr>
+<td>减加</td>
+<td>a \mp b</td>
+<td>$a\mp b$</td>
+</tr>
+<tr>
+<td>乘法</td>
+<td>a \times b</td>
+<td>$a \times b$</td>
+</tr>
+<tr>
+<td>除法</td>
+<td>a \div b</td>
+<td>$a\div b$</td>
+</tr>
+<tr>
+<td>对数</td>
+<td>\log{a+b}</td>
+<td>$\log{a+b}$</td>
+</tr>
+<tr>
+<td>开方</td>
+<td>\sqrt{a + b}</td>
+<td>$\sqrt{a+b}$</td>
+</tr>
+<tr>
+<td>n次根号</td>
+<td>\sqrt[n]{3}</td>
+<td>$\sqrt[n]{3}$</td>
+</tr>
+<tr>
+<td>点乘</td>
+<td>a \cdot b</td>
+<td>$a \cdot b$</td>
+</tr>
+<tr>
+<td>叉乘</td>
+<td>a \times b</td>
+<td>$a \times b $</td>
+</tr>
+<tr>
+<td>内积</td>
+<td>\langle x, b \rangle</td>
+<td>$\langle x, b \rangle$</td>
+</tr>
+<tr>
+<td>外积</td>
+<td>a \otimes b</td>
+<td>$a \otimes b$</td>
+</tr>
+<tr>
+<td>分式</td>
+<td>\frac{a}{b}</td>
+<td>$\frac{a}{b}$</td>
+</tr>
+<tr>
+<td>小于等于</td>
+<td>\leq</td>
+<td>$\leq$</td>
+</tr>
+<tr>
+<td>大于等于</td>
+<td>\geq</td>
+<td>$\geq$</td>
+</tr>
+<tr>
+<td>不等于</td>
+<td>\neq</td>
+<td>$\neq$</td>
+</tr>
+<tr>
+<td>不小于等于</td>
+<td>\nleq</td>
+<td>$\nleq$</td>
+</tr>
+<tr>
+<td>不大于等于</td>
+<td>\ngeq</td>
+<td>$\ngeq$</td>
+</tr>
+<tr>
+<td>约等于</td>
+<td>\approx</td>
+<td>$\approx$</td>
+</tr>
+<tr>
+<td>恒等于</td>
+<td>\equiv</td>
+<td>$\equiv$</td>
+</tr>
+<tr>
+<td>无穷</td>
+<td>\infty</td>
+<td>$\infty$</td>
+</tr>
+<tr>
+<td>属于</td>
+<td>a \in A</td>
+<td>$a\in A$</td>
+</tr>
+<tr>
+<td>不属于</td>
+<td>a \notin A</td>
+<td>$a \notin A$</td>
+</tr>
+<tr>
+<td>子集</td>
+<td>x \subset y</td>
+<td>$x \subset y$</td>
+</tr>
+<tr>
+<td>非子集</td>
+<td>x \not\subset y</td>
+<td>$x \not\subset y$</td>
+</tr>
+<tr>
+<td>真子集</td>
+<td>x \subseteq y</td>
+<td>$x \subseteq y$</td>
+</tr>
+<tr>
+<td>非真子集</td>
+<td>x \subsetneq y</td>
+<td>$x \subsetneq y$</td>
+</tr>
+<tr>
+<td>并集</td>
+<td>x \cup y</td>
+<td>$x \cup y$</td>
+</tr>
+<tr>
+<td>交集</td>
+<td>x \cap y</td>
+<td>$x \cap y$</td>
+</tr>
+<tr>
+<td>差集</td>
+<td>x \setminus y</td>
+<td>$x \setminus y$</td>
+</tr>
+<tr>
+<td>同或</td>
+<td>$x \bigodot y</td>
+<td>$x \bigodot y$</td>
+<td></td>
+</tr>
+<tr>
+<td>同与</td>
+<td>x \bigotimes y</td>
+<td>$x \bigotimes y$</td>
+</tr>
+<tr>
+<td>因为</td>
+<td>\beacuse</td>
+<td>$\because$</td>
+</tr>
+<tr>
+<td>所以</td>
+<td>\therefore</td>
+<td>$\therefore$</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="矩阵"><a href="#矩阵" class="headerlink" title="矩阵"></a>矩阵</h4><p>最后的<code>\tag&#123;1&#125;</code>表示序号</p>
+<h5 id="1-简单矩阵"><a href="#1-简单矩阵" class="headerlink" title="1. 简单矩阵"></a>1. 简单矩阵</h5><figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">$$</span><br><span class="line">\begin&#123;matrix&#125;</span><br><span class="line">1 &amp; 2 &amp; 3 \\</span><br><span class="line">4 &amp; 5 &amp; 6 \\</span><br><span class="line">7 &amp; 8 &amp; 9</span><br><span class="line">\end&#123;matrix&#125; \tag&#123;1&#125;</span><br><span class="line">$$</span><br></pre></td></tr></table></figure>
+<script type="math/tex; mode=display">
+\begin{matrix}
+1 & 2 & 3 \\
+4 & 5 & 6 \\
+7 & 8 & 9
+\end{matrix} \tag{1}</script><h5 id="2-带括号的矩阵"><a href="#2-带括号的矩阵" class="headerlink" title="2. 带括号的矩阵"></a>2. 带括号的矩阵</h5><p><strong>中括号</strong></p>
+<figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">$$</span><br><span class="line">\begin&#123;bmatrix&#125;</span><br><span class="line">1 &amp; 2 &amp; 3 \\</span><br><span class="line">4 &amp; 5 &amp; 6 \\</span><br><span class="line">7 &amp; 8 &amp; 9</span><br><span class="line">\end&#123;bmatrix&#125; \tag&#123;2&#125;</span><br><span class="line">$$</span><br></pre></td></tr></table></figure>
+<script type="math/tex; mode=display">
+\begin{bmatrix}
+1 & 2 & 3 \\
+4 & 5 & 6 \\
+7 & 8 & 9
+\end{bmatrix} \tag{2}</script><p><strong>大括号</strong></p>
+<figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">$$</span><br><span class="line">\begin&#123;Bmatrix&#125;</span><br><span class="line">1 &amp; 2 &amp; 3 \\</span><br><span class="line">4 &amp; 5 &amp; 6 \\</span><br><span class="line">7 &amp; 8 &amp; 9</span><br><span class="line">\end&#123;Bmatrix&#125; \tag&#123;3&#125;</span><br><span class="line">$$</span><br></pre></td></tr></table></figure>
+<script type="math/tex; mode=display">
+\begin{Bmatrix}
+1 & 2 & 3 \\
+4 & 5 & 6 \\
+7 & 8 & 9
+\end{Bmatrix} \tag{3}</script><h5 id="3-包含省略号"><a href="#3-包含省略号" class="headerlink" title="3. 包含省略号"></a>3. 包含省略号</h5><figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">$$</span><br><span class="line">\begin&#123;bmatrix&#125;</span><br><span class="line">1 &amp; 2 &amp; \cdots &amp; n \\</span><br><span class="line">1 &amp; 2 &amp; \cdots &amp; n \\</span><br><span class="line">\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\</span><br><span class="line">1 &amp; 2 &amp; \cdots &amp; n</span><br><span class="line">\end&#123;bmatrix&#125; \tag&#123;4&#125;</span><br><span class="line">$$</span><br></pre></td></tr></table></figure>
+<script type="math/tex; mode=display">
+\begin{bmatrix}
+1 & 2 & \cdots & n \\
+1 & 2 & \cdots & n \\
+\vdots & \vdots & \ddots & \vdots \\
+1 & 2 & \cdots & n
+\end{bmatrix} \tag{4}</script><h5 id="4-行列式"><a href="#4-行列式" class="headerlink" title="4. 行列式"></a>4. 行列式</h5><figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">$$</span><br><span class="line"> \begin&#123;vmatrix&#125;</span><br><span class="line">   1 &amp; 2 &amp; 3 \\</span><br><span class="line">   4 &amp; 5 &amp; 6 \\</span><br><span class="line">   7 &amp; 8 &amp; 9</span><br><span class="line">  \end&#123;vmatrix&#125;</span><br><span class="line">\tag&#123;7&#125;</span><br><span class="line">$$</span><br></pre></td></tr></table></figure>
+<script type="math/tex; mode=display">
+\begin{vmatrix}
+   1 & 2 & 3 \\
+   4 & 5 & 6 \\
+   7 & 8 & 9
+  \end{vmatrix}
+\tag{7}</script><h4 id="表格"><a href="#表格" class="headerlink" title="表格"></a>表格</h4><h5 id="1-普通表格"><a href="#1-普通表格" class="headerlink" title="1. 普通表格"></a>1. 普通表格</h5><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$$</span><br><span class="line">\begin&#123;array&#125;&#123;|c|c|c|&#125;</span><br><span class="line">	\hline 2&amp;9&amp;4\\</span><br><span class="line">	\hline 7&amp;5&amp;3\\</span><br><span class="line">	\hline 6&amp;1&amp;8\\</span><br><span class="line">	\hline</span><br><span class="line">\end&#123;array&#125;</span><br><span class="line">$$</span><br></pre></td></tr></table></figure>
+<script type="math/tex; mode=display">
+\begin{array}{|c|c|c|}
+    \hline 2&9&4\\
+    \hline 7&5&3\\
+    \hline 6&1&8\\
+    \hline
+\end{array}</script><p><strong>说明:</strong> <code>&#123;c|c|c&#125;</code>中，每个字母代表一列，<code>c</code>表示居中，<code>l</code> 表示左对齐，<code>r</code>表示右对齐。</p>
+<p><code>|</code>表示竖直分隔线，<code>||</code> 表示两条竖直分隔线。</p>
+<p><code>\hline</code> 表示在下一行输入前插入水平分割线。</p>
+<h4 id="2-真值表"><a href="#2-真值表" class="headerlink" title="2. 真值表"></a>2. 真值表</h4><figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">$$</span><br><span class="line">\begin&#123;array&#125;&#123;cc|c&#125;</span><br><span class="line"><span class="code">	       A&amp;B&amp;F\\</span></span><br><span class="line"><span class="code">	\hline 0&amp;0&amp;0\\</span></span><br><span class="line"><span class="code">	       0&amp;1&amp;1\\</span></span><br><span class="line"><span class="code">	       1&amp;0&amp;1\\</span></span><br><span class="line"><span class="code">	       1&amp;1&amp;1\\</span></span><br><span class="line"><span class="code">\end&#123;array&#125;</span></span><br><span class="line"><span class="code">$$</span></span><br></pre></td></tr></table></figure>
+<script type="math/tex; mode=display">
+\begin{array}{cc|c}
+           A&B&F\\
+    \hline 0&0&0\\
+           0&1&1\\
+           1&0&1\\
+           1&1&1\\
+\end{array}</script><h4 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h4><p>输入代码块<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">···mermaid</span><br><span class="line">    ……流程图代码……</span><br><span class="line">···</span><br></pre></td></tr></table></figure><br>流程图代码示例如下:<br><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">graph TB</span><br><span class="line">    A(开始)</span><br><span class="line">    B[打开冰箱门]</span><br><span class="line">    C&#123;&quot;冰箱小不小？&quot;&#125;</span><br><span class="line">    D((连接))</span><br></pre></td></tr></table></figure><br>效果为<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">graph TB</span><br><span class="line">    A(开始)</span><br><span class="line">    B[打开冰箱门]</span><br><span class="line">    C&#123;&quot;冰箱小不小？&quot;&#125;</span><br><span class="line">    D((连接))</span><br></pre></td></tr></table></figure><br>连线时用<code>--&gt;</code><br><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">graph TD</span><br><span class="line">A[方形] --&gt; B(圆角)</span><br><span class="line">    B --&gt; C&#123;条件a&#125;</span><br><span class="line">    C --&gt; |a=1| D[结果1]</span><br><span class="line">    C --&gt; |a=2| E[结果2]</span><br><span class="line">    F[竖向流程图]</span><br></pre></td></tr></table></figure><br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">graph TD</span><br><span class="line">A[方形] --&gt; B(圆角)</span><br><span class="line">    B --&gt; C&#123;条件a&#125;</span><br><span class="line">    C --&gt; |a=1| D[结果1]--&gt;F(结束)</span><br><span class="line">    C --&gt; |a=2| E[结果2]--&gt;F</span><br><span class="line">   </span><br></pre></td></tr></table></figure></p>
+]]></content>
+      <categories>
+        <category>学习笔记</category>
+      </categories>
+      <tags>
+        <tag>notes</tag>
+        <tag>markdown</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>【论文阅读】Analysis of Large-Scale Multi-Tenant GPU Clusters  for DNN Training Workloads</title>
+    <url>/2025/02/03/scheduler-5/</url>
+    <content><![CDATA[<p>Analysis of Large-Scale Multi-Tenant GPU Clusters  for DNN Training Workloads 论文阅读笔记，主要工作是描述了Microsoft中一个多租户GPU集群两个月的工作负载特征，研究影响多租户集群上DNN训练工作负载的集群利用率的三个问题</p>
+<span id="more"></span>
+<h5 id="Analysis-of-Large-Scale-Multi-Tenant-GPU-Clusters-for-DNN-Training-Workloads"><a href="#Analysis-of-Large-Scale-Multi-Tenant-GPU-Clusters-for-DNN-Training-Workloads" class="headerlink" title="Analysis of Large-Scale Multi-Tenant GPU Clusters  for DNN Training Workloads"></a>Analysis of Large-Scale Multi-Tenant GPU Clusters  for DNN Training Workloads</h5><ul>
+<li><p>出处：2019 USENIX-TAC <a href="https://www.usenix.org/conference/atc19/presentation/jeon">大规模多租户GPU集群对DNN训练工作负载的分析</a>  </p>
+</li>
+<li><p>主要工作：描述了Microsoft中一个多租户GPU集群两个月的工作负载特征，研究影响多租户集群上DNN训练工作负载的集群利用率的三个问题：</p>
+<ul>
+<li>队列调度和局部性约束对队列的影响。</li>
+<li>局部性对GPU利用率的影响。</li>
+<li>训练期间的故障问题。</li>
+</ul>
+</li>
+<li><p>介绍GPU集群Philly：</p>
+<p><img src="/2025/02/03/scheduler-5/5c166e5ac015bc30f6f80e5b3cde922e.png" alt="请添加图片描述"></p>
+</li>
+</ul>
+<p>① 传入作业和排队：用户可指定GPU数量，调度器跟踪集群中所有空闲GPU，调度时首先考虑机架，然后考虑机架中可用GPU最多的服务器。</p>
+<p>②作业放置和利用：将小作业打包到更少的服务器中来避免资源碎片。一旦作业被安排运行，它的GPU就不会与其他作业共享。</p>
+<p>③训练进度和完成情况：有三种可能情况：passed：已完成；killed：被用户终止；unsuccessful：不成功。</p>
+<ul>
+<li>工具：<strong>Apache-Yarn</strong>， 是一种新的Hadoop资源管理器，是一个通用资源管理系统 和调度平台，可以为上层应用提供统一的资源管理和调度。</li>
+<li>展望：<ul>
+<li>局部性优先：缺乏局部性会影响利用率和作业运行时间。等待有限的时间来查看是否可以实现局部性，如果不能，则使用局部性宽松的可用资源来调度作业( 从而减少用户的排队时间)。</li>
+<li>减轻干扰：将不同小作业放在专用服务器上，而不是打包到单个服务器，从而减少这些作业之间的干扰，但会增加碎片化。所以要支持作业迁移以对集群进行碎片整理。</li>
+<li>改进故障处理：大量作业失败是由于代码或配置中的用户错误造成，语法检查可以放置许多错误，并且可以通过运行训练的第一次迭代来捕获一些运行时错误。</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>论文阅读笔记</category>
+        <category>调度</category>
+      </categories>
+      <tags>
+        <tag>scheduler</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>【论文阅读】THEMIS:Fair and Efficient GPU Cluster Scheduling</title>
+    <url>/2025/02/03/shceduler-6/</url>
+    <content><![CDATA[<p>调度架构分为两个级别，包括多个应用程序调度器和一个称为ARBITER的跨应用程序调度程序：PPf∈01。</p>
+<span id="more"></span>
+<h5 id="THEMIS-Fair-and-Efficient-GPU-Cluster-Scheduling"><a href="#THEMIS-Fair-and-Efficient-GPU-Cluster-Scheduling" class="headerlink" title="THEMIS: Fair and Efficient GPU Cluster Scheduling"></a>THEMIS: Fair and Efficient GPU Cluster Scheduling</h5><ul>
+<li>出处: 2020 USENIX             <a href="https://www.usenix.org/conference/nsdi20/presentation/mahajan">Themis：公平高效的 GPU 集群调度 |USENIX</a></li>
+<li>主要工作：使用拍卖机制，针对长时间运行、位置敏感的ML应用程序。任务以短期的效率公平来赢取投标但确保长期是完成时间公平性。<ul>
+<li>对每个ML应用程序$A_i$引入在GPU分配$\vec{G_i}$最大完成时间公平性$P_i(\cdot)$ </li>
+<li>单轮拍卖：<ul>
+<li>输入：资源和投标，$\vec{R}$表示要拍卖的GPU资源总量，其中每个元素为1，长度为要拍卖的GPU数量。每个ML应用程序都竞标这些资源，每个ML程序出价是对几个GPU分配方案$\vec{G}$($\vec{G_i}$的值为$\{0,1\}$)的最大时间公平性$P_i$</li>
+</ul>
+</li>
+<li>多轮拍卖：<ul>
+<li>逐轮拍卖：在每一轮拍卖开始时，向应用程序请求新的$P_i(\cdot)$</li>
+<li>逐轮过滤：为了最大化$P\le 1$应用数量，每轮都过滤掉$P$最大的$1-f$部分，$f\in(0,1)$。过滤使具有SI的应用数量最大化：一个输掉一轮拍卖的不公平应用$i$，更容易打赢一个赢得一轮拍卖的不那么公平的应用$k$（$k$被分配了GPU，它的$P_K$会增大，$i$由于等待也会增大$P_i$，会一直出现，输掉太多轮的应用最终会失去所有资源的租约）</li>
+<li>剩余分配：在每轮的最后，有剩余GPU，将这些GPU分配给没有参加拍卖的应用程序，这在违反了SI的风险下提高了效率。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>目标：在有效利用集群GPU的同时最小化所有ML应用程序的最大完成时间公平性。<strong>最大完成时间公平性</strong>(共享激励)：在一个有N个应用程序的共享集群中运行时间与在一个有$\frac{1}{N}$个应用程序的集群中单独运行的比率。通过两个思想来做到这点。<ul>
+<li>扩大ML应用程序和调度器之间的API，以允许应用程序指定放置偏好。通过一轮轮的拍卖达到，THEMIS使用租约来处理长时间运行的ML任务，并在租约到期时开始拍卖，新一轮开始时有个应用程序出价，价高者得。出价反映应用程序从获取的不同GPU子集的完成时间公平指标。</li>
+<li>提出两级调度设计。顶层包含一个集中的应用程序见调度程序，底层包含一个集成现有超参数调优框架的API。</li>
+</ul>
+</li>
+<li>动机：<ul>
+<li>现有方案无法提供公平的共享保证，因为他们不知道ML应用程序的特征。(主要是位置偏好)</li>
+<li>简单的方案是获取所有应用的 $P_i$ 然后进行排序并分配，但应用程序请求的资源往往比所需的更多，以获得更多的分配机会。</li>
+</ul>
+</li>
+<li>几个概念：<ul>
+<li>sharing incentive(SI): 如果N个用户共用集群C，每个用户的性能应该不弱于 $\frac{C}{N}$</li>
+<li>Pareto efficiency(PE): 帕累托最优。帕累托改善：从一种分配状态到另一种状态的变化中，在没有使任何人情况变化的前提下，使得至少一个人变得更好。帕累托最优是指集群分配无法再进行帕累托改善()。</li>
+<li>envy-freedoms(EF): 无羡嫉</li>
+</ul>
+</li>
+<li>新指标：$P=\frac{T_{sh}}{T_{id}}$ $T_{id}$ 是独立完成时间，$T_{sh}$ 是共享完成时间。如果$P\le 1$ 即可实现ML应用的共享激励。(此时共享完成时间小于独立完成时间)。</li>
+<li>调度器的类型：<ul>
+<li>悲观调度器：可见性和分配在单个应用的粒度上是密切相关的。</li>
+<li>全乐观调度器：可见性和分配在多个应用的粒度上是密切相关的，有完整的多应用可见性，因为所有集群资源及其状态对所有应用都是可见的，所有应用程序都争夺资源，资源分配决策是由多个应用程序同时使用事务作出的。</li>
+<li>半乐观调度器：<strong>本文所用方案</strong>，当跨应用调度器同时为多个应用提供资源时，它具有多应用可见性，而资源分配时是无冲突的，保证每个应用程序对资源的独占访问。</li>
+</ul>
+</li>
+<li><p>模型：</p>
+<p><img src="/2025/02/03/shceduler-6/72c286902cd978db3f7838bbba8cb1c8.png" alt="在这里插入图片描述"></p>
+</li>
+</ul>
+<p>调度架构分为两个级别，包括多个应用程序调度器和一个称为ARBITER的跨应用程序调度程序：</p>
+<ul>
+<li>第一阶段(1~3):<ul>
+<li>ARBITER 要求所有应用程序提供当前完成时间公平性$P$的估计值。</li>
+<li>ARBITER 启动拍卖，将可用资源的相同非绑定资源分配给$P$最小的$f\in[0,1]$部分应用(根据逐轮过滤)。为了最小化拍卖中ML调度器与参与者的变化，THEMIS 引入一个AGENT ，它和每个ML程序调度器放在一起。AGENT作为ML程序和ARBITER之间的媒介。</li>
+<li>这些应用程序并行地检查提供的资源，每个应用程序的AGENT返回一个标价，该标价反映了对资源分配的偏好。</li>
+</ul>
+</li>
+<li>第二阶段(4~5):<ul>
+<li>ARBITER 在收到这一轮的所有投标后，根据部分分配算法和剩余分配方案选择中标。然后通知每个AGENT获胜的分配(如果有的话)。</li>
+<li>AGENT将分配传播给ML应用程序调度器，然后ML应用程序调度器可以决定组成作业之间的分配。</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>论文阅读笔记</category>
+        <category>调度</category>
+      </categories>
+      <tags>
+        <tag>scheduler</tag>
       </tags>
   </entry>
   <entry>
@@ -490,6 +1565,129 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
       </tags>
   </entry>
   <entry>
+    <title>使用 torch.profiler记录模型训练轨迹</title>
+    <url>/2025/02/03/torchProfile/</url>
+    <content><![CDATA[<p>使用 torch.profiler记录模型训练轨迹，并使用Tensorboard进行可视化分析，首先导入需要的库，准备模型和数据集，设置记录器，生成json格式的文件，最后通过Tensorboard可视化。</p>
+<span id="more"></span>
+<h4 id="Steps"><a href="#Steps" class="headerlink" title="Steps"></a>Steps</h4><ol>
+<li>Prepare the data and model</li>
+<li>Use profiler to record execution events</li>
+<li>Run the profiler</li>
+<li>Use TensorBoard to view results and analyze model performance</li>
+<li>Improve performance with the help of profiler</li>
+<li>Analyze performance with other advanced features</li>
+<li>Additional Practices: Profiling PyTorch on AMD GPUs</li>
+</ol>
+<h4 id="1-Prepare-the-data-and-model"><a href="#1-Prepare-the-data-and-model" class="headerlink" title="1. Prepare the data and model"></a>1. Prepare the data and model</h4><p><strong>导入需要的库:</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn</span><br><span class="line"><span class="keyword">import</span> torch.optim</span><br><span class="line"><span class="keyword">import</span> torch.profiler</span><br><span class="line"><span class="keyword">import</span> torch.utils.data</span><br><span class="line"><span class="keyword">import</span> torchvision.datasets</span><br><span class="line"><span class="keyword">import</span> torchvision.models</span><br><span class="line"><span class="keyword">import</span> torchvision.transforms <span class="keyword">as</span> T</span><br></pre></td></tr></table></figure>
+<p><strong>准备数据集</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">transform = T.Compose(</span><br><span class="line">    [T.Resize(<span class="number">224</span>),</span><br><span class="line">     T.ToTensor(),</span><br><span class="line">     T.Normalize((<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">0.5</span>), (<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">0.5</span>))])</span><br><span class="line">train_set = torchvision.datasets.CIFAR10(root=<span class="string">&#x27;./data&#x27;</span>, train=<span class="literal">True</span>, download=<span class="literal">True</span>, transform=transform)</span><br><span class="line">train_loader = torch.utils.data.DataLoader(train_set, batch_size=<span class="number">32</span>, shuffle=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+<p><strong>模型定义</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">device = torch.device(<span class="string">&quot;cuda:0&quot;</span>)</span><br><span class="line">model = torchvision.models.resnet18(weights=<span class="string">&#x27;IMAGENET1K_V1&#x27;</span>).cuda(device)</span><br><span class="line">criterion = torch.nn.CrossEntropyLoss().cuda(device)</span><br><span class="line">optimizer = torch.optim.SGD(model.parameters(), lr=<span class="number">0.001</span>, momentum=<span class="number">0.9</span>)</span><br><span class="line">model.train()</span><br></pre></td></tr></table></figure>
+<p><strong>模型训练</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">train</span>(<span class="params">data</span>):</span><br><span class="line">    inputs, labels = data[<span class="number">0</span>].to(device=device), data[<span class="number">1</span>].to(device=device)</span><br><span class="line">    outputs = model(inputs)</span><br><span class="line">    loss = criterion(outputs, labels)</span><br><span class="line">    optimizer.zero_grad()</span><br><span class="line">    loss.backward()</span><br><span class="line">    optimizer.step()</span><br></pre></td></tr></table></figure>
+<h4 id="2-使用Profiler记录轨迹"><a href="#2-使用Profiler记录轨迹" class="headerlink" title="2. 使用Profiler记录轨迹"></a>2. 使用Profiler记录轨迹</h4><p>some useful parameters are as follow:</p>
+<p><code>schedule</code>: 参数例如<code>wait=1,warmup=1,active=3,repeat=1</code>(profiler 会跳过第一个step/iteration，在第二个iter热身，记录三个iter。). In total, the cycle repeats once. Each cycle is called a “span” in TensorBoard plugin.</p>
+<p>在<code>wait</code>阶段，profiler 不生效，在<code>warmup</code> 阶段，proliler 开始工作但不记录结果，是为了减少开销，proliling 的开始开销很大，会影响结果。</p>
+<p><code>on_trace_ready</code> :  在每个cylce结束时调用，例如使用<code>torch.profiler.tensorboard_trace_handler</code>来时生成Tensorboard使用的结果文件，在Profiling后，结果文件存储在<code>./log/resnet18</code>中。</p>
+<p><code>record_shapes</code>：是否记录输入张亮的形状</p>
+<p><code>profile_memory</code>: 追踪张量空间申请和释放。</p>
+<p><code>with_stack</code>：记录算子的代码信息，如果在vscode中集成TensorBoard, 单击可以跳转到特定行。</p>
+<p><a href="https://code.visualstudio.com/docs/datascience/pytorch-support#_tensorboard-integration">https://code.visualstudio.com/docs/datascience/pytorch-support#_tensorboard-integration</a></p>
+<p><strong>以上下文管理器启动/停止：</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">with</span> torch.profiler.profile(</span><br><span class="line">        schedule=torch.profiler.schedule(wait=<span class="number">1</span>, warmup=<span class="number">1</span>, active=<span class="number">3</span>, repeat=<span class="number">1</span>),</span><br><span class="line">        on_trace_ready=torch.profiler.tensorboard_trace_handler(<span class="string">&#x27;./log/resnet18&#x27;</span>),</span><br><span class="line">        record_shapes=<span class="literal">True</span>,</span><br><span class="line">        profile_memory=<span class="literal">True</span>,</span><br><span class="line">        with_stack=<span class="literal">True</span></span><br><span class="line">) <span class="keyword">as</span> prof:</span><br><span class="line">    <span class="keyword">for</span> step, batch_data <span class="keyword">in</span> <span class="built_in">enumerate</span>(train_loader):</span><br><span class="line">        prof.step()  <span class="comment"># Need to call this at each step to notify profiler of steps&#x27; boundary.</span></span><br><span class="line">        <span class="keyword">if</span> step &gt;= <span class="number">1</span> + <span class="number">1</span> + <span class="number">3</span>:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        train(batch_data)</span><br></pre></td></tr></table></figure>
+<p><strong>也可以以非上下文管理器启动/停止：</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">prof = torch.profiler.profile(</span><br><span class="line">        schedule=torch.profiler.schedule(wait=<span class="number">1</span>, warmup=<span class="number">1</span>, active=<span class="number">3</span>, repeat=<span class="number">1</span>),</span><br><span class="line">        on_trace_ready=torch.profiler.tensorboard_trace_handler(<span class="string">&#x27;./log/resnet18&#x27;</span>),</span><br><span class="line">        record_shapes=<span class="literal">True</span>,</span><br><span class="line">        with_stack=<span class="literal">True</span>)</span><br><span class="line">prof.start()</span><br><span class="line"><span class="keyword">for</span> step, batch_data <span class="keyword">in</span> <span class="built_in">enumerate</span>(train_loader):</span><br><span class="line">    prof.step()</span><br><span class="line">    <span class="keyword">if</span> step &gt;= <span class="number">1</span> + <span class="number">1</span> + <span class="number">3</span>:</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">    train(batch_data)</span><br><span class="line">prof.stop()</span><br></pre></td></tr></table></figure>
+<h4 id="3-运行profiler"><a href="#3-运行profiler" class="headerlink" title="3. 运行profiler"></a>3. 运行profiler</h4><h4 id="4-使用Tensorboard展示结果"><a href="#4-使用Tensorboard展示结果" class="headerlink" title="4. 使用Tensorboard展示结果"></a>4. 使用Tensorboard展示结果</h4><p>安装Pytorch Profiler TensorBoard Plugin</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pip install torch_tb_profiler</span><br></pre></td></tr></table></figure>
+<p>登录TensorBoard</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tensorboard --logdir=./log</span><br></pre></td></tr></table></figure>
+<p>打开TensorBoard</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">http://localhost:6006/#pytorch_profiler</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Ubuntu20.04安装conda和pytorch</title>
+    <url>/2025/02/03/ubuntu-conda-torch/</url>
+    <content><![CDATA[<p>在Ubuntu 20.04上安装Anaconda 3 ，创建虚拟环境并安装pytorch。并指出一些常见的问题并给出解决办法。主要问题有，下载Aanconda后无法激活环境。pytorch版本和C湖大版本不匹配。</p>
+<span id="more"></span>
+<h3 id="Ubuntu20-04安装Anaconda3和pytorch"><a href="#Ubuntu20-04安装Anaconda3和pytorch" class="headerlink" title="Ubuntu20.04安装Anaconda3和pytorch"></a><center>Ubuntu20.04安装Anaconda3和pytorch</center></h3><h5 id="一-查看系统架构"><a href="#一-查看系统架构" class="headerlink" title="一. 查看系统架构"></a>一. 查看系统架构</h5><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lsb_release -a</span><br><span class="line">dpkg --print-architecture</span><br><span class="line">arch</span><br><span class="line">````</span><br><span class="line"> ![在这里插入图片描述](ubuntu-conda-torch/1be2c3d87307620a6e5d20c9564532e2.png)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">**x86_64与amd64**</span><br><span class="line">由于32位系统x86架构的种种限制，包括速度，性能等方面，Intel开始向64位架构发展，那么有2选择：</span><br><span class="line"></span><br><span class="line">向下兼容x86</span><br><span class="line">完全重新设计指令集，不兼容x86</span><br><span class="line">结果AMD领先，比Intel率先制造出了商用的兼容x86的CPU，AMD称之为AMD64，抢了64位PC的第一桶金，得到了用户的认同。而Intel选择了设计一种不兼容x86的全新64为指令集，称之为IA-64，但是比amd晚了一步，而且IA-64也挺惨淡的，因为是全新设计的CPU，没有编译器，也不支持windows（微软把intel给忽悠了，承诺了会出安腾版windows server版，但是迟迟拿不出东西）。。。后来不得不在时机落后的情况下也开始支持AMD64的指令集，但是换了个名字，叫x86_64，表示是x86指令集的64扩展。也就是说实际上，x86_64,x64,AMD64基本上是同一个东西，我们现在用的intel/amd的桌面级CPU基本上都是x86_64。</span><br><span class="line"></span><br><span class="line">#### 二. 下载安装文件</span><br><span class="line"></span><br><span class="line">注意，如果不是 x86_64，需要去镜像看对应的版本   [Anaconda wget 地址](https://mirrors.bfsu.edu.cn/anaconda/archive/)</span><br><span class="line">```text</span><br><span class="line">wget https://mirrors.bfsu.edu.cn/anaconda/archive/Anaconda3-2023.09-0-Linux-x86_64.sh --no-check-certificate</span><br></pre></td></tr></table></figure>
+<p><img src="/2025/02/03/ubuntu-conda-torch/fef14fd779621f099e9c72100b42ba6b.png" alt="在这里插入图片描述"></p>
+<h4 id="三-安装"><a href="#三-安装" class="headerlink" title="三.安装"></a>三.安装</h4><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">bash Anaconda3-2021.11-Linux-x86_64.sh</span><br></pre></td></tr></table></figure>
+<p>显示协议，按 下键，输入yes</p>
+<p> <img src="/2025/02/03/ubuntu-conda-torch/06d4af7986356a72534ebb129bf6bfbb.png" alt="在这里插入图片描述"></p>
+<p>选择安装位置，一般为 /home/用户名/anconda3</p>
+<h5 id="四-修改环境变量"><a href="#四-修改环境变量" class="headerlink" title="四.修改环境变量"></a>四.修改环境变量</h5><p>安装后输入 conda</p>
+<p>可能会显示 conda: command not found</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo vim ~/.bashrc</span><br></pre></td></tr></table></figure>
+<p><img src="/2025/02/03/ubuntu-conda-torch/797876cfe2007624e1846013de74cabb.png" alt="在这里插入图片描述"></p>
+<p>选择E</p>
+<p>按<code>i</code></p>
+<p>最后一行加上</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">export PATH=$PATH:/home/用户名/anaconda3/bin</span><br></pre></td></tr></table></figure>
+<p>按 Esc 输入<code>:wq</code></p>
+<p>输入 <code>conda info --env</code>显示</p>
+<p><img src="/2025/02/03/ubuntu-conda-torch/64cdb450f94e32e926291af6d293a5ed.png" alt="在这里插入图片描述"></p>
+<p>说明安装成功</p>
+<h4 id="五-安装torch"><a href="#五-安装torch" class="headerlink" title="五.安装torch"></a>五.安装torch</h4><p>创建新环境，</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">conda create -n torchTest</span><br></pre></td></tr></table></figure>
+<p>激活环境</p>
+<p><code>conda activate testTorch</code></p>
+<p>可能会报错</p>
+<p> <img src="/2025/02/03/ubuntu-conda-torch/fa1946e65eaebd9433449b9e21cdf3ea.png" alt="在这里插入图片描述"></p>
+<p>重新运行conda.sh</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">source &#123;conda路径&#125;/anaconda3/etc/profile.d/conda.sh</span><br></pre></td></tr></table></figure>
+<p>{conda路径}这里为 /home/用户名/</p>
+<p><strong>查看cuda版本</strong><br><code>nivdia-smi</code></p>
+<p><img src="/2025/02/03/ubuntu-conda-torch/de389bcf7a78397a8431947759156e84.png" alt="在这里插入图片描述"></p>
+<p><strong>解释：CUDA版本问题</strong></p>
+<p>一般查看有两个方式</p>
+<p><code>nvidia-smi</code> 和 <code>nvcc -V</code> 两种命令区别是：</p>
+<p><code>nvidia-smi</code> 是查看电脑支持的最高版CUDA</p>
+<p><code>nvcc -V</code> 查看的是你下载的CUDA版本</p>
+<p>如果你已经下载了CUDA，安装torch时就要跟<code>nvcc -V</code> 一致，如果没有，可以直接使用torch的命令下载 cuda toolkit 等，就可以了，</p>
+<p>根据 <code>nvidia-smi</code>版本从pytorch 官网找命令 <a href="https://pytorch.org/">PyTorch</a></p>
+<p><img src="/2025/02/03/ubuntu-conda-torch/d1457f631c813bedcf4922cb09c6a52d.png" alt="在这里插入图片描述"></p>
+<p>过去的版本可以在这里找 <a href="https://pytorch.org/get-started/previous-versions/">Previous PyTorch Versions | PyTorch</a></p>
+<p>比如我的版本是cu114但官网没有cu114 对应的命令，就选择cu113</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11</span><br></pre></td></tr></table></figure>
+<p>最后检验<br><img src="/2025/02/03/ubuntu-conda-torch/52a29b31c5387c804be094123aa45d6c.png" alt="在这里插入图片描述"></p>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
+        <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ubuntu_git</title>
+    <url>/2025/02/03/ubuntu-git/</url>
+    <content><![CDATA[<p>ubuntu 下git常用指令，后续遇到新的指令会持续更新</p>
+<span id="more"></span>
+<h4 id="ubuntu-下git常用指令【持续更新中】"><a href="#ubuntu-下git常用指令【持续更新中】" class="headerlink" title="ubuntu 下git常用指令【持续更新中】"></a><center>ubuntu 下git常用指令【持续更新中】</center></h4><h5 id="1-下载"><a href="#1-下载" class="headerlink" title="1.下载"></a>1.下载</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt install git		</span><br></pre></td></tr></table></figure>
+<h5 id="2-查看版本"><a href="#2-查看版本" class="headerlink" title="2. 查看版本"></a>2. 查看版本</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git --version</span><br></pre></td></tr></table></figure>
+<h5 id="3-登录git账号"><a href="#3-登录git账号" class="headerlink" title="3. 登录git账号"></a>3. 登录git账号</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git config --global user.email &quot;you@example.com&quot;</span><br><span class="line">git config --global user.name &quot;Your Name&quot;</span><br></pre></td></tr></table></figure>
+<h5 id="4-生成密钥对"><a href="#4-生成密钥对" class="headerlink" title="4.生成密钥对"></a>4.生成密钥对</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ssh-keygen -t rsa -C &quot;your_email@youremail.com&quot;</span><br></pre></td></tr></table></figure>
+<p>复制公钥</p>
+<h5 id="5-复制公钥到github"><a href="#5-复制公钥到github" class="headerlink" title="5. 复制公钥到github"></a>5. 复制公钥到github</h5><p><img src="/2025/02/03/ubuntu-git/91800e522e0020909564e868640d31a5.png" alt="请添加图片描述"></p>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
+        <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>transformer学习笔记</title>
     <url>/2025/02/03/transformer-not/</url>
     <content><![CDATA[<p>介绍Transformer的两个阶段，以及如何控制推理过程中的KV-Cach缓存大小来优化推理速度，最后分析Transformer的性能瓶颈和优化策略。</p>
@@ -569,26 +1767,6 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
       </tags>
   </entry>
   <entry>
-    <title>ubuntu_git</title>
-    <url>/2025/02/03/ubuntu-git/</url>
-    <content><![CDATA[<p>ubuntu 下git常用指令，后续遇到新的指令会持续更新</p>
-<span id="more"></span>
-<h4 id="ubuntu-下git常用指令【持续更新中】"><a href="#ubuntu-下git常用指令【持续更新中】" class="headerlink" title="ubuntu 下git常用指令【持续更新中】"></a><center>ubuntu 下git常用指令【持续更新中】</center></h4><h5 id="1-下载"><a href="#1-下载" class="headerlink" title="1.下载"></a>1.下载</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt install git		</span><br></pre></td></tr></table></figure>
-<h5 id="2-查看版本"><a href="#2-查看版本" class="headerlink" title="2. 查看版本"></a>2. 查看版本</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git --version</span><br></pre></td></tr></table></figure>
-<h5 id="3-登录git账号"><a href="#3-登录git账号" class="headerlink" title="3. 登录git账号"></a>3. 登录git账号</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git config --global user.email &quot;you@example.com&quot;</span><br><span class="line">git config --global user.name &quot;Your Name&quot;</span><br></pre></td></tr></table></figure>
-<h5 id="4-生成密钥对"><a href="#4-生成密钥对" class="headerlink" title="4.生成密钥对"></a>4.生成密钥对</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ssh-keygen -t rsa -C &quot;your_email@youremail.com&quot;</span><br></pre></td></tr></table></figure>
-<p>复制公钥</p>
-<h5 id="5-复制公钥到github"><a href="#5-复制公钥到github" class="headerlink" title="5. 复制公钥到github"></a>5. 复制公钥到github</h5><p><img src="/2025/02/03/ubuntu-git/91800e522e0020909564e868640d31a5.png" alt="请添加图片描述"></p>
-]]></content>
-      <categories>
-        <category>配置</category>
-      </categories>
-      <tags>
-        <tag>configure</tag>
-        <tag>Linux</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ubuntu创建新用户，添加用户权限，删除用户</title>
     <url>/2025/02/03/ubuntu-opts/</url>
     <content><![CDATA[<p>ubuntu创建新用户，添加用户权限，删除用户</p>
@@ -656,100 +1834,5 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 <p>注意前后的<code>,</code>否则会影响其他设置。现在，每次打开终端都会设置编码为UTF-8</p>
 <p><img src="/2025/02/03/vscode-codeRunner/4af924d125c0be037bd0137122579235.png" alt="请添加图片描述"></p>
 ]]></content>
-  </entry>
-  <entry>
-    <title>【论文阅读】Predictive Scheduling for GPU Based Cloud Servers Using Machine Learning</title>
-    <url>/2025/02/03/scheduler-4/</url>
-    <content><![CDATA[<p>提出一个干扰感知调度器Mystic，用于在基于GPU 的集群和云服务器上高效地协同执行应用程序。Mystic识别新应用程序和正在执行的应用程序之间的相似之处，并指导调度器将干扰最小化并提高系统吞吐量。</p>
-<span id="more"></span>
-<h4 id="7-Mystic-Predictive-Scheduling-for-GPU-Based-Cloud-Servers-Using-Machine-Learning"><a href="#7-Mystic-Predictive-Scheduling-for-GPU-Based-Cloud-Servers-Using-Machine-Learning" class="headerlink" title="7.Mystic: Predictive Scheduling for GPU Based Cloud Servers Using Machine Learning"></a>7.Mystic: Predictive Scheduling for GPU Based Cloud Servers Using Machine Learning</h4><ul>
-<li><p>出处：2016IEEE IPDPS  <a href="https://ieeexplore.ieee.org/document/7516031">使用机器学习的基于GPU的云服务器的预测调度</a></p>
-</li>
-<li><p>背景：</p>
-<ul>
-<li>在同一GPU上共同执行的应用程序之间的资源争用会产生干扰，从而导致性能下降，影响应用程序的QoS要求，降低系统整体吞吐率。现有解决方案要么是为了CPU集群开发的，要么是使用静态分析方法，这可能是计算密集型的，并且不能很好地扩展。</li>
-</ul>
-</li>
-<li><p>主要工作：提出一个干扰感知调度器Mystic，用于在基于GPU 的集群和云服务器上高效地协同执行应用程序。Mystic识别新应用程序和正在执行的应用程序之间的相似之处，并指导调度器将干扰最小化并提高系统吞吐量。</p>
-<ul>
-<li>使用<strong>协同过滤</strong>来识别新任务和其他正在执行的任务的相似性。协同过滤广泛应用于推荐系统，通过分析用户的购买历史，并根据用户的兴趣提供个性化的推荐。协同过滤中有两种常用方法——基于邻域的方法和潜在因素模型。</li>
-<li>争用的影响：多上下文GPU上的资源争用可能导致多个协同执行的应用程序之间的干扰，如流多处理器SMS、内存资源、纹理缓存、全局DRAM和互联网络。</li>
-</ul>
-</li>
-<li><p>模型：</p>
-<ul>
-<li><p>Stage I: 初始化器和配置文件生成器。</p>
-<ul>
-<li>初始化程序：查询集群状态表MAST，获取每个计算节点的IP地址、CPU核数、GPU核数和系统内存量，同时为每个传入的应用程序创建状态项。</li>
-<li>Mysitc为每个传入的应用程序启动连个简短的分析，已获得两个随机选择的COI(干扰的原因：流多处理器SMS、内存资源、纹理缓存、全局DRAM和互联网络。)，并存在PIT(概要信息表)中。PIT用PID(进程ID)索引。</li>
-<li>TRM(评级矩阵)：维护离线分析阶段的几个应用程序的完整配置文件。</li>
-</ul>
-</li>
-<li><p>Stage II: 基于协同过滤(CF)的预测</p>
-<ul>
-<li>CF将PIT和TRM作为输入。首先根据PID返回一个稀疏的PIT向量v(不包含所有COI信息)并附加到TRM上，然后执行基于svd的协同过滤填充TRM中所有缺失的值(只有一行缺少值),补全后将该行添加到PRT(预测表)中。知道调度。</li>
-</ul>
-</li>
-<li><p>Stage III: 干扰感知的调度程序</p>
-<p>以MAST和PRT作为输入，生成应用程序对之间的相似度，决定传入的程序A0是否不会与同一GPU上正在执行的应用程序A1并发执行。首先检查是否有空闲GPU，如果有，则分配到最靠近头节点的GPU，如果没有，获取正在执行的PRT条目，干扰分数并分配到干扰分数最低的GPU。</p>
-</li>
-</ul>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>论文阅读笔记</category>
-        <category>调度</category>
-      </categories>
-      <tags>
-        <tag>scheduler</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>【论文阅读】MICCO:An Enhanced Multi-GPU Scheduling Framework for Many-Body Correlation Functions</title>
-    <url>/2025/02/03/scheduler-3/</url>
-    <content><![CDATA[<p>首先对数据重用和负载平衡的相互作用进行了全面的研究，并提出了局部重用模式和重用边界两个新概念，研究两者之间实现最佳权衡的机会。在此基础上，MICCO提出了一种启发式调度算法和一种基于机器学习的回归模型来生成重用边界的最优设置。</p>
-<span id="more"></span>
-<h4 id="MICCO-An-Enhanced-Multi-GPU-Scheduling-Framework-for-Many-Body-Correlation-Functions"><a href="#MICCO-An-Enhanced-Multi-GPU-Scheduling-Framework-for-Many-Body-Correlation-Functions" class="headerlink" title="MICCO: An Enhanced Multi-GPU Scheduling Framework for Many-Body Correlation Functions"></a>MICCO: An Enhanced Multi-GPU Scheduling Framework for Many-Body Correlation Functions</h4><ul>
-<li><p>出处：2022IEEE    <a href="https://ieeexplore.ieee.org/document/9820666">MICCO:多体关联函数的增强型多GPU调度框架</a></p>
-</li>
-<li><p>主要工作：首先对数据重用和负载平衡的相互作用进行了全面的研究，并提出了局部重用模式和重用边界两个新概念，研究两者之间实现最佳权衡的机会。在此基础上，MICCO提出了一种启发式调度算法和一种基于机器学习的回归模型来生成重用边界的最优设置。</p>
-</li>
-<li><p>动机：</p>
-<ul>
-<li>多体相关函数是计算和内存密集型，现有的基于图的多GPU调度器无法捕获这些以数据为中心的特征，从而导致多体相关函数计算性能不佳。</li>
-<li>数据重用和负载均衡形成了一种权衡关系。</li>
-</ul>
-</li>
-<li><p>影响负载均衡和数据重用均衡的因素：多体相关函数计算的执行主要包括三个部分：内核计算、内存分配和数据通信，后两者称为内存操作。数据重用主要降低内存操作成本。</p>
-<ul>
-<li>局部重用的影响：如果调度程序能够捕获所有的数据重用，并以最佳的数据重用-负载均衡组合为目标进行穷举搜索，则可以找到最优的任务调度方案。但是实际存在两个问题：许多情况下可能全局信息不可用(特别是动态生成收缩图时)；搜索空间太大，NP难问题。本文提出<strong>利用局部重用模式信息动态搜索局部最优调度方案</strong>。</li>
-<li>重用边界：数据重用时允许的负载不均衡的级别。</li>
-</ul>
-</li>
-<li><p>多GPU调度框架</p>
-<p>MICCO的设计侧重于这些方面：</p>
-<ul>
-<li>探索重复张量的数据重用机会。</li>
-<li>改善负载均衡以保持GPU繁忙。</li>
-<li>在考虑内存调出的情况下实现最佳的数据重用-负载均衡权衡。</li>
-</ul>
-<p>主要由两部分组成</p>
-<p> <img src="/2025/02/03/scheduler-3/7e5dfcc212b47c4b6a4ea85225cc1abf.png" alt="在这里插入图片描述"></p>
-</li>
-</ul>
-<p>  MICCO将每个向量的数据特征提取到回归模型中(①)。回归模型生成最优复用边界(②)。启发式算法对张量对进行分类(③)，共同管理三条策略</p>
-<ul>
-<li>启发式调度算法</li>
-<li>预训练的轻量级回归模型</li>
-</ul>
-]]></content>
-      <categories>
-        <category>论文阅读笔记</category>
-        <category>调度</category>
-      </categories>
-      <tags>
-        <tag>scheduler</tag>
-      </tags>
   </entry>
 </search>

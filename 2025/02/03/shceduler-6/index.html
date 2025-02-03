@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="调度架构分为两个级别，包括多个应用程序调度器和一个称为ARBITER的跨应用程序调度程序：PPf∈01。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【论文阅读】THEMIS:Fair and Efficient GPU Cluster Scheduling">
+<meta property="og:url" content="http://example.com/2025/02/03/shceduler-6/index.html">
+<meta property="og:site_name" content="Coderq">
+<meta property="og:description" content="调度架构分为两个级别，包括多个应用程序调度器和一个称为ARBITER的跨应用程序调度程序：PPf∈01。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/02/03/shceduler-6/72c286902cd978db3f7838bbba8cb1c8.png">
+<meta property="article:published_time" content="2025-02-03T14:45:11.000Z">
+<meta property="article:modified_time" content="2025-02-03T14:47:14.412Z">
+<meta property="article:author" content="zheng rq">
+<meta property="article:tag" content="scheduler">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/02/03/shceduler-6/72c286902cd978db3f7838bbba8cb1c8.png">
+
+<link rel="canonical" href="http://example.com/2025/02/03/shceduler-6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>【论文阅读】THEMIS:Fair and Efficient GPU Cluster Scheduling | Coderq</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Coderq</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/02/03/shceduler-6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Coderq">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【论文阅读】THEMIS:Fair and Efficient GPU Cluster Scheduling
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-02-03 22:45:11 / 修改时间：22:47:14" itemprop="dateCreated datePublished" datetime="2025-02-03T22:45:11+08:00">2025-02-03</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">论文阅读笔记</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/%E8%B0%83%E5%BA%A6/" itemprop="url" rel="index"><span itemprop="name">调度</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>调度架构分为两个级别，包括多个应用程序调度器和一个称为ARBITER的跨应用程序调度程序：PPf∈01。</p>
+<span id="more"></span>
+<h5 id="THEMIS-Fair-and-Efficient-GPU-Cluster-Scheduling"><a href="#THEMIS-Fair-and-Efficient-GPU-Cluster-Scheduling" class="headerlink" title="THEMIS: Fair and Efficient GPU Cluster Scheduling"></a>THEMIS: Fair and Efficient GPU Cluster Scheduling</h5><ul>
+<li>出处: 2020 USENIX             <a target="_blank" rel="noopener" href="https://www.usenix.org/conference/nsdi20/presentation/mahajan">Themis：公平高效的 GPU 集群调度 |USENIX</a></li>
+<li>主要工作：使用拍卖机制，针对长时间运行、位置敏感的ML应用程序。任务以短期的效率公平来赢取投标但确保长期是完成时间公平性。<ul>
+<li>对每个ML应用程序$A_i$引入在GPU分配$\vec{G_i}$最大完成时间公平性$P_i(\cdot)$ </li>
+<li>单轮拍卖：<ul>
+<li>输入：资源和投标，$\vec{R}$表示要拍卖的GPU资源总量，其中每个元素为1，长度为要拍卖的GPU数量。每个ML应用程序都竞标这些资源，每个ML程序出价是对几个GPU分配方案$\vec{G}$($\vec{G_i}$的值为$\{0,1\}$)的最大时间公平性$P_i$</li>
+</ul>
+</li>
+<li>多轮拍卖：<ul>
+<li>逐轮拍卖：在每一轮拍卖开始时，向应用程序请求新的$P_i(\cdot)$</li>
+<li>逐轮过滤：为了最大化$P\le 1$应用数量，每轮都过滤掉$P$最大的$1-f$部分，$f\in(0,1)$。过滤使具有SI的应用数量最大化：一个输掉一轮拍卖的不公平应用$i$，更容易打赢一个赢得一轮拍卖的不那么公平的应用$k$（$k$被分配了GPU，它的$P_K$会增大，$i$由于等待也会增大$P_i$，会一直出现，输掉太多轮的应用最终会失去所有资源的租约）</li>
+<li>剩余分配：在每轮的最后，有剩余GPU，将这些GPU分配给没有参加拍卖的应用程序，这在违反了SI的风险下提高了效率。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>目标：在有效利用集群GPU的同时最小化所有ML应用程序的最大完成时间公平性。<strong>最大完成时间公平性</strong>(共享激励)：在一个有N个应用程序的共享集群中运行时间与在一个有$\frac{1}{N}$个应用程序的集群中单独运行的比率。通过两个思想来做到这点。<ul>
+<li>扩大ML应用程序和调度器之间的API，以允许应用程序指定放置偏好。通过一轮轮的拍卖达到，THEMIS使用租约来处理长时间运行的ML任务，并在租约到期时开始拍卖，新一轮开始时有个应用程序出价，价高者得。出价反映应用程序从获取的不同GPU子集的完成时间公平指标。</li>
+<li>提出两级调度设计。顶层包含一个集中的应用程序见调度程序，底层包含一个集成现有超参数调优框架的API。</li>
+</ul>
+</li>
+<li>动机：<ul>
+<li>现有方案无法提供公平的共享保证，因为他们不知道ML应用程序的特征。(主要是位置偏好)</li>
+<li>简单的方案是获取所有应用的 $P_i$ 然后进行排序并分配，但应用程序请求的资源往往比所需的更多，以获得更多的分配机会。</li>
+</ul>
+</li>
+<li>几个概念：<ul>
+<li>sharing incentive(SI): 如果N个用户共用集群C，每个用户的性能应该不弱于 $\frac{C}{N}$</li>
+<li>Pareto efficiency(PE): 帕累托最优。帕累托改善：从一种分配状态到另一种状态的变化中，在没有使任何人情况变化的前提下，使得至少一个人变得更好。帕累托最优是指集群分配无法再进行帕累托改善()。</li>
+<li>envy-freedoms(EF): 无羡嫉</li>
+</ul>
+</li>
+<li>新指标：$P=\frac{T_{sh}}{T_{id}}$ $T_{id}$ 是独立完成时间，$T_{sh}$ 是共享完成时间。如果$P\le 1$ 即可实现ML应用的共享激励。(此时共享完成时间小于独立完成时间)。</li>
+<li>调度器的类型：<ul>
+<li>悲观调度器：可见性和分配在单个应用的粒度上是密切相关的。</li>
+<li>全乐观调度器：可见性和分配在多个应用的粒度上是密切相关的，有完整的多应用可见性，因为所有集群资源及其状态对所有应用都是可见的，所有应用程序都争夺资源，资源分配决策是由多个应用程序同时使用事务作出的。</li>
+<li>半乐观调度器：<strong>本文所用方案</strong>，当跨应用调度器同时为多个应用提供资源时，它具有多应用可见性，而资源分配时是无冲突的，保证每个应用程序对资源的独占访问。</li>
+</ul>
+</li>
+<li><p>模型：</p>
+<p><img src="/2025/02/03/shceduler-6/72c286902cd978db3f7838bbba8cb1c8.png" alt="在这里插入图片描述"></p>
+</li>
+</ul>
+<p>调度架构分为两个级别，包括多个应用程序调度器和一个称为ARBITER的跨应用程序调度程序：</p>
+<ul>
+<li>第一阶段(1~3):<ul>
+<li>ARBITER 要求所有应用程序提供当前完成时间公平性$P$的估计值。</li>
+<li>ARBITER 启动拍卖，将可用资源的相同非绑定资源分配给$P$最小的$f\in[0,1]$部分应用(根据逐轮过滤)。为了最小化拍卖中ML调度器与参与者的变化，THEMIS 引入一个AGENT ，它和每个ML程序调度器放在一起。AGENT作为ML程序和ARBITER之间的媒介。</li>
+<li>这些应用程序并行地检查提供的资源，每个应用程序的AGENT返回一个标价，该标价反映了对资源分配的偏好。</li>
+</ul>
+</li>
+<li>第二阶段(4~5):<ul>
+<li>ARBITER 在收到这一轮的所有投标后，根据部分分配算法和剩余分配方案选择中标。然后通知每个AGENT获胜的分配(如果有的话)。</li>
+<li>AGENT将分配传播给ML应用程序调度器，然后ML应用程序调度器可以决定组成作业之间的分配。</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/scheduler/" rel="tag"># scheduler</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/02/03/markdown-note/" rel="prev" title="markdown_note“">
+      <i class="fa fa-chevron-left"></i> markdown_note“
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/02/03/ubuntu-conda-torch/" rel="next" title="Ubuntu20.04安装conda和pytorch">
+      Ubuntu20.04安装conda和pytorch <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#THEMIS-Fair-and-Efficient-GPU-Cluster-Scheduling"><span class="nav-number">1.</span> <span class="nav-text">THEMIS: Fair and Efficient GPU Cluster Scheduling</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
