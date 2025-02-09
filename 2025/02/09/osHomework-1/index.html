@@ -20,22 +20,20 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="调度架构分为两个级别，包括多个应用程序调度器和一个称为ARBITER的跨应用程序调度程序：PPf∈01。">
+  <meta name="description" content="BIOS中断介绍，包括中断号以及一些常见操作如字符显示，清屏">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【论文阅读】THEMIS:Fair and Efficient GPU Cluster Scheduling">
-<meta property="og:url" content="http://example.com/2025/02/03/scheduler-6/index.html">
+<meta property="og:title" content="BIOS中断介绍">
+<meta property="og:url" content="http://example.com/2025/02/09/osHomework-1/index.html">
 <meta property="og:site_name" content="CodeRQ">
-<meta property="og:description" content="调度架构分为两个级别，包括多个应用程序调度器和一个称为ARBITER的跨应用程序调度程序：PPf∈01。">
+<meta property="og:description" content="BIOS中断介绍，包括中断号以及一些常见操作如字符显示，清屏">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/2025/02/03/scheduler-6/72c286902cd978db3f7838bbba8cb1c8.png">
-<meta property="article:published_time" content="2025-02-03T14:45:11.000Z">
-<meta property="article:modified_time" content="2025-02-03T14:58:55.884Z">
+<meta property="article:published_time" content="2025-02-09T13:39:07.000Z">
+<meta property="article:modified_time" content="2025-02-09T13:41:57.608Z">
 <meta property="article:author" content="zheng rq">
-<meta property="article:tag" content="scheduler">
+<meta property="article:tag" content="os">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/2025/02/03/scheduler-6/72c286902cd978db3f7838bbba8cb1c8.png">
 
-<link rel="canonical" href="http://example.com/2025/02/03/scheduler-6/">
+<link rel="canonical" href="http://example.com/2025/02/09/osHomework-1/">
 
 
 <script id="page-configurations">
@@ -48,7 +46,7 @@
   };
 </script>
 
-  <title>【论文阅读】THEMIS:Fair and Efficient GPU Cluster Scheduling | CodeRQ</title>
+  <title>BIOS中断介绍 | CodeRQ</title>
   
 
 
@@ -196,7 +194,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/02/03/scheduler-6/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/02/09/osHomework-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -209,7 +207,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          【论文阅读】THEMIS:Fair and Efficient GPU Cluster Scheduling
+          BIOS中断介绍
         </h1>
 
         <div class="post-meta">
@@ -220,7 +218,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2025-02-03 22:45:11 / 修改时间：22:58:55" itemprop="dateCreated datePublished" datetime="2025-02-03T22:45:11+08:00">2025-02-03</time>
+              <time title="创建时间：2025-02-09 21:39:07 / 修改时间：21:41:57" itemprop="dateCreated datePublished" datetime="2025-02-09T21:39:07+08:00">2025-02-09</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -228,11 +226,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">论文阅读笔记</span></a>
+                  <a href="/categories/%E4%BD%9C%E4%B8%9A/" itemprop="url" rel="index"><span itemprop="name">作业</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/%E8%B0%83%E5%BA%A6/" itemprop="url" rel="index"><span itemprop="name">调度</span></a>
+                  <a href="/categories/%E4%BD%9C%E4%B8%9A/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
                 </span>
             </span>
 
@@ -247,65 +245,49 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>调度架构分为两个级别，包括多个应用程序调度器和一个称为ARBITER的跨应用程序调度程序：PPf∈01。</p>
+        <p>BIOS中断介绍，包括中断号以及一些常见操作如字符显示，清屏</p>
 <span id="more"></span>
-<h5 id="THEMIS-Fair-and-Efficient-GPU-Cluster-Scheduling"><a href="#THEMIS-Fair-and-Efficient-GPU-Cluster-Scheduling" class="headerlink" title="THEMIS: Fair and Efficient GPU Cluster Scheduling"></a>THEMIS: Fair and Efficient GPU Cluster Scheduling</h5><ul>
-<li>出处: 2020 USENIX             <a target="_blank" rel="noopener" href="https://www.usenix.org/conference/nsdi20/presentation/mahajan">Themis：公平高效的 GPU 集群调度 |USENIX</a></li>
-<li>主要工作：使用拍卖机制，针对长时间运行、位置敏感的ML应用程序。任务以短期的效率公平来赢取投标但确保长期是完成时间公平性。<ul>
-<li>对每个ML应用程序$A_i$引入在GPU分配$\vec{G_i}$最大完成时间公平性$P_i(\cdot)$ </li>
-<li>单轮拍卖：<ul>
-<li>输入：资源和投标，$\vec{R}$表示要拍卖的GPU资源总量，其中每个元素为1，长度为要拍卖的GPU数量。每个ML应用程序都竞标这些资源，每个ML程序出价是对几个GPU分配方案$\vec{G}$($\vec{G_i}$的值为$\{0,1\}$)的最大时间公平性$P_i$</li>
-</ul>
-</li>
-<li>多轮拍卖：<ul>
-<li>逐轮拍卖：在每一轮拍卖开始时，向应用程序请求新的$P_i(\cdot)$</li>
-<li>逐轮过滤：为了最大化$P\le 1$应用数量，每轮都过滤掉$P$最大的$1-f$部分，$f\in(0,1)$。过滤使具有SI的应用数量最大化：一个输掉一轮拍卖的不公平应用$i$，更容易打赢一个赢得一轮拍卖的不那么公平的应用$k$（$k$被分配了GPU，它的$P_K$会增大，$i$由于等待也会增大$P_i$，会一直出现，输掉太多轮的应用最终会失去所有资源的租约）</li>
-<li>剩余分配：在每轮的最后，有剩余GPU，将这些GPU分配给没有参加拍卖的应用程序，这在违反了SI的风险下提高了效率。</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>目标：在有效利用集群GPU的同时最小化所有ML应用程序的最大完成时间公平性。<strong>最大完成时间公平性</strong>(共享激励)：在一个有N个应用程序的共享集群中运行时间与在一个有$\frac{1}{N}$个应用程序的集群中单独运行的比率。通过两个思想来做到这点。<ul>
-<li>扩大ML应用程序和调度器之间的API，以允许应用程序指定放置偏好。通过一轮轮的拍卖达到，THEMIS使用租约来处理长时间运行的ML任务，并在租约到期时开始拍卖，新一轮开始时有个应用程序出价，价高者得。出价反映应用程序从获取的不同GPU子集的完成时间公平指标。</li>
-<li>提出两级调度设计。顶层包含一个集中的应用程序见调度程序，底层包含一个集成现有超参数调优框架的API。</li>
-</ul>
-</li>
-<li>动机：<ul>
-<li>现有方案无法提供公平的共享保证，因为他们不知道ML应用程序的特征。(主要是位置偏好)</li>
-<li>简单的方案是获取所有应用的 $P_i$ 然后进行排序并分配，但应用程序请求的资源往往比所需的更多，以获得更多的分配机会。</li>
-</ul>
-</li>
-<li>几个概念：<ul>
-<li>sharing incentive(SI): 如果N个用户共用集群C，每个用户的性能应该不弱于 $\frac{C}{N}$</li>
-<li>Pareto efficiency(PE): 帕累托最优。帕累托改善：从一种分配状态到另一种状态的变化中，在没有使任何人情况变化的前提下，使得至少一个人变得更好。帕累托最优是指集群分配无法再进行帕累托改善()。</li>
-<li>envy-freedoms(EF): 无羡嫉</li>
-</ul>
-</li>
-<li>新指标：$P=\frac{T_{sh}}{T_{id}}$ $T_{id}$ 是独立完成时间，$T_{sh}$ 是共享完成时间。如果$P\le 1$ 即可实现ML应用的共享激励。(此时共享完成时间小于独立完成时间)。</li>
-<li>调度器的类型：<ul>
-<li>悲观调度器：可见性和分配在单个应用的粒度上是密切相关的。</li>
-<li>全乐观调度器：可见性和分配在多个应用的粒度上是密切相关的，有完整的多应用可见性，因为所有集群资源及其状态对所有应用都是可见的，所有应用程序都争夺资源，资源分配决策是由多个应用程序同时使用事务作出的。</li>
-<li>半乐观调度器：<strong>本文所用方案</strong>，当跨应用调度器同时为多个应用提供资源时，它具有多应用可见性，而资源分配时是无冲突的，保证每个应用程序对资源的独占访问。</li>
-</ul>
-</li>
-<li><p>模型：</p>
-<p><img src="/2025/02/03/scheduler-6/72c286902cd978db3f7838bbba8cb1c8.png" alt="在这里插入图片描述"></p>
-</li>
-</ul>
-<p>调度架构分为两个级别，包括多个应用程序调度器和一个称为ARBITER的跨应用程序调度程序：</p>
-<ul>
-<li>第一阶段(1~3):<ul>
-<li>ARBITER 要求所有应用程序提供当前完成时间公平性$P$的估计值。</li>
-<li>ARBITER 启动拍卖，将可用资源的相同非绑定资源分配给$P$最小的$f\in[0,1]$部分应用(根据逐轮过滤)。为了最小化拍卖中ML调度器与参与者的变化，THEMIS 引入一个AGENT ，它和每个ML程序调度器放在一起。AGENT作为ML程序和ARBITER之间的媒介。</li>
-<li>这些应用程序并行地检查提供的资源，每个应用程序的AGENT返回一个标价，该标价反映了对资源分配的偏好。</li>
-</ul>
-</li>
-<li>第二阶段(4~5):<ul>
-<li>ARBITER 在收到这一轮的所有投标后，根据部分分配算法和剩余分配方案选择中标。然后通知每个AGENT获胜的分配(如果有的话)。</li>
-<li>AGENT将分配传播给ML应用程序调度器，然后ML应用程序调度器可以决定组成作业之间的分配。</li>
-</ul>
-</li>
-</ul>
+<h3 id="一-BIOS中断号"><a href="#一-BIOS中断号" class="headerlink" title="一.BIOS中断号"></a>一.BIOS中断号</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>中断号</th>
+<th>功能</th>
+<th style="text-align:left">入口参数</th>
+<th>返回值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>13H</td>
+<td>磁盘读取</td>
+<td style="text-align:left">AH:2表示读扇区，3表示写扇区AL=读/写的扇区数  ；CH=磁道号；CL=扇区号；DH=磁头号；DL=驱动器号 0：软驱A，1：软驱B， 80H：硬盘C，81H：硬盘D ES:BX 指向接收从扇区读入数据的内存区/写入磁盘的数据</td>
+<td>成功：AH=0       AL=读取/写入的扇区数                        失败：AH=出错码</td>
+</tr>
+<tr>
+<td>16H</td>
+<td>键盘操作</td>
+<td style="text-align:left">AH=0 从键盘读入字符送入AL，                                                               AH=1 查询键盘缓冲区，但不阻塞                                                                 AH=2 检查键盘上各特殊功能键的状态。执行后，各种特殊功能键的状态放入AL寄存器中，这个状态字记录在内存0040H：0017H单元中，若对应位为“1”，表示该键状态为“ON”，处于按下状态；若对应位为“0”，表示该键状态为“OFF”，处于断开状态。</td>
+<td></td>
+</tr>
+<tr>
+<td>21H</td>
+<td></td>
+<td style="text-align:left">AH=00h 程序终止</td>
+<td></td>
+</tr>
+<tr>
+<td>10H</td>
+<td>清屏</td>
+<td style="text-align:left">AX=0003h</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="二-字符显示"><a href="#二-字符显示" class="headerlink" title="二.字符显示"></a>二.字符显示</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mov ax,0B800h</span><br><span class="line">mov es,ax</span><br><span class="line">mov byte[es:off],&#x27;a&#x27;</span><br><span class="line">mov byte[es:off+1],b&#x27;KRGBIRGB</span><br></pre></td></tr></table></figure>
+<p>在这里插入图片描述</p>
+<h3 id="三-清屏"><a href="#三-清屏" class="headerlink" title="三.清屏"></a>三.清屏</h3><p>功能号：06H/07H<br>用　途：窗口内容向上/向下滚动<br>参　数：AL＝要滚动的行数（若是0将清窗口）<br>BH＝填入新行的属性<br>CH＝滚动窗口的左上角行号<br>CL＝滚动窗口的左上角列号<br>DH＝滚动窗口的右下角行号<br>DL＝滚动窗口的右下角列号<br>调　用：INT 10H<br>返　回：无<br>例子：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mov ah,0x06</span><br><span class="line">mov al,0</span><br><span class="line">mov ch,0  ;(0,0)</span><br><span class="line">mov cl,0</span><br><span class="line">mov dh,24  ;(24,79)</span><br><span class="line">mov dl,79</span><br><span class="line">mov bh,0x07 ;黑底白字</span><br><span class="line">int 10h</span><br></pre></td></tr></table></figure>
 
     </div>
 
@@ -330,7 +312,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/scheduler/" rel="tag"># scheduler</a>
+              <a href="/tags/os/" rel="tag"># os</a>
           </div>
 
         
@@ -339,13 +321,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2025/02/03/markdown-note/" rel="prev" title="markdown_note“">
-      <i class="fa fa-chevron-left"></i> markdown_note“
+    <a href="/2025/02/09/decisionTree/" rel="prev" title="决策树原理详解">
+      <i class="fa fa-chevron-left"></i> 决策树原理详解
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2025/02/03/ubuntu-conda-torch/" rel="next" title="Ubuntu20.04安装conda和pytorch">
-      Ubuntu20.04安装conda和pytorch <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -404,7 +383,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#THEMIS-Fair-and-Efficient-GPU-Cluster-Scheduling"><span class="nav-number">1.</span> <span class="nav-text">THEMIS: Fair and Efficient GPU Cluster Scheduling</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80-BIOS%E4%B8%AD%E6%96%AD%E5%8F%B7"><span class="nav-number">1.</span> <span class="nav-text">一.BIOS中断号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C-%E5%AD%97%E7%AC%A6%E6%98%BE%E7%A4%BA"><span class="nav-number">2.</span> <span class="nav-text">二.字符显示</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89-%E6%B8%85%E5%B1%8F"><span class="nav-number">3.</span> <span class="nav-text">三.清屏</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
