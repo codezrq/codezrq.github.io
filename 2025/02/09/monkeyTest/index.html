@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="使用Monkey测试进行软件测试，包括随机测试和脚本测试。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用Monkey进行软件测试（随机测试+脚本测试）">
+<meta property="og:url" content="http://example.com/2025/02/09/monkeyTest/index.html">
+<meta property="og:site_name" content="CodeRQ">
+<meta property="og:description" content="使用Monkey测试进行软件测试，包括随机测试和脚本测试。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/02/09/monkeyTest/185e7f152230905f34ff718b101dda9f.png">
+<meta property="og:image" content="http://example.com/2025/02/09/monkeyTest/8c9f5778443ccdc1e83f5c735df87f09.png">
+<meta property="og:image" content="http://example.com/2025/02/09/monkeyTest/88af5cfc35b5ffe9c343d6041f36f213.png">
+<meta property="og:image" content="http://example.com/2025/02/09/monkeyTest/41dd5f6a411c148bd55f66d8092fe1cf.png">
+<meta property="og:image" content="http://example.com/2025/02/09/monkeyTest/710185dc577e87c7df0d89f6eb7bf7ee.png">
+<meta property="og:image" content="http://example.com/2025/02/09/monkeyTest/29cea00790089158dd8837dcaf3f7e65.png">
+<meta property="og:image" content="http://example.com/2025/02/09/monkeyTest/6bf7cad61e642c83fced0d0f8a5b071a.png">
+<meta property="og:image" content="http://example.com/2025/02/09/monkeyTest/2cae79e3bbbf41746788345a740664ad.png">
+<meta property="og:image" content="http://example.com/2025/02/09/monkeyTest/9bfd79be0c193bd45e56dd091858f80b.png">
+<meta property="og:image" content="https://i-blog.csdnimg.cn/blog_migrate/71b40115b83fc42b5016a11583700df3.png#pic_center">
+<meta property="og:image" content="http://example.com/2025/02/09/monkeyTest/89f6d67d9cce2664e60cfde1943cd2ad.png">
+<meta property="article:published_time" content="2025-02-09T13:27:24.000Z">
+<meta property="article:modified_time" content="2025-02-09T13:30:50.969Z">
+<meta property="article:author" content="zheng rq">
+<meta property="article:tag" content="configure">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/02/09/monkeyTest/185e7f152230905f34ff718b101dda9f.png">
+
+<link rel="canonical" href="http://example.com/2025/02/09/monkeyTest/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>使用Monkey进行软件测试（随机测试+脚本测试） | CodeRQ</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CodeRQ</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/02/09/monkeyTest/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CodeRQ">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          使用Monkey进行软件测试（随机测试+脚本测试）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-02-09 21:27:24 / 修改时间：21:30:50" itemprop="dateCreated datePublished" datetime="2025-02-09T21:27:24+08:00">2025-02-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%85%8D%E7%BD%AE/" itemprop="url" rel="index"><span itemprop="name">配置</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>使用Monkey测试进行软件测试，包括随机测试和脚本测试。</p>
+<span id="more"></span>
+<p>[toc]</p>
+<h3 id="一、基础概念"><a href="#一、基础概念" class="headerlink" title="一、基础概念"></a>一、基础概念</h3><p>所谓的猴子测试（Money Test），也称搞怪测试，怪用测试，指在软件测试中﹐测试者可以进行各种稀奇古怪的操作模式，用以测试软件的稳定度。猴子测试，通俗来讲是一种系统对信号因子输入稳健性的测试方法。一般用于计算机软件程序这样的逻辑严密性要求高的系统。</p>
+<p>猴子测试之所以会广泛用于软件BUG测试，是因为系统的“可重复性”以及系统输入因子“有限性”和“单纯性”。</p>
+<p>通常情况下，复杂的测试会比简单的测试找到更多的bug。但是大部分的自动化测试都是简单的。我们期待一个输入后得到一个输出，然后程序回到一个已知的基本状态，然后我们再去执行另外一个简单的测试。我们设计测试用例一般都是按照一定的逻辑顺序，是经过深思熟虑的，但是这样的测试仍然是简单的测试。当我们回到程序的基本状态，则丢弃了前面测试的“历史”。而真正的用户不会这样操作，他们把一系列简单的动作串起来，形成一个复杂的动作流。</p>
+<p>　　我们的简单测试不会模拟那些用户行为。因此如果一个简单的动作引起了另外一个动作的失败，我们的简单测试不会找到那个bug…因此，我们需要使用复杂序列的、以前未使用过的测试，在这方面猴子比人更有效。</p>
+<p>　　猴子测试就是百般刁难，乱按一通，系統也不能宕机或者数据出现差错，这样才能称得上是经得起考验的程序。</p>
+<h3 id="二、monkey测试的优缺点"><a href="#二、monkey测试的优缺点" class="headerlink" title="二、monkey测试的优缺点"></a>二、monkey测试的优缺点</h3><h4 id="2-1-优点"><a href="#2-1-优点" class="headerlink" title="2.1 优点"></a>2.1 优点</h4><p>简单易用，方便快捷，并且理论上可以测试到所有bug,因为理论上只要次数最够多，所有事件都会发生。</p>
+<h4 id="2-2缺点"><a href="#2-2缺点" class="headerlink" title="2.2缺点"></a>2.2缺点</h4><ul>
+<li><p><strong>遍历界面有限。</strong> 在monkey测试中，由于事件的随机性，使得monkey容易卡在某些简单页面，比如登陆页面这种可操作内容很少的页面。导致测试效果不佳。测试有效性大打折扣。</p>
+</li>
+<li><p><strong>无法得知Bug的复现步骤</strong>。由于Monkey的随机性，如果Bug是由于事件发生的特定序列产生的，往往很难复现Bug。</p>
+</li>
+<li><p><strong>路径回环</strong>。由于monkey太过随机，最后根本无法控制，很容易陷于一个页面无法出来，或者陷入某个无关紧要的地方无法出来，导致测试结果并不具有很好的意义。这也是导致遍历界面有限的原因。</p>
+</li>
+</ul>
+<h4 id="2-3-解决方案"><a href="#2-3-解决方案" class="headerlink" title="2.3 解决方案"></a>2.3 解决方案</h4><h5 id="2-3-1-二次开发"><a href="#2-3-1-二次开发" class="headerlink" title="2.3.1 二次开发"></a>2.3.1 二次开发</h5><p>对monkey进行二次开发，例如maxin，可以通过一些黑白名单控制，或者输入指定事件流，或者指定不同的测试随机模式，深度优先或者控件识别等，同时加入一些熔断机制，在一个地方执行了太多次后可以自动触发熔断并拉起。但是这样还是会进入死循环，因为仍然不能解决路径回环的问题。</p>
+<h5 id="2-3-2-指定测试页面"><a href="#2-3-2-指定测试页面" class="headerlink" title="2.3.2 指定测试页面"></a>2.3.2 指定测试页面</h5><p>我们可以指定测试哪些页面，但是发现如果指定某几个Activity，虽然不会陷入路径回环，但随机的意义又不是那么大了，如果在几个页面进行随机，并且页面深度不是很深，那一直在这些页面测试也没有多大意义</p>
+<h5 id="2-3-3-调整各种事件的比例"><a href="#2-3-3-调整各种事件的比例" class="headerlink" title="2.3.3 调整各种事件的比例"></a>2.3.3 调整各种事件的比例</h5><p>我们可以根据应用的特点，适当调整各种事件的比例，adb也提供了这样的命令参数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">--pct-trackball &lt;percent&gt;</span><br><span class="line"></span><br><span class="line">作用：调整滚动球事件百分比。（滚动球事件由一个或多个随机的移动事件组成，有时会伴随着点击事件）如不规则滑动解锁</span><br><span class="line"></span><br><span class="line">--pct-nav&lt;percent&gt; 导航，现在手机基本没有导航了</span><br><span class="line"></span><br><span class="line">---pct-syskeys&lt;percent&gt; 按键消息比例，主页、后退、音量增减</span><br><span class="line"></span><br><span class="line">--pct-anyevent&lt;percent&gt; 其他不常用的按键比例的设置，不常用</span><br></pre></td></tr></table></figure>
+<h5 id="2-3-3-编写自定义测试脚本"><a href="#2-3-3-编写自定义测试脚本" class="headerlink" title="2.3.3 编写自定义测试脚本"></a>2.3.3 编写自定义测试脚本</h5><p>Monkey测试产生以上问题的原因就是太随机了，所以我们如果降低甚至抑制这种随机性，就可以避免上述的问题，调整各种事件的比例虽然降低了随机性，但仍可能存在上述问题。基于这个原因，我们可以编写特定的脚本，让事件依据我们设定的顺序发生，这样就可以解决上述问题：由于我们可以设定事件发生顺序，自然可以到达任意深度的页面，也可以定位出Bug。</p>
+<p>但这种方式只适用于我们已经有明确的思路，特别想测试APP中某些功能。</p>
+<h5 id="2-3-4-分析APP特性，选择合适的方案"><a href="#2-3-4-分析APP特性，选择合适的方案" class="headerlink" title="2.3.4 分析APP特性，选择合适的方案"></a>2.3.4 分析APP特性，选择合适的方案</h5><p>可以看出，测试的随机性和上述问题的解决是很难兼得的，我们必须根据我们应用的特性选择合适的方案。</p>
+<p>对于<strong>页面功能不多，控件简单</strong>的应用，我们可以采用自定义脚本进行测试，因为在这种情况下测试所有功能也是可能的。</p>
+<p>对于<strong>页面结构比较规律</strong>的应用，比如直播软件，每个页面结构相对固定（直播间都长一样），或者电商app(每种商品的页面大致相同)。由于随机性，所以点击不会一直在同一个地方进行点击，所以不容易一直卡在同一个页面。</p>
+<h3 id="三、monkey测试的基本过程"><a href="#三、monkey测试的基本过程" class="headerlink" title="三、monkey测试的基本过程"></a>三、monkey测试的基本过程</h3><h4 id="3-1-环境准备"><a href="#3-1-环境准备" class="headerlink" title="3.1 环境准备"></a>3.1 环境准备</h4><h5 id="3-1-1环境"><a href="#3-1-1环境" class="headerlink" title="3.1.1环境"></a>3.1.1环境</h5><ul>
+<li>电脑系统：window10</li>
+<li>手机系统：Android 10</li>
+<li>JDK版本：1.8</li>
+<li>SDK版本：1.0.41</li>
+</ul>
+<h5 id="3-1-2-配置过程"><a href="#3-1-2-配置过程" class="headerlink" title="3.1.2 配置过程"></a>3.1.2 配置过程</h5><p> 每台android手机里都有Monkey工具，但是我们是看不到的，因为，Monkey不是一个可视化的工具。我们需要借助ADB才能与Monkey进行通讯。</p>
+<p>ADB全名为Android Debug Bridge ,安卓调试桥，是实现电脑设备和手机沟通的桥梁。在开始Monkey测试之前，我们需要搭建环境。第一个前提条件就是安装Java JDK，第二个条件就是安装android SDK。</p>
+<ul>
+<li>下载jdk   具体安装流程参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/write6/article/details/79136388">https://blog.csdn.net/write6/article/details/79136388</a></li>
+<li>再下载sdk  具体安装流程参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/u011541946/article/details/77142045">https://blog.csdn.net/u011541946/article/details/77142045</a></li>
+</ul>
+<p>配置成功后，打开cmd，输入以下命令：</p>
+<p><code>adb</code></p>
+<p>出现以下画面：<br><img src="/2025/02/09/monkeyTest/185e7f152230905f34ff718b101dda9f.png" alt="在这里插入图片描述"></p>
+<p>表示配置成功。</p>
+<h4 id="3-2-测试adb程序"><a href="#3-2-测试adb程序" class="headerlink" title="3.2 测试adb程序"></a>3.2 测试adb程序</h4><h5 id="3-2-1-连接设备"><a href="#3-2-1-连接设备" class="headerlink" title="3.2.1 连接设备"></a>3.2.1 连接设备</h5><p>配置成功后，打开手机的开发者模式，然后打开USB调试，并用数据线连接手机和电脑，然后在cmd中输入以下命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb devices</span><br></pre></td></tr></table></figure>
+<p>出现以下画面，表示连接成功</p>
+<p><img src="/2025/02/09/monkeyTest/8c9f5778443ccdc1e83f5c735df87f09.png" alt="在这里插入图片描述"></p>
+<h5 id="3-2-2-获取包名"><a href="#3-2-2-获取包名" class="headerlink" title="3.2.2 获取包名"></a>3.2.2 获取包名</h5><p><strong>方法一：</strong></p>
+<p>在cmd中输入以下命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb shell pm list packages</span><br></pre></td></tr></table></figure>
+<p>可以查看手机所有的安装包（以下只显示部分）可以通过名称找出你要评测的包<br><img src="/2025/02/09/monkeyTest/88af5cfc35b5ffe9c343d6041f36f213.png" alt="在这里插入图片描述"></p>
+<p><strong>方法二</strong></p>
+<p>输入</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb shell pm list packages -3</span><br></pre></td></tr></table></figure>
+<p>可以查看手机上所有的第三方安装包，可以通过名称找出你要评测的包</p>
+<p><img src="/2025/02/09/monkeyTest/41dd5f6a411c148bd55f66d8092fe1cf.png" alt="在这里插入图片描述"></p>
+<p><strong>方法三</strong></p>
+<p>输入命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb shell logcat|findstr &quot;Displayed</span><br></pre></td></tr></table></figure>
+<p>同时打开待测的APP，出现以下画面，这里以今日头条为例<br><img src="/2025/02/09/monkeyTest/710185dc577e87c7df0d89f6eb7bf7ee.png" alt="在这里插入图片描述"></p>
+<p>其中<code>com.ss.android.article.news</code>表示包名之后是APPactivity，可用于自动化评测。</p>
+<h5 id="3-2-3-使用monkey测试"><a href="#3-2-3-使用monkey测试" class="headerlink" title="3.2.3 使用monkey测试"></a>3.2.3 使用monkey测试</h5><p><strong>对整机进行测试</strong></p>
+<p>使用<code>adb shell monkey -v 100</code>对整机进行测试</p>
+<p><img src="/2025/02/09/monkeyTest/29cea00790089158dd8837dcaf3f7e65.png" alt="在这里插入图片描述"></p>
+<p><strong>对指定应用进行测试</strong></p>
+<p>找到包名然后使用一个简单的命令进行monkey测试，</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb shell monkey -p com.ss.android.article.news -v -v -v 100</span><br></pre></td></tr></table></figure>
+<p>其中</p>
+<p><code>-p</code>表示指定测试的程序</p>
+<p><code>-v</code>表示查看monkey的执行日志，其中<code>-v</code>越多，表示信息越详细。</p>
+<p>其分别对应三个等级：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Level 0(缺省值)</span><br><span class="line">除启动提示、测试完成和最终结果之外，提供较少信息。</span><br><span class="line">Level 1</span><br><span class="line">提供较为详细的测试信息，如逐个发送到Activity的事件。</span><br><span class="line">Level 2</span><br><span class="line">提供更加详细的设置信息，如测试中被选中的或未被选中的Activity</span><br></pre></td></tr></table></figure>
+<p><code>100</code>表示执行的测试事件为100个</p>
+<p>执行后会出现详细的信息，同时会发现，手机App界面自动进行了100次随机操作。</p>
+<p><img src="/2025/02/09/monkeyTest/6bf7cad61e642c83fced0d0f8a5b071a.png" alt="在这里插入图片描述"></p>
+<h5 id="3-2-4-日志内容解析"><a href="#3-2-4-日志内容解析" class="headerlink" title="3.2.4 日志内容解析"></a>3.2.4 日志内容解析</h5><p>Monkey运行时输出的日志一般包含四类信息，分别是测试命令信息、伪随机事件流信息、异常信息、Monkey执行结果信息。</p>
+<p><strong>测试命令信息</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">-----随机种子，执行事件的数目-----</span><br><span class="line">:Monkey: seed=1639214805777 count=100</span><br><span class="line"></span><br><span class="line">-----可运行的应用列表-----</span><br><span class="line">:AllowPackage: com.ss.android.article.news</span><br><span class="line"></span><br><span class="line">-----表示启动的活动-----</span><br><span class="line">:IncludeCategory: android.intent.category.LAUNCHER</span><br><span class="line">:IncludeCategory: android.intent.category.MONKEY</span><br><span class="line"></span><br><span class="line">-----表示打开的活动-----</span><br><span class="line">// Selecting main activities from category android.intent.category.LAUNCHER</span><br><span class="line">// Seeded: 1639214805777</span><br><span class="line"></span><br><span class="line">-----各事件的百分比-----</span><br><span class="line">// Event percentages:</span><br><span class="line">//   0: 15.0%</span><br><span class="line">//   1: 10.0%</span><br><span class="line">//   2: 2.0%</span><br><span class="line">//   3: 15.0%</span><br><span class="line">//   4: -0.0%</span><br><span class="line">//   5: -0.0%</span><br><span class="line">//   6: 25.0%</span><br><span class="line">//   7: 15.0%</span><br><span class="line">//   8: 2.0%</span><br><span class="line">//   9: 2.0%</span><br><span class="line">//   10: 1.0%</span><br><span class="line">//   11: 13.0%</span><br></pre></td></tr></table></figure>
+<p>日志中会显示进行各种操作的百分比：其含义会随着Android版本的不同而不同，为了了解其含义，首先使用如下命令查看Android版本</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb shell getprop ro.build.version.release</span><br></pre></td></tr></table></figure>
+<p>我的查询结果为</p>
+<p> <img src="/2025/02/09/monkeyTest/2cae79e3bbbf41746788345a740664ad.png" alt="在这里插入图片描述"></p>
+<p>通过阅读对应版本的money源码中的MonkeySourceRandom.java文件，可以看到其Event序列是</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_TOUCH</span>        <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_MOTION</span>       <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_PINCHZOOM</span>    <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_TRACKBALL</span>    <span class="operator">=</span> <span class="number">3</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_ROTATION</span>     <span class="operator">=</span> <span class="number">4</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_NAV</span>          <span class="operator">=</span> <span class="number">5</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_MAJORNAV</span>     <span class="operator">=</span> <span class="number">6</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_SYSOPS</span>       <span class="operator">=</span> <span class="number">7</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_APPSWITCH</span>    <span class="operator">=</span> <span class="number">8</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_FLIP</span>         <span class="operator">=</span> <span class="number">9</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_ANYTHING</span>     <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTORZ_COUNT</span>       <span class="operator">=</span> <span class="number">11</span>;    <span class="comment">// should be last+1</span></span><br></pre></td></tr></table></figure>
+<p>所以对应的事件解释为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">//   0: 15.0%   触摸事件TOUCH，--pct-touch</span><br><span class="line">//   1: 10.0%   手势事件MOTION, --pct-motion</span><br><span class="line">//   2: 2.0%    两指缩放事件PINCHZOOM,--pct-pinchzoom</span><br><span class="line">//   3: 15.0%   轨迹球事件TRACKBALL,--pct-trackball</span><br><span class="line">//   4: -0.0%   屏幕旋转事件ROTATION, --pct-rotation</span><br><span class="line">//   5: 25.0%   基本导航事件nav, --pct-nav</span><br><span class="line">//   6: 15.0%   主要导航事件majornav, --pct-majornav</span><br><span class="line">//   7: 2.0%    系统按钮事件sysops, --pct-syskeys</span><br><span class="line">//   8: 2.0%    启动activity事件appswitch, --pct-appswitch</span><br><span class="line">//   9: 1.0%    键盘轻弹事件flip, --pct-flip</span><br><span class="line">//   10: 13.0%   其它事件,包括按键和不常用的按键，--pct-anyevent</span><br></pre></td></tr></table></figure>
+<p><strong>伪随机时间流信息</strong></p>
+<p>Monkey开始执行测试后，会顺序输出执行的事件流信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">-----跳转到com.android.article.news里的activity.MainActivity这个活动-----</span><br><span class="line">:Switch: #Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;launchFlags=0x10200000;component=com.ss.android.article.news/.activity.MainActivity;end</span><br><span class="line"></span><br><span class="line">-----允许启动com.android.article.news里的activity.MainActivity这个活动-----</span><br><span class="line">    // Allowing start of Intent &#123; act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] cmp=com.ss.android.article.news/.activity.MainActivity &#125; in package com.ss.android.article.news</span><br><span class="line">    </span><br><span class="line">-----延迟(可以在命令参数中设置延迟)-----</span><br><span class="line">Sleeping for 0 milliseconds</span><br><span class="line"></span><br><span class="line">-----触摸事件-----</span><br><span class="line">:Sending Touch (ACTION_DOWN): 0:(842.0,1801.0)</span><br><span class="line"></span><br><span class="line">-----基本导航事件-----</span><br><span class="line">C:\Users\86156&gt;adb shell monkey -p com.ss.android.article.news -v -v -v 100</span><br></pre></td></tr></table></figure>
+<p><strong>异常信息</strong></p>
+<p>当Monkey执行过程中遇到错误时，会输出对应的异常信息。由于本次实验的软件没有遇到错误，所以没有输出信息。</p>
+<p><strong>执行结果信息</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-----产生了100次事件-----Events injected: 100-----表示屏幕旋转信息-----:Sending rotation degree=0, persist=false-----表示丢弃的事件信息-----:Dropped: keys=1 pointers=0 trackballs=0 flips=0 rotations=0-----网络状态-----## Network stats: elapsed time=700ms (0ms mobile, 0ms wifi, 700ms not connected)----最终执行结果-----// Monkey finished</span><br></pre></td></tr></table></figure>
+<h4 id="3-3脚本自动化测试"><a href="#3-3脚本自动化测试" class="headerlink" title="3.3脚本自动化测试"></a>3.3脚本自动化测试</h4><p>3.2中实现了使用monkey进行随机测试的过程，但有时候我们需要根据我们的需求进行测试，这时候就要设计特定的测试样例。</p>
+<p>monkey提供了一系列脚本命令以便于我们根据需求设计测试样例，主要有</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LaunchActivity(pkg_name, cl_name)： 启动应用，第一个参数DispatchPress(keycode)： 向系统发送一个固定的按键事件；例如home键，back键；参数是按键值 ，按键值可查看keycodeUserWait：让脚本的执行暂停一段时间，做一个等待操作RotateScreen(rotationDegree, persist)： 翻转屏幕，第一个参数是旋转角度，第二个是旋转后是否停在当前位置Tap(x, y) ：单击事件，点击屏幕，参数是点击坐标Drag(xStart, yStart, xEnd, yEnd) ：在屏幕上滑动，坐标是从哪一点滑到哪一点DispatchString(input)： 输入字符串RunCmd(cmd) ：执行shell命令，比如截图 screencap -p /data/local/tmp/tmp.pngDispatchFlip(true/false) ：打开或者关闭软键盘UserWait(sleepTime) ：睡眠指定时间</span><br></pre></td></tr></table></figure>
+<h5 id="3-3-1需求分析"><a href="#3-3-1需求分析" class="headerlink" title="3.3.1需求分析"></a>3.3.1需求分析</h5><p>本次实验中主要实现以下<strong>测试案例</strong>:</p>
+<p>打开今日头条，点击搜索框，输入”abc”，然后点击搜索。播放第一视频，并在播放过程中调整音量（增大和减小）。</p>
+<p>通过资料中的脚本命令可知，输入字符串可以是使用<code>DispatchString(input)</code>函数，但我们还要点击搜索框和搜索按键，所以要获取对应按键的坐标。最后可以使用<code>RunCmd(Cmd)</code>进行截图。</p>
+<h5 id="3-3-2-获取坐标"><a href="#3-3-2-获取坐标" class="headerlink" title="3.3.2 获取坐标"></a>3.3.2 获取坐标</h5><p>在保持设备连接的情况下。执行以下命令获取当前事件，</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb shellgetevent</span><br></pre></td></tr></table></figure>
+<p><img src="/2025/02/09/monkeyTest/9bfd79be0c193bd45e56dd091858f80b.png" alt="在这里插入图片描述"></p>
+<p>然后点击屏幕对应区域，可以看到如下信息</p>
+<p><img src="https://i-blog.csdnimg.cn/blog_migrate/71b40115b83fc42b5016a11583700df3.png#pic_center" alt="在这里插入图片描述"></p>
+<p>有四列信息，分别为：设备名称，Code，Type，Value.<br>Code是指：该事件是什么。<br>Type是指：事件的相关参数<br>Value是指：事件参数的值。</p>
+<p>code值：</p>
+<p>0003—&gt;绝对坐标</p>
+<p>0000—&gt;同步事件。代表某一操作的完成。</p>
+<p>0001—&gt;key_broad。</p>
+<p>0002—&gt;相对坐标。</p>
+<p>Type值，我们只关注两个值</p>
+<p>0035—&gt;绝对坐标X<br>0036—&gt;绝对坐标Y</p>
+<p>value：表示对应的值</p>
+<p>例子中点击的坐标为<code>(0x1d2=466,0xad=173)</code></p>
+<h5 id="3-3-3编写脚本"><a href="#3-3-3编写脚本" class="headerlink" title="3.3.3编写脚本"></a>3.3.3编写脚本</h5><p>根据需求已经获取的信息，编写以下脚本</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Start of Script   <span class="built_in">type</span>= user   count= 10   speed= 1.0   start data &gt;&gt;   <span class="comment">#open the appLaunchActivity(com.ss.android.article.news, com.ss.android.article.news.activity.MainActivity)   UserWait(8000)Tap(576, 239)UserWait(2000) DispatchString(abc)UserWait(2000) Tap(1298, 216)UserWait(2000) Tap(746,1277)UserWait(8000) #turn up and down the volumeDispatchPress(24)UserWait(1000) DispatchPress(24)UserWait(1000) DispatchPress(24)UserWait(1000) DispatchPress(24)UserWait(1000) DispatchPress(24)UserWait(3000) DispatchPress(25)UserWait(1000) DispatchPress(25)UserWait(1000) DispatchPress(25)UserWait(1000)</span></span> </span><br></pre></td></tr></table></figure>
+<h5 id="3-3-4-执行脚本"><a href="#3-3-4-执行脚本" class="headerlink" title="3.3.4 执行脚本"></a>3.3.4 执行脚本</h5><p>因为Monkey是运行在设备上的，所以需要将脚本先传到设备上，</p>
+<p>通过<code>adb push monkey.txt sdcard/monkey.txt</code>将文件推送到手机sd卡上</p>
+<p>然后通过<code>adb shell monkey -f sdcard/monkey.txt -v 1</code> 执行脚本文件<br>执行日志如下：</p>
+<p><img src="/2025/02/09/monkeyTest/89f6d67d9cce2664e60cfde1943cd2ad.png" alt="在这里插入图片描述"></p>
+<p>可以看到，每个事件都成功执行了。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/configure/" rel="tag"># configure</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/02/05/ubuntu-docker/" rel="prev" title="Ubuntu安装Docker">
+      <i class="fa fa-chevron-left"></i> Ubuntu安装Docker
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/02/09/decisionTree/" rel="next" title="决策树原理详解">
+      决策树原理详解 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">一、基础概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81monkey%E6%B5%8B%E8%AF%95%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">2.</span> <span class="nav-text">二、monkey测试的优缺点</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-%E4%BC%98%E7%82%B9"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 优点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2%E7%BC%BA%E7%82%B9"><span class="nav-number">2.2.</span> <span class="nav-text">2.2缺点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-1-%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91"><span class="nav-number">2.3.1.</span> <span class="nav-text">2.3.1 二次开发</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-2-%E6%8C%87%E5%AE%9A%E6%B5%8B%E8%AF%95%E9%A1%B5%E9%9D%A2"><span class="nav-number">2.3.2.</span> <span class="nav-text">2.3.2 指定测试页面</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-3-%E8%B0%83%E6%95%B4%E5%90%84%E7%A7%8D%E4%BA%8B%E4%BB%B6%E7%9A%84%E6%AF%94%E4%BE%8B"><span class="nav-number">2.3.3.</span> <span class="nav-text">2.3.3 调整各种事件的比例</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-3-%E7%BC%96%E5%86%99%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B5%8B%E8%AF%95%E8%84%9A%E6%9C%AC"><span class="nav-number">2.3.4.</span> <span class="nav-text">2.3.3 编写自定义测试脚本</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-4-%E5%88%86%E6%9E%90APP%E7%89%B9%E6%80%A7%EF%BC%8C%E9%80%89%E6%8B%A9%E5%90%88%E9%80%82%E7%9A%84%E6%96%B9%E6%A1%88"><span class="nav-number">2.3.5.</span> <span class="nav-text">2.3.4 分析APP特性，选择合适的方案</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81monkey%E6%B5%8B%E8%AF%95%E7%9A%84%E5%9F%BA%E6%9C%AC%E8%BF%87%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">三、monkey测试的基本过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 环境准备</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-1%E7%8E%AF%E5%A2%83"><span class="nav-number">3.1.1.</span> <span class="nav-text">3.1.1环境</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-2-%E9%85%8D%E7%BD%AE%E8%BF%87%E7%A8%8B"><span class="nav-number">3.1.2.</span> <span class="nav-text">3.1.2 配置过程</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-%E6%B5%8B%E8%AF%95adb%E7%A8%8B%E5%BA%8F"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 测试adb程序</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-1-%E8%BF%9E%E6%8E%A5%E8%AE%BE%E5%A4%87"><span class="nav-number">3.2.1.</span> <span class="nav-text">3.2.1 连接设备</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-2-%E8%8E%B7%E5%8F%96%E5%8C%85%E5%90%8D"><span class="nav-number">3.2.2.</span> <span class="nav-text">3.2.2 获取包名</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-3-%E4%BD%BF%E7%94%A8monkey%E6%B5%8B%E8%AF%95"><span class="nav-number">3.2.3.</span> <span class="nav-text">3.2.3 使用monkey测试</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-4-%E6%97%A5%E5%BF%97%E5%86%85%E5%AE%B9%E8%A7%A3%E6%9E%90"><span class="nav-number">3.2.4.</span> <span class="nav-text">3.2.4 日志内容解析</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-3%E8%84%9A%E6%9C%AC%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95"><span class="nav-number">3.3.</span> <span class="nav-text">3.3脚本自动化测试</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-1%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90"><span class="nav-number">3.3.1.</span> <span class="nav-text">3.3.1需求分析</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-2-%E8%8E%B7%E5%8F%96%E5%9D%90%E6%A0%87"><span class="nav-number">3.3.2.</span> <span class="nav-text">3.3.2 获取坐标</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-3%E7%BC%96%E5%86%99%E8%84%9A%E6%9C%AC"><span class="nav-number">3.3.3.</span> <span class="nav-text">3.3.3编写脚本</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-4-%E6%89%A7%E8%A1%8C%E8%84%9A%E6%9C%AC"><span class="nav-number">3.3.4.</span> <span class="nav-text">3.3.4 执行脚本</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -2175,4 +2175,264 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 <p><img src="/2025/02/03/vscode-codeRunner/4af924d125c0be037bd0137122579235.png" alt="请添加图片描述"></p>
 ]]></content>
   </entry>
+  <entry>
+    <title>使用Monkey进行软件测试（随机测试+脚本测试）</title>
+    <url>/2025/02/09/monkeyTest/</url>
+    <content><![CDATA[<p>使用Monkey测试进行软件测试，包括随机测试和脚本测试。</p>
+<span id="more"></span>
+<p>[toc]</p>
+<h3 id="一、基础概念"><a href="#一、基础概念" class="headerlink" title="一、基础概念"></a>一、基础概念</h3><p>所谓的猴子测试（Money Test），也称搞怪测试，怪用测试，指在软件测试中﹐测试者可以进行各种稀奇古怪的操作模式，用以测试软件的稳定度。猴子测试，通俗来讲是一种系统对信号因子输入稳健性的测试方法。一般用于计算机软件程序这样的逻辑严密性要求高的系统。</p>
+<p>猴子测试之所以会广泛用于软件BUG测试，是因为系统的“可重复性”以及系统输入因子“有限性”和“单纯性”。</p>
+<p>通常情况下，复杂的测试会比简单的测试找到更多的bug。但是大部分的自动化测试都是简单的。我们期待一个输入后得到一个输出，然后程序回到一个已知的基本状态，然后我们再去执行另外一个简单的测试。我们设计测试用例一般都是按照一定的逻辑顺序，是经过深思熟虑的，但是这样的测试仍然是简单的测试。当我们回到程序的基本状态，则丢弃了前面测试的“历史”。而真正的用户不会这样操作，他们把一系列简单的动作串起来，形成一个复杂的动作流。</p>
+<p>　　我们的简单测试不会模拟那些用户行为。因此如果一个简单的动作引起了另外一个动作的失败，我们的简单测试不会找到那个bug…因此，我们需要使用复杂序列的、以前未使用过的测试，在这方面猴子比人更有效。</p>
+<p>　　猴子测试就是百般刁难，乱按一通，系統也不能宕机或者数据出现差错，这样才能称得上是经得起考验的程序。</p>
+<h3 id="二、monkey测试的优缺点"><a href="#二、monkey测试的优缺点" class="headerlink" title="二、monkey测试的优缺点"></a>二、monkey测试的优缺点</h3><h4 id="2-1-优点"><a href="#2-1-优点" class="headerlink" title="2.1 优点"></a>2.1 优点</h4><p>简单易用，方便快捷，并且理论上可以测试到所有bug,因为理论上只要次数最够多，所有事件都会发生。</p>
+<h4 id="2-2缺点"><a href="#2-2缺点" class="headerlink" title="2.2缺点"></a>2.2缺点</h4><ul>
+<li><p><strong>遍历界面有限。</strong> 在monkey测试中，由于事件的随机性，使得monkey容易卡在某些简单页面，比如登陆页面这种可操作内容很少的页面。导致测试效果不佳。测试有效性大打折扣。</p>
+</li>
+<li><p><strong>无法得知Bug的复现步骤</strong>。由于Monkey的随机性，如果Bug是由于事件发生的特定序列产生的，往往很难复现Bug。</p>
+</li>
+<li><p><strong>路径回环</strong>。由于monkey太过随机，最后根本无法控制，很容易陷于一个页面无法出来，或者陷入某个无关紧要的地方无法出来，导致测试结果并不具有很好的意义。这也是导致遍历界面有限的原因。</p>
+</li>
+</ul>
+<h4 id="2-3-解决方案"><a href="#2-3-解决方案" class="headerlink" title="2.3 解决方案"></a>2.3 解决方案</h4><h5 id="2-3-1-二次开发"><a href="#2-3-1-二次开发" class="headerlink" title="2.3.1 二次开发"></a>2.3.1 二次开发</h5><p>对monkey进行二次开发，例如maxin，可以通过一些黑白名单控制，或者输入指定事件流，或者指定不同的测试随机模式，深度优先或者控件识别等，同时加入一些熔断机制，在一个地方执行了太多次后可以自动触发熔断并拉起。但是这样还是会进入死循环，因为仍然不能解决路径回环的问题。</p>
+<h5 id="2-3-2-指定测试页面"><a href="#2-3-2-指定测试页面" class="headerlink" title="2.3.2 指定测试页面"></a>2.3.2 指定测试页面</h5><p>我们可以指定测试哪些页面，但是发现如果指定某几个Activity，虽然不会陷入路径回环，但随机的意义又不是那么大了，如果在几个页面进行随机，并且页面深度不是很深，那一直在这些页面测试也没有多大意义</p>
+<h5 id="2-3-3-调整各种事件的比例"><a href="#2-3-3-调整各种事件的比例" class="headerlink" title="2.3.3 调整各种事件的比例"></a>2.3.3 调整各种事件的比例</h5><p>我们可以根据应用的特点，适当调整各种事件的比例，adb也提供了这样的命令参数。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">--pct-trackball &lt;percent&gt;</span><br><span class="line"></span><br><span class="line">作用：调整滚动球事件百分比。（滚动球事件由一个或多个随机的移动事件组成，有时会伴随着点击事件）如不规则滑动解锁</span><br><span class="line"></span><br><span class="line">--pct-nav&lt;percent&gt; 导航，现在手机基本没有导航了</span><br><span class="line"></span><br><span class="line">---pct-syskeys&lt;percent&gt; 按键消息比例，主页、后退、音量增减</span><br><span class="line"></span><br><span class="line">--pct-anyevent&lt;percent&gt; 其他不常用的按键比例的设置，不常用</span><br></pre></td></tr></table></figure>
+<h5 id="2-3-3-编写自定义测试脚本"><a href="#2-3-3-编写自定义测试脚本" class="headerlink" title="2.3.3 编写自定义测试脚本"></a>2.3.3 编写自定义测试脚本</h5><p>Monkey测试产生以上问题的原因就是太随机了，所以我们如果降低甚至抑制这种随机性，就可以避免上述的问题，调整各种事件的比例虽然降低了随机性，但仍可能存在上述问题。基于这个原因，我们可以编写特定的脚本，让事件依据我们设定的顺序发生，这样就可以解决上述问题：由于我们可以设定事件发生顺序，自然可以到达任意深度的页面，也可以定位出Bug。</p>
+<p>但这种方式只适用于我们已经有明确的思路，特别想测试APP中某些功能。</p>
+<h5 id="2-3-4-分析APP特性，选择合适的方案"><a href="#2-3-4-分析APP特性，选择合适的方案" class="headerlink" title="2.3.4 分析APP特性，选择合适的方案"></a>2.3.4 分析APP特性，选择合适的方案</h5><p>可以看出，测试的随机性和上述问题的解决是很难兼得的，我们必须根据我们应用的特性选择合适的方案。</p>
+<p>对于<strong>页面功能不多，控件简单</strong>的应用，我们可以采用自定义脚本进行测试，因为在这种情况下测试所有功能也是可能的。</p>
+<p>对于<strong>页面结构比较规律</strong>的应用，比如直播软件，每个页面结构相对固定（直播间都长一样），或者电商app(每种商品的页面大致相同)。由于随机性，所以点击不会一直在同一个地方进行点击，所以不容易一直卡在同一个页面。</p>
+<h3 id="三、monkey测试的基本过程"><a href="#三、monkey测试的基本过程" class="headerlink" title="三、monkey测试的基本过程"></a>三、monkey测试的基本过程</h3><h4 id="3-1-环境准备"><a href="#3-1-环境准备" class="headerlink" title="3.1 环境准备"></a>3.1 环境准备</h4><h5 id="3-1-1环境"><a href="#3-1-1环境" class="headerlink" title="3.1.1环境"></a>3.1.1环境</h5><ul>
+<li>电脑系统：window10</li>
+<li>手机系统：Android 10</li>
+<li>JDK版本：1.8</li>
+<li>SDK版本：1.0.41</li>
+</ul>
+<h5 id="3-1-2-配置过程"><a href="#3-1-2-配置过程" class="headerlink" title="3.1.2 配置过程"></a>3.1.2 配置过程</h5><p> 每台android手机里都有Monkey工具，但是我们是看不到的，因为，Monkey不是一个可视化的工具。我们需要借助ADB才能与Monkey进行通讯。</p>
+<p>ADB全名为Android Debug Bridge ,安卓调试桥，是实现电脑设备和手机沟通的桥梁。在开始Monkey测试之前，我们需要搭建环境。第一个前提条件就是安装Java JDK，第二个条件就是安装android SDK。</p>
+<ul>
+<li>下载jdk   具体安装流程参考：<a href="https://blog.csdn.net/write6/article/details/79136388">https://blog.csdn.net/write6/article/details/79136388</a></li>
+<li>再下载sdk  具体安装流程参考：<a href="https://blog.csdn.net/u011541946/article/details/77142045">https://blog.csdn.net/u011541946/article/details/77142045</a></li>
+</ul>
+<p>配置成功后，打开cmd，输入以下命令：</p>
+<p><code>adb</code></p>
+<p>出现以下画面：<br><img src="/2025/02/09/monkeyTest/185e7f152230905f34ff718b101dda9f.png" alt="在这里插入图片描述"></p>
+<p>表示配置成功。</p>
+<h4 id="3-2-测试adb程序"><a href="#3-2-测试adb程序" class="headerlink" title="3.2 测试adb程序"></a>3.2 测试adb程序</h4><h5 id="3-2-1-连接设备"><a href="#3-2-1-连接设备" class="headerlink" title="3.2.1 连接设备"></a>3.2.1 连接设备</h5><p>配置成功后，打开手机的开发者模式，然后打开USB调试，并用数据线连接手机和电脑，然后在cmd中输入以下命令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">adb devices</span><br></pre></td></tr></table></figure>
+<p>出现以下画面，表示连接成功</p>
+<p><img src="/2025/02/09/monkeyTest/8c9f5778443ccdc1e83f5c735df87f09.png" alt="在这里插入图片描述"></p>
+<h5 id="3-2-2-获取包名"><a href="#3-2-2-获取包名" class="headerlink" title="3.2.2 获取包名"></a>3.2.2 获取包名</h5><p><strong>方法一：</strong></p>
+<p>在cmd中输入以下命令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">adb shell pm list packages</span><br></pre></td></tr></table></figure>
+<p>可以查看手机所有的安装包（以下只显示部分）可以通过名称找出你要评测的包<br><img src="/2025/02/09/monkeyTest/88af5cfc35b5ffe9c343d6041f36f213.png" alt="在这里插入图片描述"></p>
+<p><strong>方法二</strong></p>
+<p>输入</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">adb shell pm list packages -3</span><br></pre></td></tr></table></figure>
+<p>可以查看手机上所有的第三方安装包，可以通过名称找出你要评测的包</p>
+<p><img src="/2025/02/09/monkeyTest/41dd5f6a411c148bd55f66d8092fe1cf.png" alt="在这里插入图片描述"></p>
+<p><strong>方法三</strong></p>
+<p>输入命令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">adb shell logcat|findstr &quot;Displayed</span><br></pre></td></tr></table></figure>
+<p>同时打开待测的APP，出现以下画面，这里以今日头条为例<br><img src="/2025/02/09/monkeyTest/710185dc577e87c7df0d89f6eb7bf7ee.png" alt="在这里插入图片描述"></p>
+<p>其中<code>com.ss.android.article.news</code>表示包名之后是APPactivity，可用于自动化评测。</p>
+<h5 id="3-2-3-使用monkey测试"><a href="#3-2-3-使用monkey测试" class="headerlink" title="3.2.3 使用monkey测试"></a>3.2.3 使用monkey测试</h5><p><strong>对整机进行测试</strong></p>
+<p>使用<code>adb shell monkey -v 100</code>对整机进行测试</p>
+<p><img src="/2025/02/09/monkeyTest/29cea00790089158dd8837dcaf3f7e65.png" alt="在这里插入图片描述"></p>
+<p><strong>对指定应用进行测试</strong></p>
+<p>找到包名然后使用一个简单的命令进行monkey测试，</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">adb shell monkey -p com.ss.android.article.news -v -v -v 100</span><br></pre></td></tr></table></figure>
+<p>其中</p>
+<p><code>-p</code>表示指定测试的程序</p>
+<p><code>-v</code>表示查看monkey的执行日志，其中<code>-v</code>越多，表示信息越详细。</p>
+<p>其分别对应三个等级：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Level 0(缺省值)</span><br><span class="line">除启动提示、测试完成和最终结果之外，提供较少信息。</span><br><span class="line">Level 1</span><br><span class="line">提供较为详细的测试信息，如逐个发送到Activity的事件。</span><br><span class="line">Level 2</span><br><span class="line">提供更加详细的设置信息，如测试中被选中的或未被选中的Activity</span><br></pre></td></tr></table></figure>
+<p><code>100</code>表示执行的测试事件为100个</p>
+<p>执行后会出现详细的信息，同时会发现，手机App界面自动进行了100次随机操作。</p>
+<p><img src="/2025/02/09/monkeyTest/6bf7cad61e642c83fced0d0f8a5b071a.png" alt="在这里插入图片描述"></p>
+<h5 id="3-2-4-日志内容解析"><a href="#3-2-4-日志内容解析" class="headerlink" title="3.2.4 日志内容解析"></a>3.2.4 日志内容解析</h5><p>Monkey运行时输出的日志一般包含四类信息，分别是测试命令信息、伪随机事件流信息、异常信息、Monkey执行结果信息。</p>
+<p><strong>测试命令信息</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-----随机种子，执行事件的数目-----</span><br><span class="line">:Monkey: seed=1639214805777 count=100</span><br><span class="line"></span><br><span class="line">-----可运行的应用列表-----</span><br><span class="line">:AllowPackage: com.ss.android.article.news</span><br><span class="line"></span><br><span class="line">-----表示启动的活动-----</span><br><span class="line">:IncludeCategory: android.intent.category.LAUNCHER</span><br><span class="line">:IncludeCategory: android.intent.category.MONKEY</span><br><span class="line"></span><br><span class="line">-----表示打开的活动-----</span><br><span class="line">// Selecting main activities from category android.intent.category.LAUNCHER</span><br><span class="line">// Seeded: 1639214805777</span><br><span class="line"></span><br><span class="line">-----各事件的百分比-----</span><br><span class="line">// Event percentages:</span><br><span class="line">//   0: 15.0%</span><br><span class="line">//   1: 10.0%</span><br><span class="line">//   2: 2.0%</span><br><span class="line">//   3: 15.0%</span><br><span class="line">//   4: -0.0%</span><br><span class="line">//   5: -0.0%</span><br><span class="line">//   6: 25.0%</span><br><span class="line">//   7: 15.0%</span><br><span class="line">//   8: 2.0%</span><br><span class="line">//   9: 2.0%</span><br><span class="line">//   10: 1.0%</span><br><span class="line">//   11: 13.0%</span><br></pre></td></tr></table></figure>
+<p>日志中会显示进行各种操作的百分比：其含义会随着Android版本的不同而不同，为了了解其含义，首先使用如下命令查看Android版本</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">adb shell getprop ro.build.version.release</span><br></pre></td></tr></table></figure>
+<p>我的查询结果为</p>
+<p> <img src="/2025/02/09/monkeyTest/2cae79e3bbbf41746788345a740664ad.png" alt="在这里插入图片描述"></p>
+<p>通过阅读对应版本的money源码中的MonkeySourceRandom.java文件，可以看到其Event序列是</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_TOUCH</span>        <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_MOTION</span>       <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_PINCHZOOM</span>    <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_TRACKBALL</span>    <span class="operator">=</span> <span class="number">3</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_ROTATION</span>     <span class="operator">=</span> <span class="number">4</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_NAV</span>          <span class="operator">=</span> <span class="number">5</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_MAJORNAV</span>     <span class="operator">=</span> <span class="number">6</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_SYSOPS</span>       <span class="operator">=</span> <span class="number">7</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_APPSWITCH</span>    <span class="operator">=</span> <span class="number">8</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_FLIP</span>         <span class="operator">=</span> <span class="number">9</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTOR_ANYTHING</span>     <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">FACTORZ_COUNT</span>       <span class="operator">=</span> <span class="number">11</span>;    <span class="comment">// should be last+1</span></span><br></pre></td></tr></table></figure>
+<p>所以对应的事件解释为</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">//   0: 15.0%   触摸事件TOUCH，--pct-touch</span><br><span class="line">//   1: 10.0%   手势事件MOTION, --pct-motion</span><br><span class="line">//   2: 2.0%    两指缩放事件PINCHZOOM,--pct-pinchzoom</span><br><span class="line">//   3: 15.0%   轨迹球事件TRACKBALL,--pct-trackball</span><br><span class="line">//   4: -0.0%   屏幕旋转事件ROTATION, --pct-rotation</span><br><span class="line">//   5: 25.0%   基本导航事件nav, --pct-nav</span><br><span class="line">//   6: 15.0%   主要导航事件majornav, --pct-majornav</span><br><span class="line">//   7: 2.0%    系统按钮事件sysops, --pct-syskeys</span><br><span class="line">//   8: 2.0%    启动activity事件appswitch, --pct-appswitch</span><br><span class="line">//   9: 1.0%    键盘轻弹事件flip, --pct-flip</span><br><span class="line">//   10: 13.0%   其它事件,包括按键和不常用的按键，--pct-anyevent</span><br></pre></td></tr></table></figure>
+<p><strong>伪随机时间流信息</strong></p>
+<p>Monkey开始执行测试后，会顺序输出执行的事件流信息。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-----跳转到com.android.article.news里的activity.MainActivity这个活动-----</span><br><span class="line">:Switch: #Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;launchFlags=0x10200000;component=com.ss.android.article.news/.activity.MainActivity;end</span><br><span class="line"></span><br><span class="line">-----允许启动com.android.article.news里的activity.MainActivity这个活动-----</span><br><span class="line">    // Allowing start of Intent &#123; act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] cmp=com.ss.android.article.news/.activity.MainActivity &#125; in package com.ss.android.article.news</span><br><span class="line">    </span><br><span class="line">-----延迟(可以在命令参数中设置延迟)-----</span><br><span class="line">Sleeping for 0 milliseconds</span><br><span class="line"></span><br><span class="line">-----触摸事件-----</span><br><span class="line">:Sending Touch (ACTION_DOWN): 0:(842.0,1801.0)</span><br><span class="line"></span><br><span class="line">-----基本导航事件-----</span><br><span class="line">C:\Users\86156&gt;adb shell monkey -p com.ss.android.article.news -v -v -v 100</span><br></pre></td></tr></table></figure>
+<p><strong>异常信息</strong></p>
+<p>当Monkey执行过程中遇到错误时，会输出对应的异常信息。由于本次实验的软件没有遇到错误，所以没有输出信息。</p>
+<p><strong>执行结果信息</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-----产生了100次事件-----Events injected: 100-----表示屏幕旋转信息-----:Sending rotation degree=0, persist=false-----表示丢弃的事件信息-----:Dropped: keys=1 pointers=0 trackballs=0 flips=0 rotations=0-----网络状态-----## Network stats: elapsed time=700ms (0ms mobile, 0ms wifi, 700ms not connected)----最终执行结果-----// Monkey finished</span><br></pre></td></tr></table></figure>
+<h4 id="3-3脚本自动化测试"><a href="#3-3脚本自动化测试" class="headerlink" title="3.3脚本自动化测试"></a>3.3脚本自动化测试</h4><p>3.2中实现了使用monkey进行随机测试的过程，但有时候我们需要根据我们的需求进行测试，这时候就要设计特定的测试样例。</p>
+<p>monkey提供了一系列脚本命令以便于我们根据需求设计测试样例，主要有</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">LaunchActivity(pkg_name, cl_name)： 启动应用，第一个参数DispatchPress(keycode)： 向系统发送一个固定的按键事件；例如home键，back键；参数是按键值 ，按键值可查看keycodeUserWait：让脚本的执行暂停一段时间，做一个等待操作RotateScreen(rotationDegree, persist)： 翻转屏幕，第一个参数是旋转角度，第二个是旋转后是否停在当前位置Tap(x, y) ：单击事件，点击屏幕，参数是点击坐标Drag(xStart, yStart, xEnd, yEnd) ：在屏幕上滑动，坐标是从哪一点滑到哪一点DispatchString(input)： 输入字符串RunCmd(cmd) ：执行shell命令，比如截图 screencap -p /data/local/tmp/tmp.pngDispatchFlip(true/false) ：打开或者关闭软键盘UserWait(sleepTime) ：睡眠指定时间</span><br></pre></td></tr></table></figure>
+<h5 id="3-3-1需求分析"><a href="#3-3-1需求分析" class="headerlink" title="3.3.1需求分析"></a>3.3.1需求分析</h5><p>本次实验中主要实现以下<strong>测试案例</strong>:</p>
+<p>打开今日头条，点击搜索框，输入”abc”，然后点击搜索。播放第一视频，并在播放过程中调整音量（增大和减小）。</p>
+<p>通过资料中的脚本命令可知，输入字符串可以是使用<code>DispatchString(input)</code>函数，但我们还要点击搜索框和搜索按键，所以要获取对应按键的坐标。最后可以使用<code>RunCmd(Cmd)</code>进行截图。</p>
+<h5 id="3-3-2-获取坐标"><a href="#3-3-2-获取坐标" class="headerlink" title="3.3.2 获取坐标"></a>3.3.2 获取坐标</h5><p>在保持设备连接的情况下。执行以下命令获取当前事件，</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">adb shellgetevent</span><br></pre></td></tr></table></figure>
+<p><img src="/2025/02/09/monkeyTest/9bfd79be0c193bd45e56dd091858f80b.png" alt="在这里插入图片描述"></p>
+<p>然后点击屏幕对应区域，可以看到如下信息</p>
+<p><img src="https://i-blog.csdnimg.cn/blog_migrate/71b40115b83fc42b5016a11583700df3.png#pic_center" alt="在这里插入图片描述"></p>
+<p>有四列信息，分别为：设备名称，Code，Type，Value.<br>Code是指：该事件是什么。<br>Type是指：事件的相关参数<br>Value是指：事件参数的值。</p>
+<p>code值：</p>
+<p>0003—&gt;绝对坐标</p>
+<p>0000—&gt;同步事件。代表某一操作的完成。</p>
+<p>0001—&gt;key_broad。</p>
+<p>0002—&gt;相对坐标。</p>
+<p>Type值，我们只关注两个值</p>
+<p>0035—&gt;绝对坐标X<br>0036—&gt;绝对坐标Y</p>
+<p>value：表示对应的值</p>
+<p>例子中点击的坐标为<code>(0x1d2=466,0xad=173)</code></p>
+<h5 id="3-3-3编写脚本"><a href="#3-3-3编写脚本" class="headerlink" title="3.3.3编写脚本"></a>3.3.3编写脚本</h5><p>根据需求已经获取的信息，编写以下脚本</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Start of Script   <span class="built_in">type</span>= user   count= 10   speed= 1.0   start data &gt;&gt;   <span class="comment">#open the appLaunchActivity(com.ss.android.article.news, com.ss.android.article.news.activity.MainActivity)   UserWait(8000)Tap(576, 239)UserWait(2000) DispatchString(abc)UserWait(2000) Tap(1298, 216)UserWait(2000) Tap(746,1277)UserWait(8000) #turn up and down the volumeDispatchPress(24)UserWait(1000) DispatchPress(24)UserWait(1000) DispatchPress(24)UserWait(1000) DispatchPress(24)UserWait(1000) DispatchPress(24)UserWait(3000) DispatchPress(25)UserWait(1000) DispatchPress(25)UserWait(1000) DispatchPress(25)UserWait(1000)</span></span> </span><br></pre></td></tr></table></figure>
+<h5 id="3-3-4-执行脚本"><a href="#3-3-4-执行脚本" class="headerlink" title="3.3.4 执行脚本"></a>3.3.4 执行脚本</h5><p>因为Monkey是运行在设备上的，所以需要将脚本先传到设备上，</p>
+<p>通过<code>adb push monkey.txt sdcard/monkey.txt</code>将文件推送到手机sd卡上</p>
+<p>然后通过<code>adb shell monkey -f sdcard/monkey.txt -v 1</code> 执行脚本文件<br>执行日志如下：</p>
+<p><img src="/2025/02/09/monkeyTest/89f6d67d9cce2664e60cfde1943cd2ad.png" alt="在这里插入图片描述"></p>
+<p>可以看到，每个事件都成功执行了。</p>
+]]></content>
+      <categories>
+        <category>配置</category>
+      </categories>
+      <tags>
+        <tag>configure</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>决策树原理详解</title>
+    <url>/2025/02/09/decisionTree/</url>
+    <content><![CDATA[<p>决策树原理，举例演算及其代码实现</p>
+<span id="more"></span>
+<h4 id="一-使用的例子："><a href="#一-使用的例子：" class="headerlink" title="一 .使用的例子："></a>一 .使用的例子：</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>人员</th>
+<th>眼睛颜色</th>
+<th>头发颜色</th>
+<th>所属人种</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>黑色</td>
+<td>金色</td>
+<td>白种人</td>
+</tr>
+<tr>
+<td>2</td>
+<td>蓝色</td>
+<td>黑色</td>
+<td>黄种人</td>
+</tr>
+<tr>
+<td>3</td>
+<td>灰色</td>
+<td>金色</td>
+<td>白种人</td>
+</tr>
+<tr>
+<td>4</td>
+<td>蓝色</td>
+<td>金色</td>
+<td>白种人</td>
+</tr>
+<tr>
+<td>5</td>
+<td>灰色</td>
+<td>金色</td>
+<td>白种人</td>
+</tr>
+<tr>
+<td>6</td>
+<td>黑色</td>
+<td>黑色</td>
+<td>黄种人</td>
+</tr>
+<tr>
+<td>7</td>
+<td>灰色</td>
+<td>黑色</td>
+<td>黄种人</td>
+</tr>
+<tr>
+<td>8</td>
+<td>蓝色</td>
+<td>黑色</td>
+<td>黄种人</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>决策树的基本思想是从一颗空的决策树开始，选择某一属性作为测试属性，该测试属性对应决策树中的决策顶点，再在剩下的数据集上递归选择另一属性建立决策顶点。</p>
+<p><strong>一。决策树学习算法大体上可以分为两个阶段：建模阶段和预测阶段</strong></p>
+<p><strong>建模阶段</strong>可通过以下步骤实现：</p>
+<ul>
+<li>首先，所有训练样本都处于根节点位置</li>
+<li>基于一定的策略选择属性</li>
+<li>根据选择的属性，递归地划分样本</li>
+</ul>
+<p>我们主要要解决两个问题：</p>
+<ul>
+<li><p>递归结束的条件：递归的情况有以下几种</p>
+<ul>
+<li>没有可用的数据：以父节点的标签作为标签</li>
+<li>被分到的样本都属于同一个类别：以该类别作为标签</li>
+<li>所有属性都已用于之前的划分，没有可用的属性可以继续划分：采用多数投票的方式选出标签。</li>
+</ul>
+</li>
+<li><p>通过什么策略选择节点的属性</p>
+</li>
+</ul>
+<p>使用上面的例子，如果我们先选眼睛颜色作为属性，可以建出如下的树<br><img src="/2025/02/09/decisionTree/c12497b3880b065611e22c3af4681b1c.png" alt="在这里插入图片描述"></p>
+<p>如果先选择头发颜色作为属性，可以建出如下的树：</p>
+<p><img src="/2025/02/09/decisionTree/2d3b1ce475a59658fcf6c79e95f1765b.png" alt="在这里插入图片描述"></p>
+<p>从上面两棵树来看，选择不同属性作为节点对建树的影响很大，所以我们要选择合适的策略算法，常用的有<code>ID3,C4.5,CART</code>，这三种之后会逐个解释。</p>
+<p>通过上述步骤，就可以建立一棵决策树，接下来就是<strong>预测阶段</strong>：</p>
+<p>预测阶段就是根据带预测数据各属性的取值，逐步遍历树，直到叶子节点，叶子节点对应的标签就说我们的预测结果，比如我们要预测<strong>蓝眼睛黄头发</strong>的属于哪个人种，以第一棵树为例</p>
+<p>从根节点出发，先看眼睛颜色，为蓝色，所以选择根节点的第二个节点作为下个节点，然后看头发颜色，为黄色，选择第一个节点，此时已到叶子节点，对应的标签为白种人，所以我们预测结果为白种人。</p>
+<p><strong>二。决策函数</strong></p>
+<p>上面已经解释了建立一颗树的大致步骤，但还有最重要的一个问题没有解决，就是选择什么策略：</p>
+<p><strong>ID3</strong>使用信息增益度选择测试属性，要解释如何计算信息增益度，先要解释信息熵，信息熵是衡量一个信息不确定性大小的值，通常我们认为，如果某个信息让我们的判断更加有序，清晰，则它信息熵越小，反之越大。</p>
+<p>$X$的信息熵计算公式如下：</p>
+<p>$H(X) = \sum_{x\in X}(-p(x)\times log(p(x)))$</p>
+<p>条件熵:$H(Y|X)$表示是在$X$确定下$Y$的熵，可以通过如下公式计算</p>
+<p>$H(Y|X) = \sum_{x\in X}p(x)H(Y|X=x)=\sum_{x\in X}\sum_{y\in Y}p(x,y)log_2p(y|x)$</p>
+<p>联合熵：$H(X,Y) = -\sum_{x\in X}\sum_{y\in Y}p(x,y)log_2p(x,y)=H(X)+H(Y|X)= H(Y)+H(Y|X))$</p>
+<p>这表明两个变量的联合熵等于$X$的熵加上给定$X$,出现$Y$的条件熵。</p>
+<p>接着根据联合熵的公式定义两个变量的互信息为$I(X,Y)=H(Y)-H(Y|X)$</p>
+<p>互信息量表示两个变量之间的相关程度，互信息量越大，表示两个变量相关程度越大，$X$就越适合作为属性，比如$Y$表示人种，$X$表示头发颜色，如果$I(X,Y)$越大，表示两者之间关系很大，此时选择头发颜色作为属性是合适的。</p>
+<p>例如，上例中$H(Y) = -0.5<em>log_2(0.5)-0.5</em>log_20.5=1$</p>
+<p>$H(Y|X=”眼睛颜色”)=\frac{2}{8}<em>(-\frac{1}{2}</em>log_2\frac{1}{2}-\frac{1}{2}<em>log_2\frac{1}{2})+\frac{3}{8}</em>(-\frac{1}{3}<em>log_2\frac{1}{3}-\frac{2}{3}</em>log_2\frac{2}{3})+\frac{3}{8}<em>(-\frac{1}{3}</em>log_2\frac{1}{3}-\frac{2}{3}*log_2\frac{2}{3})$</p>
+<p>$I(X=”眼睛颜色”，Y) = H(Y)-H(Y|X=”眼睛颜色”)$</p>
+<p>类似的，可以算出$I(X=”头发颜色”，Y)$,然后取两者中的较大值。</p>
+<p>但是采用信息增益进行数据分裂容易偏向取值较多的特征，可以理解为分支数越多，不确定性越大，熵就会越大。</p>
+<p><strong>C4.5</strong>采用增益率克服了上述问题，通过引入一个变量增益率</p>
+<p>$SplitInfo_A(D)=-\sum_{j}\frac{|D_j|}{|D|}\times log_2(\frac{|D_j|}{D})$</p>
+<p>对信息增益进行归一化，一个特征的取值越多，变量增益率就越大，把它作为分母，就可以校正信息增益偏向取值较多的特征的问题，</p>
+<p>即最终结果为$GainRatio_A(D)=\frac{Gain_A(D)}{SplitInfo_A(D)}$</p>
+<p>取计算结果最大的特征作为属性。</p>
+<p><strong>CART</strong>模型基于基尼指数选择合适的属性。</p>
+<p>如果一个数据集包含来自n个类的样本，那么基尼指数$gini(D)=\sum_jP_j(1-p_j)=1-\sum_jp_j^2$</p>
+<p>如果一个数据集$D$被分成两个子集$D_1$和$D_2$，大小分别为$N_1$和$N_2$，那么基尼指数$gini_{split}(D)=\frac{N_1}{N}gini(D_1)+\frac{N_2}{N}gini(D_2)$</p>
+<p>取基尼指数最小的属性最为本节点的属性。</p>
+<p><a href="https://download.csdn.net/download/weixin_46091520/52585766?spm=1001.2014.3001.5501">代码实现, 决策函数为ID3/C4.5/CART</a></p>
+]]></content>
+      <categories>
+        <category>作业</category>
+        <category>机器学习</category>
+      </categories>
+      <tags>
+        <tag>Mechine learning</tag>
+      </tags>
+  </entry>
 </search>

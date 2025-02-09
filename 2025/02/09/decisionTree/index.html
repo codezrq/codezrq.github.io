@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="决策树原理，举例演算及其代码实现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="决策树原理详解">
+<meta property="og:url" content="http://example.com/2025/02/09/decisionTree/index.html">
+<meta property="og:site_name" content="CodeRQ">
+<meta property="og:description" content="决策树原理，举例演算及其代码实现">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/02/09/decisionTree/c12497b3880b065611e22c3af4681b1c.png">
+<meta property="og:image" content="http://example.com/2025/02/09/decisionTree/2d3b1ce475a59658fcf6c79e95f1765b.png">
+<meta property="article:published_time" content="2025-02-09T13:33:26.000Z">
+<meta property="article:modified_time" content="2025-02-09T13:35:47.244Z">
+<meta property="article:author" content="zheng rq">
+<meta property="article:tag" content="Mechine learning">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/02/09/decisionTree/c12497b3880b065611e22c3af4681b1c.png">
+
+<link rel="canonical" href="http://example.com/2025/02/09/decisionTree/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>决策树原理详解 | CodeRQ</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CodeRQ</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/02/09/decisionTree/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CodeRQ">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          决策树原理详解
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-02-09 21:33:26 / 修改时间：21:35:47" itemprop="dateCreated datePublished" datetime="2025-02-09T21:33:26+08:00">2025-02-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BD%9C%E4%B8%9A/" itemprop="url" rel="index"><span itemprop="name">作业</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BD%9C%E4%B8%9A/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">机器学习</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>决策树原理，举例演算及其代码实现</p>
+<span id="more"></span>
+<h4 id="一-使用的例子："><a href="#一-使用的例子：" class="headerlink" title="一 .使用的例子："></a>一 .使用的例子：</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>人员</th>
+<th>眼睛颜色</th>
+<th>头发颜色</th>
+<th>所属人种</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>黑色</td>
+<td>金色</td>
+<td>白种人</td>
+</tr>
+<tr>
+<td>2</td>
+<td>蓝色</td>
+<td>黑色</td>
+<td>黄种人</td>
+</tr>
+<tr>
+<td>3</td>
+<td>灰色</td>
+<td>金色</td>
+<td>白种人</td>
+</tr>
+<tr>
+<td>4</td>
+<td>蓝色</td>
+<td>金色</td>
+<td>白种人</td>
+</tr>
+<tr>
+<td>5</td>
+<td>灰色</td>
+<td>金色</td>
+<td>白种人</td>
+</tr>
+<tr>
+<td>6</td>
+<td>黑色</td>
+<td>黑色</td>
+<td>黄种人</td>
+</tr>
+<tr>
+<td>7</td>
+<td>灰色</td>
+<td>黑色</td>
+<td>黄种人</td>
+</tr>
+<tr>
+<td>8</td>
+<td>蓝色</td>
+<td>黑色</td>
+<td>黄种人</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>决策树的基本思想是从一颗空的决策树开始，选择某一属性作为测试属性，该测试属性对应决策树中的决策顶点，再在剩下的数据集上递归选择另一属性建立决策顶点。</p>
+<p><strong>一。决策树学习算法大体上可以分为两个阶段：建模阶段和预测阶段</strong></p>
+<p><strong>建模阶段</strong>可通过以下步骤实现：</p>
+<ul>
+<li>首先，所有训练样本都处于根节点位置</li>
+<li>基于一定的策略选择属性</li>
+<li>根据选择的属性，递归地划分样本</li>
+</ul>
+<p>我们主要要解决两个问题：</p>
+<ul>
+<li><p>递归结束的条件：递归的情况有以下几种</p>
+<ul>
+<li>没有可用的数据：以父节点的标签作为标签</li>
+<li>被分到的样本都属于同一个类别：以该类别作为标签</li>
+<li>所有属性都已用于之前的划分，没有可用的属性可以继续划分：采用多数投票的方式选出标签。</li>
+</ul>
+</li>
+<li><p>通过什么策略选择节点的属性</p>
+</li>
+</ul>
+<p>使用上面的例子，如果我们先选眼睛颜色作为属性，可以建出如下的树<br><img src="/2025/02/09/decisionTree/c12497b3880b065611e22c3af4681b1c.png" alt="在这里插入图片描述"></p>
+<p>如果先选择头发颜色作为属性，可以建出如下的树：</p>
+<p><img src="/2025/02/09/decisionTree/2d3b1ce475a59658fcf6c79e95f1765b.png" alt="在这里插入图片描述"></p>
+<p>从上面两棵树来看，选择不同属性作为节点对建树的影响很大，所以我们要选择合适的策略算法，常用的有<code>ID3,C4.5,CART</code>，这三种之后会逐个解释。</p>
+<p>通过上述步骤，就可以建立一棵决策树，接下来就是<strong>预测阶段</strong>：</p>
+<p>预测阶段就是根据带预测数据各属性的取值，逐步遍历树，直到叶子节点，叶子节点对应的标签就说我们的预测结果，比如我们要预测<strong>蓝眼睛黄头发</strong>的属于哪个人种，以第一棵树为例</p>
+<p>从根节点出发，先看眼睛颜色，为蓝色，所以选择根节点的第二个节点作为下个节点，然后看头发颜色，为黄色，选择第一个节点，此时已到叶子节点，对应的标签为白种人，所以我们预测结果为白种人。</p>
+<p><strong>二。决策函数</strong></p>
+<p>上面已经解释了建立一颗树的大致步骤，但还有最重要的一个问题没有解决，就是选择什么策略：</p>
+<p><strong>ID3</strong>使用信息增益度选择测试属性，要解释如何计算信息增益度，先要解释信息熵，信息熵是衡量一个信息不确定性大小的值，通常我们认为，如果某个信息让我们的判断更加有序，清晰，则它信息熵越小，反之越大。</p>
+<p>$X$的信息熵计算公式如下：</p>
+<p>$H(X) = \sum_{x\in X}(-p(x)\times log(p(x)))$</p>
+<p>条件熵:$H(Y|X)$表示是在$X$确定下$Y$的熵，可以通过如下公式计算</p>
+<p>$H(Y|X) = \sum_{x\in X}p(x)H(Y|X=x)=\sum_{x\in X}\sum_{y\in Y}p(x,y)log_2p(y|x)$</p>
+<p>联合熵：$H(X,Y) = -\sum_{x\in X}\sum_{y\in Y}p(x,y)log_2p(x,y)=H(X)+H(Y|X)= H(Y)+H(Y|X))$</p>
+<p>这表明两个变量的联合熵等于$X$的熵加上给定$X$,出现$Y$的条件熵。</p>
+<p>接着根据联合熵的公式定义两个变量的互信息为$I(X,Y)=H(Y)-H(Y|X)$</p>
+<p>互信息量表示两个变量之间的相关程度，互信息量越大，表示两个变量相关程度越大，$X$就越适合作为属性，比如$Y$表示人种，$X$表示头发颜色，如果$I(X,Y)$越大，表示两者之间关系很大，此时选择头发颜色作为属性是合适的。</p>
+<p>例如，上例中$H(Y) = -0.5<em>log_2(0.5)-0.5</em>log_20.5=1$</p>
+<p>$H(Y|X=”眼睛颜色”)=\frac{2}{8}<em>(-\frac{1}{2}</em>log_2\frac{1}{2}-\frac{1}{2}<em>log_2\frac{1}{2})+\frac{3}{8}</em>(-\frac{1}{3}<em>log_2\frac{1}{3}-\frac{2}{3}</em>log_2\frac{2}{3})+\frac{3}{8}<em>(-\frac{1}{3}</em>log_2\frac{1}{3}-\frac{2}{3}*log_2\frac{2}{3})$</p>
+<p>$I(X=”眼睛颜色”，Y) = H(Y)-H(Y|X=”眼睛颜色”)$</p>
+<p>类似的，可以算出$I(X=”头发颜色”，Y)$,然后取两者中的较大值。</p>
+<p>但是采用信息增益进行数据分裂容易偏向取值较多的特征，可以理解为分支数越多，不确定性越大，熵就会越大。</p>
+<p><strong>C4.5</strong>采用增益率克服了上述问题，通过引入一个变量增益率</p>
+<p>$SplitInfo_A(D)=-\sum_{j}\frac{|D_j|}{|D|}\times log_2(\frac{|D_j|}{D})$</p>
+<p>对信息增益进行归一化，一个特征的取值越多，变量增益率就越大，把它作为分母，就可以校正信息增益偏向取值较多的特征的问题，</p>
+<p>即最终结果为$GainRatio_A(D)=\frac{Gain_A(D)}{SplitInfo_A(D)}$</p>
+<p>取计算结果最大的特征作为属性。</p>
+<p><strong>CART</strong>模型基于基尼指数选择合适的属性。</p>
+<p>如果一个数据集包含来自n个类的样本，那么基尼指数$gini(D)=\sum_jP_j(1-p_j)=1-\sum_jp_j^2$</p>
+<p>如果一个数据集$D$被分成两个子集$D_1$和$D_2$，大小分别为$N_1$和$N_2$，那么基尼指数$gini_{split}(D)=\frac{N_1}{N}gini(D_1)+\frac{N_2}{N}gini(D_2)$</p>
+<p>取基尼指数最小的属性最为本节点的属性。</p>
+<p><a target="_blank" rel="noopener" href="https://download.csdn.net/download/weixin_46091520/52585766?spm=1001.2014.3001.5501">代码实现, 决策函数为ID3/C4.5/CART</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Mechine-learning/" rel="tag"># Mechine learning</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/02/09/monkeyTest/" rel="prev" title="使用Monkey进行软件测试（随机测试+脚本测试）">
+      <i class="fa fa-chevron-left"></i> 使用Monkey进行软件测试（随机测试+脚本测试）
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E4%BD%BF%E7%94%A8%E7%9A%84%E4%BE%8B%E5%AD%90%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">一 .使用的例子：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
