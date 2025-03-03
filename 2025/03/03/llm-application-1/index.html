@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="LLM落地常见的技术方案简要介绍大模型落地的几种方案，包括：提示词工程，RAG，Agent，微调。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="llm_application_1">
+<meta property="og:url" content="http://example.com/2025/03/03/llm-application-1/index.html">
+<meta property="og:site_name" content="CodeRQ">
+<meta property="og:description" content="LLM落地常见的技术方案简要介绍大模型落地的几种方案，包括：提示词工程，RAG，Agent，微调。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-03-03T14:40:02.000Z">
+<meta property="article:modified_time" content="2025-03-03T14:47:00.500Z">
+<meta property="article:author" content="zheng rq">
+<meta property="article:tag" content="大模型应用">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/03/03/llm-application-1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>llm_application_1 | CodeRQ</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CodeRQ</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/03/llm-application-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CodeRQ">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          llm_application_1
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-03-03 22:40:02 / 修改时间：22:47:00" itemprop="dateCreated datePublished" datetime="2025-03-03T22:40:02+08:00">2025-03-03</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="LLM落地常见的技术方案"><a href="#LLM落地常见的技术方案" class="headerlink" title="LLM落地常见的技术方案"></a><center>LLM落地常见的技术方案</center></h3><p>简要介绍大模型落地的几种方案，包括：提示词工程，RAG，Agent，微调。</p>
+<span id="more"></span>
+<h4 id="一-LLM分类"><a href="#一-LLM分类" class="headerlink" title="一. LLM分类"></a>一. LLM分类</h4><p>大模型是指具有大规模参数和复杂计算结构的深度神经网络，ChatGPT对它的定义是: 大模型本质上是一个使用海量数据训练而成的深度神经网络模型，其巨大的数据和参数规模，实现了智能的涌现，展现出类似人类的智能。<br>大致可以分为两类: GPT(Generation Pre-trained Transformer)和BERT(Bidirectional Encoder Repersentations from Transformers)他们主要有以下不同点：</p>
+<h5 id="1-训练方式"><a href="#1-训练方式" class="headerlink" title="1. 训练方式"></a>1. 训练方式</h5><p>BERT使用双向语言模型进行训练(在推理过程中会用到mask技术，类似填空)，GPT采用自回归语言模型进行训练。<br>可以简单理解为，BERT是双向的，同时考虑单词的左右上下文，BERT同时查看句子中的所有单词。而GPT每次只看到前面单词。</p>
+<h5 id="2-任务目标"><a href="#2-任务目标" class="headerlink" title="2. 任务目标"></a>2. 任务目标</h5><p>BERT的目标是理解句子的是上下文，适合词语级别的任务，如命名实体识别，问答等<br>GPT的目标是生成连贯的文本，适用于生成式任务</p>
+<h5 id="3-应用场景"><a href="#3-应用场景" class="headerlink" title="3. 应用场景"></a>3. 应用场景</h5><p>BERT主要用于自然语言理解任务，如文本分类，实体识别，语义关系判断等<br>GPU主要用于文本生成任务</p>
+<p>目前比较火的是模型ChatGPT, Qwen, DeepSeek, 是GPT的，介绍BERT是觉得可能舆情那块没准也可以用BERT做分类。</p>
+<h4 id="二-LLM训练到应用的基本步骤"><a href="#二-LLM训练到应用的基本步骤" class="headerlink" title="二.LLM训练到应用的基本步骤"></a>二.LLM训练到应用的基本步骤</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>效果</th>
+<th>常用技术</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>预训练</td>
+<td>模型获得基本知识，(所有都懂，但都只懂一点点)</td>
+<td>无监督训练，(消耗大部分资源), DS的主要创新点也在这里。</td>
+</tr>
+<tr>
+<td>微调</td>
+<td>通过来自某个领域的标注的高质量数据微调LLM，使LLM提高某方面能力</td>
+<td>RLHF(rainforce learning from human feedback, 使用强化学习，人类对LLM的输出进行奖励，以指导LLM的学习。)，LoRA微调(将高维的参数空间转化到低秩空间以减少参数量，GPU不够时使用。(我使用的微调方式)</td>
+</tr>
+<tr>
+<td>对齐</td>
+<td>生成无害，符合人类预期的结果</td>
+<td>RLHF</td>
+</tr>
+<tr>
+<td>评估</td>
+<td>在应用领域上评估模型效果</td>
+<td>召回率，准确率等</td>
+</tr>
+<tr>
+<td>部署</td>
+<td>离线推理(每次都要加载模型参数)或者在线服务(API)</td>
+<td>vllm, ollama。ollama适用于轻量型应用场景，企业级一般用vllm，我使用vllm部署。模型部署的环境，方式等会影响模型的性能(吞吐量，速度等)</td>
+</tr>
+<tr>
+<td>应用开发</td>
+<td>下游应用调用上游LLM</td>
+<td>RAG，Agent等</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="三-应用大模型的几种方式"><a href="#三-应用大模型的几种方式" class="headerlink" title="三. 应用大模型的几种方式"></a>三. 应用大模型的几种方式</h4><h5 id="1-提示词工程"><a href="#1-提示词工程" class="headerlink" title="1. 提示词工程"></a>1. 提示词工程</h5><p>最常用的方式，不需要微调，基座模型都是一样的，使用预训练的基座模型即可，在prompt中描述场景，任务要求，输入，知识，输出格式等，LLM生成对应的输出。<br>优点:  省事，不需要微调，一个大模型可以像多个应用提供推理服务，只要针对不同应用写不同prompt。<br>缺点：LLM只看到prompt所展示的知识，并不是真的学会了，比如要让LLM回答一个法律知识，可能得在prompt里输入一整本法律书。目前的多轮回答上下文也只是在prompt中输入前几轮回答的问题和答案。</p>
+<h5 id="2-提示词工程改进-RAG-Retrieval-Augmented-Generation-检索增强生成"><a href="#2-提示词工程改进-RAG-Retrieval-Augmented-Generation-检索增强生成" class="headerlink" title="2. 提示词工程改进:RAG(Retrieval-Augmented Generation 检索增强生成)"></a>2. 提示词工程改进:RAG(Retrieval-Augmented Generation 检索增强生成)</h5><p>RAG=检索+增强+生成<br>提示词工程可以再prompt中输入回答所需知识，以提高回答质量，但输入过多的知识会造成prompt过长，导致推理速度慢。<br>输入的知识时一个领域的知识，其中和当前问题相关的可能只有一些，真正起作用的其实只有这部分知识，RAG先构建一个知识库(如通过Nomic-Embed-Text模型等构建文本嵌入数据库)，在生成prompt前检索出最相关的知识，结合到prompt中<br>优点：缩短prompt长度，缓解LLM幻觉。<br>缺点：依赖检索的准确性</p>
+<h5 id="3-微调"><a href="#3-微调" class="headerlink" title="3. 微调"></a>3. 微调</h5><p>使用LoRA(资源消耗少)，全参微调(资源消耗高)对模型进一步微调，使其更适合某个任务<br>优点：prompt可以更短，不需要输入太多知识，因为微调过程中已经学会了。<br>缺点：需要资源，微调后的模型一般只适用于一个场景，因为对每个应用都要部署一个模型。需要收集微调数据<br>LoRA原理: 在原始的PLM(Pre-trained Language Model)旁边增加一个旁路, 该旁路做一个先降维再升维的操作，只需要微调降维后的参数，以此来降低微调的参数量。</p>
+<h5 id="4-Agent"><a href="#4-Agent" class="headerlink" title="4. Agent"></a>4. Agent</h5><p>Agent是能够模拟独立思考过程，灵活调用各类工具，逐步达成预设目标。大模型Agent由规划、记忆、工具与行动四大关键部分组成，分别负责任务拆解与策略评估、信息存储与回忆、环境感知与决策辅助、以及将思维转化为实际行动。<br><strong>1.规划</strong></p>
+<ul>
+<li><p>定义：规划是Agent的思维模型，负责拆解复杂任务为可执行的子任务，并评估执行策略。</p>
+</li>
+<li><p>实现方式：通过大模型提示工程（如ReAct、CoT推理模式）实现，使Agent能够精准拆解任务，分步解决</p>
+</li>
+</ul>
+<p><strong>2.记忆</strong></p>
+<ul>
+<li><p>定义：记忆即信息存储与回忆，包括短期记忆和长期记忆。</p>
+</li>
+<li><p>实现方式：短期记忆用于存储会话上下文，支持多轮对话；长期记忆则存储用户特征、业务数据等，通常通过向量数据库等技术实现快速存取。</p>
+</li>
+</ul>
+<p><strong>3.工具</strong></p>
+<ul>
+<li>定义：工具是Agent感知环境、执行决策的辅助手段，如API调用、插件扩展等。</li>
+<li>实现方式：通过接入外部工具（如API、插件）扩展Agent的能力，如ChatPDF解析文档、Midjourney文生图等。<br>  <strong>4.行动</strong></li>
+<li>定义：行动是Agent将规划与记忆转化为具体输出的过程，包括与外部环境的互动或工具调用。</li>
+<li>实现方式：Agent根据规划与记忆执行具体行动，如智能客服回复、查询天气预报、AI机器人抓起物体等。</li>
+</ul>
+<h5 id="5-部署中的问题"><a href="#5-部署中的问题" class="headerlink" title="5. 部署中的问题"></a>5. 部署中的问题</h5><h6 id="a-部署过程中所需的显存-加载LLM参数的显存-kv-Cache显存"><a href="#a-部署过程中所需的显存-加载LLM参数的显存-kv-Cache显存" class="headerlink" title="a. 部署过程中所需的显存=加载LLM参数的显存+kv-Cache显存"></a>a. 部署过程中所需的显存=加载LLM参数的显存+kv-Cache显存</h6><p>kv-Cache: LLM推理时自左向右，意味着每次都要计算前面所有单词的注意力分数(每个token都有一个k值和一个v值)，LLM每次只预测一个token，预测时根据当前token的query值和之前序列的所有k值和v值进行预测。为了避免重复计算，LLM会缓存每个token的k值和v值，需要的时候直接读取，没有优化时kv-cache是连续的，并且需要提前预留。<br>正式应用中的部署一般使用vllm，vllm将大模型加载并常驻到显存中，当推理请求到来时，只需将输入加载到显存，因此可以加快推理速度。同时vllm使用了PageAttention优化(类似虚拟缓存中的分页管理)，平常的LLM推理会设置max-token，加载时需要预留显存，PageAttention技术可以动态管理kv-cache，并且不需要连续，减少内存碎片。(【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention | CodeRQ)</p>
+<h6 id="b-性能"><a href="#b-性能" class="headerlink" title="b. 性能"></a>b. 性能</h6><p>部署模型的性能影响也是多方面的，比如上云时调度器将该任务调到哪个GPU上，多卡部署时还依赖于GPU之间的连结方式，这是基础设施带来的影响，我们很难决定(合理利用调度策略，欺骗调度器)<br>主要考虑的是选择的模型大小，max-token，一般模型越大，max-token越大，推理越慢。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" rel="tag"># 大模型应用</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/02/09/osHomework-1/" rel="prev" title="BIOS中断介绍">
+      <i class="fa fa-chevron-left"></i> BIOS中断介绍
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#LLM%E8%90%BD%E5%9C%B0%E5%B8%B8%E8%A7%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%B9%E6%A1%88"><span class="nav-number">1.</span> <span class="nav-text">LLM落地常见的技术方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-LLM%E5%88%86%E7%B1%BB"><span class="nav-number">1.1.</span> <span class="nav-text">一. LLM分类</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E8%AE%AD%E7%BB%83%E6%96%B9%E5%BC%8F"><span class="nav-number">1.1.1.</span> <span class="nav-text">1. 训练方式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-%E4%BB%BB%E5%8A%A1%E7%9B%AE%E6%A0%87"><span class="nav-number">1.1.2.</span> <span class="nav-text">2. 任务目标</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">1.1.3.</span> <span class="nav-text">3. 应用场景</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-LLM%E8%AE%AD%E7%BB%83%E5%88%B0%E5%BA%94%E7%94%A8%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%AD%A5%E9%AA%A4"><span class="nav-number">1.2.</span> <span class="nav-text">二.LLM训练到应用的基本步骤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-%E5%BA%94%E7%94%A8%E5%A4%A7%E6%A8%A1%E5%9E%8B%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F"><span class="nav-number">1.3.</span> <span class="nav-text">三. 应用大模型的几种方式</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E6%8F%90%E7%A4%BA%E8%AF%8D%E5%B7%A5%E7%A8%8B"><span class="nav-number">1.3.1.</span> <span class="nav-text">1. 提示词工程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-%E6%8F%90%E7%A4%BA%E8%AF%8D%E5%B7%A5%E7%A8%8B%E6%94%B9%E8%BF%9B-RAG-Retrieval-Augmented-Generation-%E6%A3%80%E7%B4%A2%E5%A2%9E%E5%BC%BA%E7%94%9F%E6%88%90"><span class="nav-number">1.3.2.</span> <span class="nav-text">2. 提示词工程改进:RAG(Retrieval-Augmented Generation 检索增强生成)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-%E5%BE%AE%E8%B0%83"><span class="nav-number">1.3.3.</span> <span class="nav-text">3. 微调</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-Agent"><span class="nav-number">1.3.4.</span> <span class="nav-text">4. Agent</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-%E9%83%A8%E7%BD%B2%E4%B8%AD%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">1.3.5.</span> <span class="nav-text">5. 部署中的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#a-%E9%83%A8%E7%BD%B2%E8%BF%87%E7%A8%8B%E4%B8%AD%E6%89%80%E9%9C%80%E7%9A%84%E6%98%BE%E5%AD%98-%E5%8A%A0%E8%BD%BDLLM%E5%8F%82%E6%95%B0%E7%9A%84%E6%98%BE%E5%AD%98-kv-Cache%E6%98%BE%E5%AD%98"><span class="nav-number">1.3.5.1.</span> <span class="nav-text">a. 部署过程中所需的显存&#x3D;加载LLM参数的显存+kv-Cache显存</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#b-%E6%80%A7%E8%83%BD"><span class="nav-number">1.3.5.2.</span> <span class="nav-text">b. 性能</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
