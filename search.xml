@@ -1347,90 +1347,6 @@
       </tags>
   </entry>
   <entry>
-    <title>llm_application_1</title>
-    <url>/2025/03/03/llm-application-1/</url>
-    <content><![CDATA[<h3 id="LLM落地常见的技术方案"><a href="#LLM落地常见的技术方案" class="headerlink" title="LLM落地常见的技术方案"></a><center>LLM落地常见的技术方案</center></h3><p>简要介绍大模型落地的几种方案，包括：提示词工程，RAG，Agent，微调。</p>
-<span id="more"></span>
-<h4 id="一-LLM分类"><a href="#一-LLM分类" class="headerlink" title="一. LLM分类"></a>一. LLM分类</h4><p>大模型是指具有大规模参数和复杂计算结构的深度神经网络，ChatGPT对它的定义是: 大模型本质上是一个使用海量数据训练而成的深度神经网络模型，其巨大的数据和参数规模，实现了智能的涌现，展现出类似人类的智能。<br>大致可以分为两类: GPT(Generation Pre-trained Transformer)和BERT(Bidirectional Encoder Repersentations from Transformers)他们主要有以下不同点：</p>
-<h5 id="1-训练方式"><a href="#1-训练方式" class="headerlink" title="1. 训练方式"></a>1. 训练方式</h5><p>BERT使用双向语言模型进行训练(在推理过程中会用到mask技术，类似填空)，GPT采用自回归语言模型进行训练。<br>可以简单理解为，BERT是双向的，同时考虑单词的左右上下文，BERT同时查看句子中的所有单词。而GPT每次只看到前面单词。</p>
-<h5 id="2-任务目标"><a href="#2-任务目标" class="headerlink" title="2. 任务目标"></a>2. 任务目标</h5><p>BERT的目标是理解句子的是上下文，适合词语级别的任务，如命名实体识别，问答等<br>GPT的目标是生成连贯的文本，适用于生成式任务</p>
-<h5 id="3-应用场景"><a href="#3-应用场景" class="headerlink" title="3. 应用场景"></a>3. 应用场景</h5><p>BERT主要用于自然语言理解任务，如文本分类，实体识别，语义关系判断等<br>GPU主要用于文本生成任务</p>
-<p>目前比较火的是模型ChatGPT, Qwen, DeepSeek, 是GPT的，介绍BERT是觉得可能舆情那块没准也可以用BERT做分类。</p>
-<h4 id="二-LLM训练到应用的基本步骤"><a href="#二-LLM训练到应用的基本步骤" class="headerlink" title="二.LLM训练到应用的基本步骤"></a>二.LLM训练到应用的基本步骤</h4><div class="table-container">
-<table>
-<thead>
-<tr>
-<th>阶段</th>
-<th>效果</th>
-<th>常用技术</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>预训练</td>
-<td>模型获得基本知识，(所有都懂，但都只懂一点点)</td>
-<td>无监督训练，(消耗大部分资源), DS的主要创新点也在这里。</td>
-</tr>
-<tr>
-<td>微调</td>
-<td>通过来自某个领域的标注的高质量数据微调LLM，使LLM提高某方面能力</td>
-<td>RLHF(rainforce learning from human feedback, 使用强化学习，人类对LLM的输出进行奖励，以指导LLM的学习。)，LoRA微调(将高维的参数空间转化到低秩空间以减少参数量，GPU不够时使用。(我使用的微调方式)</td>
-</tr>
-<tr>
-<td>对齐</td>
-<td>生成无害，符合人类预期的结果</td>
-<td>RLHF</td>
-</tr>
-<tr>
-<td>评估</td>
-<td>在应用领域上评估模型效果</td>
-<td>召回率，准确率等</td>
-</tr>
-<tr>
-<td>部署</td>
-<td>离线推理(每次都要加载模型参数)或者在线服务(API)</td>
-<td>vllm, ollama。ollama适用于轻量型应用场景，企业级一般用vllm，我使用vllm部署。模型部署的环境，方式等会影响模型的性能(吞吐量，速度等)</td>
-</tr>
-<tr>
-<td>应用开发</td>
-<td>下游应用调用上游LLM</td>
-<td>RAG，Agent等</td>
-</tr>
-</tbody>
-</table>
-</div>
-<h4 id="三-应用大模型的几种方式"><a href="#三-应用大模型的几种方式" class="headerlink" title="三. 应用大模型的几种方式"></a>三. 应用大模型的几种方式</h4><h5 id="1-提示词工程"><a href="#1-提示词工程" class="headerlink" title="1. 提示词工程"></a>1. 提示词工程</h5><p>最常用的方式，不需要微调，基座模型都是一样的，使用预训练的基座模型即可，在prompt中描述场景，任务要求，输入，知识，输出格式等，LLM生成对应的输出。<br>优点:  省事，不需要微调，一个大模型可以像多个应用提供推理服务，只要针对不同应用写不同prompt。<br>缺点：LLM只看到prompt所展示的知识，并不是真的学会了，比如要让LLM回答一个法律知识，可能得在prompt里输入一整本法律书。目前的多轮回答上下文也只是在prompt中输入前几轮回答的问题和答案。</p>
-<h5 id="2-提示词工程改进-RAG-Retrieval-Augmented-Generation-检索增强生成"><a href="#2-提示词工程改进-RAG-Retrieval-Augmented-Generation-检索增强生成" class="headerlink" title="2. 提示词工程改进:RAG(Retrieval-Augmented Generation 检索增强生成)"></a>2. 提示词工程改进:RAG(Retrieval-Augmented Generation 检索增强生成)</h5><p>RAG=检索+增强+生成<br>提示词工程可以再prompt中输入回答所需知识，以提高回答质量，但输入过多的知识会造成prompt过长，导致推理速度慢。<br>输入的知识时一个领域的知识，其中和当前问题相关的可能只有一些，真正起作用的其实只有这部分知识，RAG先构建一个知识库(如通过Nomic-Embed-Text模型等构建文本嵌入数据库)，在生成prompt前检索出最相关的知识，结合到prompt中<br>优点：缩短prompt长度，缓解LLM幻觉。<br>缺点：依赖检索的准确性</p>
-<h5 id="3-微调"><a href="#3-微调" class="headerlink" title="3. 微调"></a>3. 微调</h5><p>使用LoRA(资源消耗少)，全参微调(资源消耗高)对模型进一步微调，使其更适合某个任务<br>优点：prompt可以更短，不需要输入太多知识，因为微调过程中已经学会了。<br>缺点：需要资源，微调后的模型一般只适用于一个场景，因为对每个应用都要部署一个模型。需要收集微调数据<br>LoRA原理: 在原始的PLM(Pre-trained Language Model)旁边增加一个旁路, 该旁路做一个先降维再升维的操作，只需要微调降维后的参数，以此来降低微调的参数量。</p>
-<h5 id="4-Agent"><a href="#4-Agent" class="headerlink" title="4. Agent"></a>4. Agent</h5><p>Agent是能够模拟独立思考过程，灵活调用各类工具，逐步达成预设目标。大模型Agent由规划、记忆、工具与行动四大关键部分组成，分别负责任务拆解与策略评估、信息存储与回忆、环境感知与决策辅助、以及将思维转化为实际行动。<br><strong>1.规划</strong></p>
-<ul>
-<li><p>定义：规划是Agent的思维模型，负责拆解复杂任务为可执行的子任务，并评估执行策略。</p>
-</li>
-<li><p>实现方式：通过大模型提示工程（如ReAct、CoT推理模式）实现，使Agent能够精准拆解任务，分步解决</p>
-</li>
-</ul>
-<p><strong>2.记忆</strong></p>
-<ul>
-<li><p>定义：记忆即信息存储与回忆，包括短期记忆和长期记忆。</p>
-</li>
-<li><p>实现方式：短期记忆用于存储会话上下文，支持多轮对话；长期记忆则存储用户特征、业务数据等，通常通过向量数据库等技术实现快速存取。</p>
-</li>
-</ul>
-<p><strong>3.工具</strong></p>
-<ul>
-<li>定义：工具是Agent感知环境、执行决策的辅助手段，如API调用、插件扩展等。</li>
-<li>实现方式：通过接入外部工具（如API、插件）扩展Agent的能力，如ChatPDF解析文档、Midjourney文生图等。<br>  <strong>4.行动</strong></li>
-<li>定义：行动是Agent将规划与记忆转化为具体输出的过程，包括与外部环境的互动或工具调用。</li>
-<li>实现方式：Agent根据规划与记忆执行具体行动，如智能客服回复、查询天气预报、AI机器人抓起物体等。</li>
-</ul>
-<h5 id="5-部署中的问题"><a href="#5-部署中的问题" class="headerlink" title="5. 部署中的问题"></a>5. 部署中的问题</h5><h6 id="a-部署过程中所需的显存-加载LLM参数的显存-kv-Cache显存"><a href="#a-部署过程中所需的显存-加载LLM参数的显存-kv-Cache显存" class="headerlink" title="a. 部署过程中所需的显存=加载LLM参数的显存+kv-Cache显存"></a>a. 部署过程中所需的显存=加载LLM参数的显存+kv-Cache显存</h6><p>kv-Cache: LLM推理时自左向右，意味着每次都要计算前面所有单词的注意力分数(每个token都有一个k值和一个v值)，LLM每次只预测一个token，预测时根据当前token的query值和之前序列的所有k值和v值进行预测。为了避免重复计算，LLM会缓存每个token的k值和v值，需要的时候直接读取，没有优化时kv-cache是连续的，并且需要提前预留。<br>正式应用中的部署一般使用vllm，vllm将大模型加载并常驻到显存中，当推理请求到来时，只需将输入加载到显存，因此可以加快推理速度。同时vllm使用了PageAttention优化(类似虚拟缓存中的分页管理)，平常的LLM推理会设置max-token，加载时需要预留显存，PageAttention技术可以动态管理kv-cache，并且不需要连续，减少内存碎片。(【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention | CodeRQ)</p>
-<h6 id="b-性能"><a href="#b-性能" class="headerlink" title="b. 性能"></a>b. 性能</h6><p>部署模型的性能影响也是多方面的，比如上云时调度器将该任务调到哪个GPU上，多卡部署时还依赖于GPU之间的连结方式，这是基础设施带来的影响，我们很难决定(合理利用调度策略，欺骗调度器)<br>主要考虑的是选择的模型大小，max-token，一般模型越大，max-token越大，推理越慢。</p>
-]]></content>
-      <tags>
-        <tag>大模型应用</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>BIOS中断介绍</title>
     <url>/2025/02/09/osHomework-1/</url>
     <content><![CDATA[<p>BIOS中断介绍，包括中断号以及一些常见操作如字符显示，清屏</p>
@@ -2573,5 +2489,89 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 <p>注意前后的<code>,</code>否则会影响其他设置。现在，每次打开终端都会设置编码为UTF-8</p>
 <p><img src="/2025/02/03/vscode-codeRunner/4af924d125c0be037bd0137122579235.png" alt="请添加图片描述"></p>
 ]]></content>
+  </entry>
+  <entry>
+    <title>llm_application_1</title>
+    <url>/2025/03/03/llm_application_1/</url>
+    <content><![CDATA[<h3 id="LLM落地常见的技术方案"><a href="#LLM落地常见的技术方案" class="headerlink" title="LLM落地常见的技术方案"></a><center>LLM落地常见的技术方案</center></h3><p>简要介绍大模型落地的几种方案，包括：提示词工程，RAG，Agent，微调。</p>
+<span id="more"></span>
+<h4 id="一-LLM分类"><a href="#一-LLM分类" class="headerlink" title="一. LLM分类"></a>一. LLM分类</h4><p>大模型是指具有大规模参数和复杂计算结构的深度神经网络，ChatGPT对它的定义是: 大模型本质上是一个使用海量数据训练而成的深度神经网络模型，其巨大的数据和参数规模，实现了智能的涌现，展现出类似人类的智能。<br>大致可以分为两类: GPT(Generation Pre-trained Transformer)和BERT(Bidirectional Encoder Repersentations from Transformers)他们主要有以下不同点：</p>
+<h5 id="1-训练方式"><a href="#1-训练方式" class="headerlink" title="1. 训练方式"></a>1. 训练方式</h5><p>BERT使用双向语言模型进行训练(在推理过程中会用到mask技术，类似填空)，GPT采用自回归语言模型进行训练。<br>可以简单理解为，BERT是双向的，同时考虑单词的左右上下文，BERT同时查看句子中的所有单词。而GPT每次只看到前面单词。</p>
+<h5 id="2-任务目标"><a href="#2-任务目标" class="headerlink" title="2. 任务目标"></a>2. 任务目标</h5><p>BERT的目标是理解句子的是上下文，适合词语级别的任务，如命名实体识别，问答等<br>GPT的目标是生成连贯的文本，适用于生成式任务</p>
+<h5 id="3-应用场景"><a href="#3-应用场景" class="headerlink" title="3. 应用场景"></a>3. 应用场景</h5><p>BERT主要用于自然语言理解任务，如文本分类，实体识别，语义关系判断等<br>GPU主要用于文本生成任务</p>
+<p>目前比较火的是模型ChatGPT, Qwen, DeepSeek, 是GPT的，介绍BERT是觉得可能舆情那块没准也可以用BERT做分类。</p>
+<h4 id="二-LLM训练到应用的基本步骤"><a href="#二-LLM训练到应用的基本步骤" class="headerlink" title="二.LLM训练到应用的基本步骤"></a>二.LLM训练到应用的基本步骤</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>效果</th>
+<th>常用技术</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>预训练</td>
+<td>模型获得基本知识，(所有都懂，但都只懂一点点)</td>
+<td>无监督训练，(消耗大部分资源), DS的主要创新点也在这里。</td>
+</tr>
+<tr>
+<td>微调</td>
+<td>通过来自某个领域的标注的高质量数据微调LLM，使LLM提高某方面能力</td>
+<td>RLHF(rainforce learning from human feedback, 使用强化学习，人类对LLM的输出进行奖励，以指导LLM的学习。)，LoRA微调(将高维的参数空间转化到低秩空间以减少参数量，GPU不够时使用。(我使用的微调方式)</td>
+</tr>
+<tr>
+<td>对齐</td>
+<td>生成无害，符合人类预期的结果</td>
+<td>RLHF</td>
+</tr>
+<tr>
+<td>评估</td>
+<td>在应用领域上评估模型效果</td>
+<td>召回率，准确率等</td>
+</tr>
+<tr>
+<td>部署</td>
+<td>离线推理(每次都要加载模型参数)或者在线服务(API)</td>
+<td>vllm, ollama。ollama适用于轻量型应用场景，企业级一般用vllm，我使用vllm部署。模型部署的环境，方式等会影响模型的性能(吞吐量，速度等)</td>
+</tr>
+<tr>
+<td>应用开发</td>
+<td>下游应用调用上游LLM</td>
+<td>RAG，Agent等</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="三-应用大模型的几种方式"><a href="#三-应用大模型的几种方式" class="headerlink" title="三. 应用大模型的几种方式"></a>三. 应用大模型的几种方式</h4><h5 id="1-提示词工程"><a href="#1-提示词工程" class="headerlink" title="1. 提示词工程"></a>1. 提示词工程</h5><p>最常用的方式，不需要微调，基座模型都是一样的，使用预训练的基座模型即可，在prompt中描述场景，任务要求，输入，知识，输出格式等，LLM生成对应的输出。<br>优点:  省事，不需要微调，一个大模型可以像多个应用提供推理服务，只要针对不同应用写不同prompt。<br>缺点：LLM只看到prompt所展示的知识，并不是真的学会了，比如要让LLM回答一个法律知识，可能得在prompt里输入一整本法律书。目前的多轮回答上下文也只是在prompt中输入前几轮回答的问题和答案。</p>
+<h5 id="2-提示词工程改进-RAG-Retrieval-Augmented-Generation-检索增强生成"><a href="#2-提示词工程改进-RAG-Retrieval-Augmented-Generation-检索增强生成" class="headerlink" title="2. 提示词工程改进:RAG(Retrieval-Augmented Generation 检索增强生成)"></a>2. 提示词工程改进:RAG(Retrieval-Augmented Generation 检索增强生成)</h5><p>RAG=检索+增强+生成<br>提示词工程可以再prompt中输入回答所需知识，以提高回答质量，但输入过多的知识会造成prompt过长，导致推理速度慢。<br>输入的知识时一个领域的知识，其中和当前问题相关的可能只有一些，真正起作用的其实只有这部分知识，RAG先构建一个知识库(如通过Nomic-Embed-Text模型等构建文本嵌入数据库)，在生成prompt前检索出最相关的知识，结合到prompt中<br>优点：缩短prompt长度，缓解LLM幻觉。<br>缺点：依赖检索的准确性</p>
+<h5 id="3-微调"><a href="#3-微调" class="headerlink" title="3. 微调"></a>3. 微调</h5><p>使用LoRA(资源消耗少)，全参微调(资源消耗高)对模型进一步微调，使其更适合某个任务<br>优点：prompt可以更短，不需要输入太多知识，因为微调过程中已经学会了。<br>缺点：需要资源，微调后的模型一般只适用于一个场景，因为对每个应用都要部署一个模型。需要收集微调数据<br>LoRA原理: 在原始的PLM(Pre-trained Language Model)旁边增加一个旁路, 该旁路做一个先降维再升维的操作，只需要微调降维后的参数，以此来降低微调的参数量。</p>
+<h5 id="4-Agent"><a href="#4-Agent" class="headerlink" title="4. Agent"></a>4. Agent</h5><p>Agent是能够模拟独立思考过程，灵活调用各类工具，逐步达成预设目标。大模型Agent由规划、记忆、工具与行动四大关键部分组成，分别负责任务拆解与策略评估、信息存储与回忆、环境感知与决策辅助、以及将思维转化为实际行动。<br><strong>1.规划</strong></p>
+<ul>
+<li><p>定义：规划是Agent的思维模型，负责拆解复杂任务为可执行的子任务，并评估执行策略。</p>
+</li>
+<li><p>实现方式：通过大模型提示工程（如ReAct、CoT推理模式）实现，使Agent能够精准拆解任务，分步解决</p>
+</li>
+</ul>
+<p><strong>2.记忆</strong></p>
+<ul>
+<li><p>定义：记忆即信息存储与回忆，包括短期记忆和长期记忆。</p>
+</li>
+<li><p>实现方式：短期记忆用于存储会话上下文，支持多轮对话；长期记忆则存储用户特征、业务数据等，通常通过向量数据库等技术实现快速存取。</p>
+</li>
+</ul>
+<p><strong>3.工具</strong></p>
+<ul>
+<li>定义：工具是Agent感知环境、执行决策的辅助手段，如API调用、插件扩展等。</li>
+<li>实现方式：通过接入外部工具（如API、插件）扩展Agent的能力，如ChatPDF解析文档、Midjourney文生图等。<br>  <strong>4.行动</strong></li>
+<li>定义：行动是Agent将规划与记忆转化为具体输出的过程，包括与外部环境的互动或工具调用。</li>
+<li>实现方式：Agent根据规划与记忆执行具体行动，如智能客服回复、查询天气预报、AI机器人抓起物体等。</li>
+</ul>
+<h5 id="5-部署中的问题"><a href="#5-部署中的问题" class="headerlink" title="5. 部署中的问题"></a>5. 部署中的问题</h5><h6 id="a-部署过程中所需的显存-加载LLM参数的显存-kv-Cache显存"><a href="#a-部署过程中所需的显存-加载LLM参数的显存-kv-Cache显存" class="headerlink" title="a. 部署过程中所需的显存=加载LLM参数的显存+kv-Cache显存"></a>a. 部署过程中所需的显存=加载LLM参数的显存+kv-Cache显存</h6><p>kv-Cache: LLM推理时自左向右，意味着每次都要计算前面所有单词的注意力分数(每个token都有一个k值和一个v值)，LLM每次只预测一个token，预测时根据当前token的query值和之前序列的所有k值和v值进行预测。为了避免重复计算，LLM会缓存每个token的k值和v值，需要的时候直接读取，没有优化时kv-cache是连续的，并且需要提前预留。<br>正式应用中的部署一般使用vllm，vllm将大模型加载并常驻到显存中，当推理请求到来时，只需将输入加载到显存，因此可以加快推理速度。同时vllm使用了PageAttention优化(类似虚拟缓存中的分页管理)，平常的LLM推理会设置max-token，加载时需要预留显存，PageAttention技术可以动态管理kv-cache，并且不需要连续，减少内存碎片。(【论文阅读】Efficient Memory Management for Large Language Model Serving with PagedAttention | CodeRQ)</p>
+<h6 id="b-性能"><a href="#b-性能" class="headerlink" title="b. 性能"></a>b. 性能</h6><p>部署模型的性能影响也是多方面的，比如上云时调度器将该任务调到哪个GPU上，多卡部署时还依赖于GPU之间的连结方式，这是基础设施带来的影响，我们很难决定(合理利用调度策略，欺骗调度器)<br>主要考虑的是选择的模型大小，max-token，一般模型越大，max-token越大，推理越慢。</p>
+]]></content>
+      <categories>
+        <category>大模型应用</category>
+      </categories>
   </entry>
 </search>
