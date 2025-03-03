@@ -2491,9 +2491,9 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 ]]></content>
   </entry>
   <entry>
-    <title>llm_application_1</title>
+    <title>LLM落地常见的技术方案</title>
     <url>/2025/03/03/llm_application_1/</url>
-    <content><![CDATA[<h3 id="LLM落地常见的技术方案"><a href="#LLM落地常见的技术方案" class="headerlink" title="LLM落地常见的技术方案"></a><center>LLM落地常见的技术方案</center></h3><p>简要介绍大模型落地的几种方案，包括：提示词工程，RAG，Agent，微调。</p>
+    <content><![CDATA[<p>简要介绍大模型落地的几种方案，包括：提示词工程，RAG，Agent，微调。</p>
 <span id="more"></span>
 <h4 id="一-LLM分类"><a href="#一-LLM分类" class="headerlink" title="一. LLM分类"></a>一. LLM分类</h4><p>大模型是指具有大规模参数和复杂计算结构的深度神经网络，ChatGPT对它的定义是: 大模型本质上是一个使用海量数据训练而成的深度神经网络模型，其巨大的数据和参数规模，实现了智能的涌现，展现出类似人类的智能。<br>大致可以分为两类: GPT(Generation Pre-trained Transformer)和BERT(Bidirectional Encoder Repersentations from Transformers)他们主要有以下不同点：</p>
 <h5 id="1-训练方式"><a href="#1-训练方式" class="headerlink" title="1. 训练方式"></a>1. 训练方式</h5><p>BERT使用双向语言模型进行训练(在推理过程中会用到mask技术，类似填空)，GPT采用自回归语言模型进行训练。<br>可以简单理解为，BERT是双向的，同时考虑单词的左右上下文，BERT同时查看句子中的所有单词。而GPT每次只看到前面单词。</p>
