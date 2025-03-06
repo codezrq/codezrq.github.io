@@ -188,6 +188,99 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/06/llm_application_2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CodeRQ">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/06/llm_application_2/" class="post-title-link" itemprop="url">Huggingface的安装和使用</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-03-06 22:23:29 / 修改时间：23:10:27" itemprop="dateCreated datePublished" datetime="2025-03-06T22:23:29+08:00">2025-03-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>介绍如何从huggingface下载模型，如何使用API调用huggingface模型的在线服务，以及如何本地运行模型推理服务。</p>
+<h4 id="一-使用API调用Huggingface-在线服务。"><a href="#一-使用API调用Huggingface-在线服务。" class="headerlink" title="一. 使用API调用Huggingface 在线服务。"></a>一. 使用API调用Huggingface 在线服务。</h4><p>通过post向huggingface发送请求, 代码如下:<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="comment"># 通过post调用huggingface的在线模型</span></span><br><span class="line">API_URL = <span class="string">&quot;https://api-inference.huggingface.co/models/uer/gpt2-distil-chinese-cluecorpussmall&quot;</span></span><br><span class="line">API_TOKEN = <span class="string">&quot;hf_xxxxxxxxxxx&quot;</span> <span class="comment"># 从官网申请API_TOKEN</span></span><br><span class="line"></span><br><span class="line">headers = &#123;<span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;API_TOKEN&#125;</span>&quot;</span>&#125;</span><br><span class="line"><span class="comment"># 不使用token，匿名访问</span></span><br><span class="line">response = requests.post(API_URL, headers=headers, json = &#123;<span class="string">&quot;inputs&quot;</span>:<span class="string">&quot;你好,huggingface&quot;</span>&#125;)</span><br><span class="line"><span class="built_in">print</span>(response.json())</span><br></pre></td></tr></table></figure><br>其中API_TOKEN要从官网申请</p>
+<p> <img src="/2025/03/06/llm_application_2/image-20250306224349015.png" alt="image-20250306224349015"></p>
+<p>点击Access Token， 然后进入申请，里面的权限全选即可。</p>
+<h4 id="二-从huggingface上拉取模型"><a href="#二-从huggingface上拉取模型" class="headerlink" title="二. 从huggingface上拉取模型"></a>二. 从huggingface上拉取模型</h4><p>首先创建python虚拟环境，如果没有安装Anaconda，可以参考<br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_52677672/article/details/133632708">Windows下的Anaconda详细安装教程_windows安装anaconda-CSDN博客</a></p>
+<p>pip 安装<code>huggingface,transformers</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pip install huggingface_hub</span><br><span class="line">pip install -U transformers</span><br></pre></td></tr></table></figure>
+<p>从<a target="_blank" rel="noopener" href="https://huggingface.co/">https://huggingface.co/</a> 上查找对应的模型，然后用如下命令下载, 比如要下载模型<code>gpt2-chinese-cluecorpussmall</code>到当前目录下的 <code>./gpt2-chinese-cluecorpussmall</code>，则用如下命令:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">huggingface-cli download --resume-download gpt2-chinese-cluecorpussmall --local-dir gpt2-chinese-cluecorpussmall</span><br></pre></td></tr></table></figure>
+<p>下载数据集用如下命令:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">huggingface-cli download --repo-type dataset lavita/medical-qa-shared-task-v1-toy</span><br></pre></td></tr></table></figure>
+<p><strong>注意:</strong> 从huggingface上下载需要科学上网</p>
+<p>如果没有科学上网，可以从huggingface的国内镜像下载(笔者常用，推荐)</p>
+<p><a target="_blank" rel="noopener" href="https://hf-mirror.com/">HF-MIRRO</a></p>
+<p>下载前先设置环境变量</p>
+<p>windows</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$</span><span class="language-bash"><span class="built_in">env</span>:HF_ENDPOINT = <span class="string">&quot;https://hf-mirror.com&quot;</span></span></span><br></pre></td></tr></table></figure>
+<p>linux</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export HF_ENDPOINT=https://hf-mirror.com</span><br></pre></td></tr></table></figure>
+<p>下载模型</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">huggingface-cli download --resume-download gpt2 --local-dir gpt2</span><br></pre></td></tr></table></figure>
+<p>下载数据集</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">huggingface-cli download --repo-type dataset --resume-download wikitext --local-dir wikitext</span><br></pre></td></tr></table></figure>
+<h4 id="三-本地运行模型"><a href="#三-本地运行模型" class="headerlink" title="三. 本地运行模型"></a>三. 本地运行模型</h4><p>下载好模型后，使用<code>transformers</code>运行模型, 目前大模型可以简单分为两类: Bert类和GPT类，Bert类常用于词嵌入，分类，情感识别等，GPT类用于生成。</p>
+<h5 id="3-1-Bert类"><a href="#3-1-Bert类" class="headerlink" title="3.1 Bert类"></a>3.1 Bert类</h5><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> BertTokenizer, BertForSequenceClassification, pipeline</span><br><span class="line"></span><br><span class="line"><span class="comment"># 用bert做分类</span></span><br><span class="line">model_path = <span class="string">&quot;bert-base-chinese&quot;</span>  <span class="comment"># 模型文件夹所在目录，可以绝对路径或者相对路径</span></span><br><span class="line"></span><br><span class="line">model = BertForSequenceClassification.from_pretrained(model_path)</span><br><span class="line">tokenizer = BertTokenizer.from_pretrained(model_path)</span><br><span class="line"></span><br><span class="line">classifier = pipeline(<span class="string">&quot;text-classification&quot;</span>, model = model, tokenizer = tokenizer, device = <span class="string">&#x27;cpu&#x27;</span>)</span><br><span class="line"></span><br><span class="line">result = classifier(<span class="string">&quot;你好, 我是一款语言模型&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(result)</span><br></pre></td></tr></table></figure>
+<h5 id="3-2-GPT-类"><a href="#3-2-GPT-类" class="headerlink" title="3.2 GPT 类"></a>3.2 GPT 类</h5><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoModelForCausalLM, AutoTokenizer, pipeline</span><br><span class="line"><span class="comment"># 本地调用GPT2进行语言生成</span></span><br><span class="line">model_name = <span class="string">&quot;uer/gpt2-distil-chinese-cluecorpussmall&quot;</span></span><br><span class="line">model_path = <span class="string">&quot;./gpt2-chinese-cluecorpussmall&quot;</span></span><br><span class="line"></span><br><span class="line">model = AutoModelForCausalLM.from_pretrained(model_name)</span><br><span class="line">tokenizer = AutoTokenizer.from_pretrained(model_name)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用GPT2创建生成文本的pipeline</span></span><br><span class="line">generator = pipeline(<span class="string">&quot;text-generation&quot;</span>, model = model, tokenizer = tokenizer, device=<span class="string">&#x27;cpu&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 生成文本</span></span><br><span class="line"></span><br><span class="line">output = generator(<span class="string">&quot;讲一个猫和老鼠的故事,&quot;</span>, </span><br><span class="line">                   max_length=<span class="number">50</span>, </span><br><span class="line">                   num_return_sequences=<span class="number">1</span>, <span class="comment"># 将输出划分为num_return_sequences</span></span><br><span class="line">                   truncation=<span class="literal">True</span>,  <span class="comment"># 输入超出max_token会截断</span></span><br><span class="line">                   temperature=<span class="number">0.1</span>, <span class="comment"># 温度参数, 越大越有创造性(随机性)</span></span><br><span class="line">                   top_k=<span class="number">50</span>, <span class="comment"># 每次生成时只会从概率最高的top_k中选择, 再根据temperature选择</span></span><br><span class="line">                   top_p=<span class="number">0.9</span>, <span class="comment"># 核采样, 会从生成的词汇中选择一组累计概率达到top_p的词汇中选择</span></span><br><span class="line">                   clean_up_tokenization_spaces=<span class="literal">True</span> <span class="comment"># 是否清除多余的空格</span></span><br><span class="line">                   )</span><br><span class="line"><span class="built_in">print</span>(output)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/03/llm_application_1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -879,81 +972,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/02/03/ubuntu-conda-torch/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="zheng rq">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="CodeRQ">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/02/03/ubuntu-conda-torch/" class="post-title-link" itemprop="url">Ubuntu20.04安装conda和pytorch</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2025-02-03 22:48:11 / 修改时间：22:49:34" itemprop="dateCreated datePublished" datetime="2025-02-03T22:48:11+08:00">2025-02-03</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%85%8D%E7%BD%AE/" itemprop="url" rel="index"><span itemprop="name">配置</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>在Ubuntu 20.04上安装Anaconda 3 ，创建虚拟环境并安装pytorch。并指出一些常见的问题并给出解决办法。主要问题有，下载Aanconda后无法激活环境。pytorch版本和C湖大版本不匹配。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2025/02/03/ubuntu-conda-torch/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1023,7 +1041,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-count">28</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
