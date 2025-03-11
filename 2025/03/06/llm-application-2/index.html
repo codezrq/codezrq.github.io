@@ -20,21 +20,21 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="介绍如何从huggingface下载模型，如何使用API调用huggingface模型的在线服务，以及如何本地运行模型推理服务。 一. 使用API调用Huggingface 在线服务。通过post向huggingface发送请求, 代码如下:123456789import requests# 通过post调用huggingface的在线模型API_URL &#x3D; &quot;https:&#x2F;&#x2F;api-i">
+  <meta name="description" content="介绍如何从huggingface下载模型，如何使用API调用huggingface模型的在线服务，以及如何本地运行模型推理服务。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Huggingface的安装和使用">
-<meta property="og:url" content="http://example.com/2025/03/06/llm_application_2/index.html">
+<meta property="og:url" content="http://example.com/2025/03/06/llm-application-2/index.html">
 <meta property="og:site_name" content="CodeRQ">
-<meta property="og:description" content="介绍如何从huggingface下载模型，如何使用API调用huggingface模型的在线服务，以及如何本地运行模型推理服务。 一. 使用API调用Huggingface 在线服务。通过post向huggingface发送请求, 代码如下:123456789import requests# 通过post调用huggingface的在线模型API_URL &#x3D; &quot;https:&#x2F;&#x2F;api-i">
+<meta property="og:description" content="介绍如何从huggingface下载模型，如何使用API调用huggingface模型的在线服务，以及如何本地运行模型推理服务。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/2025/03/06/llm_application_2/image-20250306224349015.png">
+<meta property="og:image" content="http://example.com/2025/03/06/llm-application-2/image-20250306224349015.png">
 <meta property="article:published_time" content="2025-03-06T14:23:29.000Z">
-<meta property="article:modified_time" content="2025-03-06T15:10:27.684Z">
+<meta property="article:modified_time" content="2025-03-11T16:44:10.962Z">
 <meta property="article:author" content="zheng rq">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/2025/03/06/llm_application_2/image-20250306224349015.png">
+<meta name="twitter:image" content="http://example.com/2025/03/06/llm-application-2/image-20250306224349015.png">
 
-<link rel="canonical" href="http://example.com/2025/03/06/llm_application_2/">
+<link rel="canonical" href="http://example.com/2025/03/06/llm-application-2/">
 
 
 <script id="page-configurations">
@@ -195,7 +195,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/06/llm_application_2/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/06/llm-application-2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -217,10 +217,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-03-06 22:23:29 / 修改时间：23:10:27" itemprop="dateCreated datePublished" datetime="2025-03-06T22:23:29+08:00">2025-03-06</time>
+              <time title="创建时间：2025-03-06 22:23:29" itemprop="dateCreated datePublished" datetime="2025-03-06T22:23:29+08:00">2025-03-06</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-12 00:44:10" itemprop="dateModified" datetime="2025-03-12T00:44:10+08:00">2025-03-12</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -228,6 +234,10 @@
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E5%BE%AE%E8%B0%83%E4%B8%8E%E8%AE%AD%E7%BB%83/" itemprop="url" rel="index"><span itemprop="name">微调与训练</span></a>
                 </span>
             </span>
 
@@ -243,8 +253,9 @@
 
       
         <p>介绍如何从huggingface下载模型，如何使用API调用huggingface模型的在线服务，以及如何本地运行模型推理服务。</p>
+<span id="more"></span>
 <h4 id="一-使用API调用Huggingface-在线服务。"><a href="#一-使用API调用Huggingface-在线服务。" class="headerlink" title="一. 使用API调用Huggingface 在线服务。"></a>一. 使用API调用Huggingface 在线服务。</h4><p>通过post向huggingface发送请求, 代码如下:<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="comment"># 通过post调用huggingface的在线模型</span></span><br><span class="line">API_URL = <span class="string">&quot;https://api-inference.huggingface.co/models/uer/gpt2-distil-chinese-cluecorpussmall&quot;</span></span><br><span class="line">API_TOKEN = <span class="string">&quot;hf_xxxxxxxxxxx&quot;</span> <span class="comment"># 从官网申请API_TOKEN</span></span><br><span class="line"></span><br><span class="line">headers = &#123;<span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;API_TOKEN&#125;</span>&quot;</span>&#125;</span><br><span class="line"><span class="comment"># 不使用token，匿名访问</span></span><br><span class="line">response = requests.post(API_URL, headers=headers, json = &#123;<span class="string">&quot;inputs&quot;</span>:<span class="string">&quot;你好,huggingface&quot;</span>&#125;)</span><br><span class="line"><span class="built_in">print</span>(response.json())</span><br></pre></td></tr></table></figure><br>其中API_TOKEN要从官网申请</p>
-<p> <img src="/2025/03/06/llm_application_2/image-20250306224349015.png" alt="image-20250306224349015"></p>
+<p> <img src="/2025/03/06/llm-application-2/image-20250306224349015.png" alt="image-20250306224349015"></p>
 <p>点击Access Token， 然后进入申请，里面的权限全选即可。</p>
 <h4 id="二-从huggingface上拉取模型"><a href="#二-从huggingface上拉取模型" class="headerlink" title="二. 从huggingface上拉取模型"></a>二. 从huggingface上拉取模型</h4><p>首先创建python虚拟环境，如果没有安装Anaconda，可以参考<br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_52677672/article/details/133632708">Windows下的Anaconda详细安装教程_windows安装anaconda-CSDN博客</a></p>
 <p>pip 安装<code>huggingface,transformers</code></p>
@@ -298,10 +309,13 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2025/03/03/llm_application_1/" rel="prev" title="LLM落地常见的技术方案">
+    <a href="/2025/03/03/llm-application-1/" rel="prev" title="LLM落地常见的技术方案">
       <i class="fa fa-chevron-left"></i> LLM落地常见的技术方案
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2025/03/12/llm-application-3/" rel="next" title="Bert微调-评论情感分析">
+      Bert微调-评论情感分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -374,14 +388,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-count">29</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
