@@ -692,9 +692,9 @@
 <p>点击Access Token， 然后进入申请，里面的权限全选即可。</p>
 <h4 id="二-从huggingface上拉取模型"><a href="#二-从huggingface上拉取模型" class="headerlink" title="二. 从huggingface上拉取模型"></a>二. 从huggingface上拉取模型</h4><p>首先创建python虚拟环境，如果没有安装Anaconda，可以参考<br><a href="https://blog.csdn.net/weixin_52677672/article/details/133632708">Windows下的Anaconda详细安装教程_windows安装anaconda-CSDN博客</a></p>
 <p>pip 安装<code>huggingface,transformers</code></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pip install huggingface_hub</span><br><span class="line">pip install -U transformers</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pip install huggingface_hub</span><br><span class="line">pip install -U transformers     </span><br></pre></td></tr></table></figure>
 <p>从<a href="https://huggingface.co/">https://huggingface.co/</a> 上查找对应的模型，然后用如下命令下载, 比如要下载模型<code>gpt2-chinese-cluecorpussmall</code>到当前目录下的 <code>./gpt2-chinese-cluecorpussmall</code>，则用如下命令:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">huggingface-cli download --resume-download gpt2-chinese-cluecorpussmall --local-dir gpt2-chinese-cluecorpussmall</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">huggingface-cli download --resume-download Qwen/Qwen2.5-0.5B-Instruct --local-dir Qwen2.5-0.5B-Instruct</span><br></pre></td></tr></table></figure>
 <p>下载数据集用如下命令:</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">huggingface-cli download --repo-type dataset lavita/medical-qa-shared-task-v1-toy</span><br></pre></td></tr></table></figure>
 <p><strong>注意:</strong> 从huggingface上下载需要科学上网</p>
