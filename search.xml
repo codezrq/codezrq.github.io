@@ -2256,7 +2256,7 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
       </tags>
   </entry>
   <entry>
-    <title>LLama Factory和OpenWebui的安装和使用</title>
+    <title>大模型应用系列(七)  LLama Factory和OpenWebui的安装和使用</title>
     <url>/2025/03/30/llm-application-7/</url>
     <content><![CDATA[<p>详细介绍了LLamaFactory和OpenWebui的安装和使用, 以及如何在LLamaFactory上进行推理，微调。以及如何通过脚本对模型进行Lora微调。最后解释量化原理。</p>
 <span id="more"></span>
