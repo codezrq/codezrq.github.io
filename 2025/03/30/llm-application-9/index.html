@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="解决在微调和部署时对话模板不统一的问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="llm-application-9">
+<meta property="og:url" content="http://example.com/2025/03/30/llm-application-9/index.html">
+<meta property="og:site_name" content="CodeRQ">
+<meta property="og:description" content="解决在微调和部署时对话模板不统一的问题。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-9/image-20250328011605973.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-9/image-20250328005447733.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-9/image-20250328010119136.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-9/image-20250328012417165.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-9/image-20250330211852058.png">
+<meta property="article:published_time" content="2025-03-30T13:24:26.000Z">
+<meta property="article:modified_time" content="2025-03-30T13:25:44.201Z">
+<meta property="article:author" content="zheng rq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/03/30/llm-application-9/image-20250328011605973.png">
+
+<link rel="canonical" href="http://example.com/2025/03/30/llm-application-9/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>llm-application-9 | CodeRQ</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CodeRQ</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/30/llm-application-9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CodeRQ">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          llm-application-9
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-03-30 21:24:26 / 修改时间：21:25:44" itemprop="dateCreated datePublished" datetime="2025-03-30T21:24:26+08:00">2025-03-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E9%83%A8%E7%BD%B2/" itemprop="url" rel="index"><span itemprop="name">部署</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>解决在微调和部署时对话模板不统一的问题。</p>
+<span id="more"></span>
+<h4 id="一-发现问题"><a href="#一-发现问题" class="headerlink" title="一. 发现问题"></a>一. 发现问题</h4><p>我们在<strong><a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/30/llm-application-7/">大模型应用系列(七) LLama Factory和OpenWebui的安装和使用 | CodeRQ</a></strong>中学习了如何通过脚本或者LLama-Factory微调大模型，<strong><a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/21/llm-application-6/">大模型应用系列(六) ollama,vllm,LMDeploy 部署大模型 | CodeRQ</a></strong></p>
+<p>中学习了如何使用Ollama， vllm, LMDeploy部署大模型，我们在使用的过程中就会发现，如果在LLamaFactory上微调到基本收敛了，此时在LLamaFactory上的对话框输出是正常的，符合预期的，但是使用其他部署工具部署的模型输出又不一样了。以下展示一些不同, 这里的模型是<strong><a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/30/llm-application-7/">大模型应用系列(七) LLama Factory和OpenWebui的安装和使用 | CodeRQ</a></strong>训练的弱智吧对话AI，</p>
+<h5 id="1-1-LLamaFactory"><a href="#1-1-LLamaFactory" class="headerlink" title="1.1 LLamaFactory"></a>1.1 LLamaFactory</h5><p><img src="/2025/03/30/llm-application-9/image-20250328011605973.png" alt="image-20250328011605973"></p>
+<h5 id="1-2-openWebui"><a href="#1-2-openWebui" class="headerlink" title="1.2 openWebui"></a>1.2 openWebui</h5><p>  <img src="/2025/03/30/llm-application-9/image-20250328005447733.png" alt="image-20250328005447733"></p>
+<h5 id="1-3-vllm"><a href="#1-3-vllm" class="headerlink" title="1.3 vllm"></a>1.3 vllm</h5><p>这里直接使用之前的vllm部署中多轮对话的代码</p>
+<p><img src="/2025/03/30/llm-application-9/image-20250328010119136.png" alt="image-20250328010119136"></p>
+<p>对比上面五个结果，可以看出，模型的输出都有区别，其中LLamaFactory的输出最符合数据集(和数据集一样，因为训练loss基本不下降了)。</p>
+<h4 id="二-分析"><a href="#二-分析" class="headerlink" title="二. 分析"></a>二. 分析</h4><p>发生上述原因主要是不同的框架使用的对话模板不同，首先所有大模型的文件中存在模型自定义的对话模板，但是不同的大模型的对话模板是不同的，下面分析不同模型和框架的对话模板：</p>
+<h5 id="2-1-Qwen-对话模板"><a href="#2-1-Qwen-对话模板" class="headerlink" title="2.1 Qwen 对话模板"></a>2.1 Qwen 对话模板</h5><p>大模型自带的对话模板可以从它文件中的<code>tokenizer_config.json</code>中查看，比如qwen2.5的对话模板为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;chat_template&quot;: &quot;&#123;%- if tools %&#125;\n    &#123;&#123;- &#x27;&lt;|im_start|&gt;system\\n&#x27; &#125;&#125;\n    &#123;%- if messages[0][&#x27;role&#x27;] == &#x27;system&#x27; %&#125;\n        &#123;&#123;- messages[0][&#x27;content&#x27;] &#125;&#125;\n    &#123;%- else %&#125;\n        &#123;&#123;- &#x27;You are Qwen, created by Alibaba Cloud. You are a helpful assistant.&#x27; &#125;&#125;\n    &#123;%- endif %&#125;\n    &#123;&#123;- \&quot;\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within &lt;tools&gt;&lt;/tools&gt; XML tags:\\n&lt;tools&gt;\&quot; &#125;&#125;\n    &#123;%- for tool in tools %&#125;\n        &#123;&#123;- \&quot;\\n\&quot; &#125;&#125;\n        &#123;&#123;- tool | tojson &#125;&#125;\n    &#123;%- endfor %&#125;\n    &#123;&#123;- \&quot;\\n&lt;/tools&gt;\\n\\nFor each function call, return a json object with function name and arguments within &lt;tool_call&gt;&lt;/tool_call&gt; XML tags:\\n&lt;tool_call&gt;\\n&#123;\\\&quot;name\\\&quot;: &lt;function-name&gt;, \\\&quot;arguments\\\&quot;: &lt;args-json-object&gt;&#125;\\n&lt;/tool_call&gt;&lt;|im_end|&gt;\\n\&quot; &#125;&#125;\n&#123;%- else %&#125;\n    &#123;%- if messages[0][&#x27;role&#x27;] == &#x27;system&#x27; %&#125;\n        &#123;&#123;- &#x27;&lt;|im_start|&gt;system\\n&#x27; + messages[0][&#x27;content&#x27;] + &#x27;&lt;|im_end|&gt;\\n&#x27; &#125;&#125;\n    &#123;%- else %&#125;\n        &#123;&#123;- &#x27;&lt;|im_start|&gt;system\\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.&lt;|im_end|&gt;\\n&#x27; &#125;&#125;\n    &#123;%- endif %&#125;\n&#123;%- endif %&#125;\n&#123;%- for message in messages %&#125;\n    &#123;%- if (message.role == \&quot;user\&quot;) or (message.role == \&quot;system\&quot; and not loop.first) or (message.role == \&quot;assistant\&quot; and not message.tool_calls) %&#125;\n        &#123;&#123;- &#x27;&lt;|im_start|&gt;&#x27; + message.role + &#x27;\\n&#x27; + message.content + &#x27;&lt;|im_end|&gt;&#x27; + &#x27;\\n&#x27; &#125;&#125;\n    &#123;%- elif message.role == \&quot;assistant\&quot; %&#125;\n        &#123;&#123;- &#x27;&lt;|im_start|&gt;&#x27; + message.role &#125;&#125;\n        &#123;%- if message.content %&#125;\n            &#123;&#123;- &#x27;\\n&#x27; + message.content &#125;&#125;\n        &#123;%- endif %&#125;\n        &#123;%- for tool_call in message.tool_calls %&#125;\n            &#123;%- if tool_call.function is defined %&#125;\n                &#123;%- set tool_call = tool_call.function %&#125;\n            &#123;%- endif %&#125;\n            &#123;&#123;- &#x27;\\n&lt;tool_call&gt;\\n&#123;\&quot;name\&quot;: \&quot;&#x27; &#125;&#125;\n            &#123;&#123;- tool_call.name &#125;&#125;\n            &#123;&#123;- &#x27;\&quot;, \&quot;arguments\&quot;: &#x27; &#125;&#125;\n            &#123;&#123;- tool_call.arguments | tojson &#125;&#125;\n            &#123;&#123;- &#x27;&#125;\\n&lt;/tool_call&gt;&#x27; &#125;&#125;\n        &#123;%- endfor %&#125;\n        &#123;&#123;- &#x27;&lt;|im_end|&gt;\\n&#x27; &#125;&#125;\n    &#123;%- elif message.role == \&quot;tool\&quot; %&#125;\n        &#123;%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != \&quot;tool\&quot;) %&#125;\n            &#123;&#123;- &#x27;&lt;|im_start|&gt;user&#x27; &#125;&#125;\n        &#123;%- endif %&#125;\n        &#123;&#123;- &#x27;\\n&lt;tool_response&gt;\\n&#x27; &#125;&#125;\n        &#123;&#123;- message.content &#125;&#125;\n        &#123;&#123;- &#x27;\\n&lt;/tool_response&gt;&#x27; &#125;&#125;\n        &#123;%- if loop.last or (messages[loop.index0 + 1].role != \&quot;tool\&quot;) %&#125;\n            &#123;&#123;- &#x27;&lt;|im_end|&gt;\\n&#x27; &#125;&#125;\n        &#123;%- endif %&#125;\n    &#123;%- endif %&#125;\n&#123;%- endfor %&#125;\n&#123;%- if add_generation_prompt %&#125;\n    &#123;&#123;- &#x27;&lt;|im_start|&gt;assistant\\n&#x27; &#125;&#125;\n&#123;%- endif %&#125;\n&quot;,</span><br></pre></td></tr></table></figure>
+<p>同样，可以从qwen1.5的<code>tokenizer_config.json</code>文件中查看qwen1.5的对话模板</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;chat_template&quot;: &quot;&#123;% for message in messages %&#125;&#123;% if loop.first and messages[0][&#x27;role&#x27;] != &#x27;system&#x27; %&#125;&#123;&#123; &#x27;&lt;|im_start|&gt;system\nYou are a helpful assistant&lt;|im_end|&gt;\n&#x27; &#125;&#125;&#123;% endif %&#125;&#123;&#123;&#x27;&lt;|im_start|&gt;&#x27; + message[&#x27;role&#x27;] + &#x27;\n&#x27; + message[&#x27;content&#x27;] + &#x27;&lt;|im_end|&gt;&#x27; + &#x27;\n&#x27;&#125;&#125;&#123;% endfor %&#125;&#123;% if add_generation_prompt %&#125;&#123;&#123; &#x27;&lt;|im_start|&gt;assistant\n&#x27; &#125;&#125;&#123;% endif %&#125;&quot;,</span><br></pre></td></tr></table></figure>
+<p>对比可以看出, qwen2.5和qwen1.5的对话模板是不一样的。同样，比如GPT的对话模板和Qwen更是不一样的，也就是说大模型的对话模板并没有统一标准，实际上也不能统一，因为不同大模型架构是不同的，qwen1.5和qwen2.5架构也是有区别的，所以对话模板也不同。但这样我们的输入都需要按对话模板转为后才输入到大模型，同样的输入经过不同的对话模板就会变得不同。</p>
+<h5 id="2-2-llamaFactory-对话模板"><a href="#2-2-llamaFactory-对话模板" class="headerlink" title="2.2 llamaFactory 对话模板"></a>2.2 llamaFactory 对话模板</h5><p>LLamaFactory中，我们在配置的时候，有个比较奇怪的地方，我们用的是自己的模型，按理来说只需要把模型路径传进去就行，为什么还要选择它的基座模型是什么。我们注意到选择不同系列的模型，变化的除了模型路径(可以使用我们自己的模型路径替换)还有对话模板。其实这个选项主要就是为了选择对话模板，也就是说LLamaFactory内置了很多对话模板，通过模型名称选择对应的对话模板，同时我们也注意到Qwen的qwen, qwen1.5,qwen2,qwen2.5系列对应的对话模板都是一样的。</p>
+<p><img src="/2025/03/30/llm-application-9/image-20250328012417165.png" alt="image-20250328012417165"></p>
+<p>也就是说LLamaFactory的对话模板不是用大模型的模板，而是用自定义的模板。LLamaFactory的对话模板定义在在源码中的<code>LLaMA-Factory/src/llamafactory/data/template.py</code>文件中，比如Qwen的对话模板定义如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># copied from chatml template</span></span><br><span class="line">register_template(</span><br><span class="line">    name=<span class="string">&quot;qwen&quot;</span>,</span><br><span class="line">    format_user=StringFormatter(slots=[<span class="string">&quot;&lt;|im_start|&gt;user\n&#123;&#123;content&#125;&#125;&lt;|im_end|&gt;\n&lt;|im_start|&gt;assistant\n&quot;</span>]),</span><br><span class="line">    format_assistant=StringFormatter(slots=[<span class="string">&quot;&#123;&#123;content&#125;&#125;&lt;|im_end|&gt;\n&quot;</span>]),</span><br><span class="line">    format_system=StringFormatter(slots=[<span class="string">&quot;&lt;|im_start|&gt;system\n&#123;&#123;content&#125;&#125;&lt;|im_end|&gt;\n&quot;</span>]),</span><br><span class="line">    format_function=FunctionFormatter(slots=[<span class="string">&quot;&#123;&#123;content&#125;&#125;&lt;|im_end|&gt;\n&quot;</span>], tool_format=<span class="string">&quot;qwen&quot;</span>),</span><br><span class="line">    format_observation=StringFormatter(</span><br><span class="line">        slots=[<span class="string">&quot;&lt;|im_start|&gt;user\n&lt;tool_response&gt;\n&#123;&#123;content&#125;&#125;\n&lt;/tool_response&gt;&lt;|im_end|&gt;\n&lt;|im_start|&gt;assistant\n&quot;</span>]</span><br><span class="line">    ),</span><br><span class="line">    format_tools=ToolFormatter(tool_format=<span class="string">&quot;qwen&quot;</span>),</span><br><span class="line">    default_system=<span class="string">&quot;You are a helpful assistant.&quot;</span>,</span><br><span class="line">    stop_words=[<span class="string">&quot;&lt;|im_end|&gt;&quot;</span>],</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>所以当我们在前端选择的时候，就会注册一个对话模板，LLamaFactory的对话模板是参考官方的，但是还是不一样的，我们微调Qwen的时候，不管是qwen1.5还是qwen2.5，都是qwen的模板，微调完，我们用LLamaFactory的Chat功能，它也是用qwen的对话模板，这时候输出是正常的，但当我们使用vllm部署后，它默认使用的是模型自带的模板，就和我们微调时的模板不一样，就可能产生不一样的输出。</p>
+<h5 id="2-3-vllm对话模板"><a href="#2-3-vllm对话模板" class="headerlink" title="2.3 vllm对话模板"></a>2.3 vllm对话模板</h5><p>vllm对话模板的介绍可以从其官方文档中找到<a target="_blank" rel="noopener" href="https://vllm.hyper.ai/docs/serving/openai-compatible-server#聊天模板">OpenAI 兼容服务器 | vLLM 中文站</a></p>
+<p>文档中给出了自定义对话模板的办法，即通过<code>--chat-template</code>定义指明对话模板文件，对话模板的格式为<code>Jinja2</code>， 它是python的模板引擎，具体介绍可在其官网找到<a target="_blank" rel="noopener" href="https://docs.jinkan.org/docs/jinja2/">欢迎来到 Jinja2 — Jinja2 2.7 documentation</a></p>
+<p>大部分大模型的对话模板都是用<code>Jinjia2</code>, 也有一些用<code>json</code></p>
+<h5 id="2-3-OpenWebui对话模板"><a href="#2-3-OpenWebui对话模板" class="headerlink" title="2.3 OpenWebui对话模板"></a>2.3 OpenWebui对话模板</h5><p>OpenWebui会覆盖掉我们定义的模板，并且没有提供自定义对话模板，所以还没找到解决办法。</p>
+<h4 id="三-解决方案"><a href="#三-解决方案" class="headerlink" title="三. 解决方案"></a>三. 解决方案</h4><h5 id="3-1-统一LLamaFactory和vllm对话模板"><a href="#3-1-统一LLamaFactory和vllm对话模板" class="headerlink" title="3.1 统一LLamaFactory和vllm对话模板"></a>3.1 统一LLamaFactory和vllm对话模板</h5><p>做法：把vllm的对话模板替换为LLamaFactory的对话模板。</p>
+<p>问题：为什么不把LLamaFactory的对话模板替换为模型自带模板？</p>
+<p>解答：LLamaFactory把数据处理封装成服务，我们只需要按照LLama规定的格式(<code>json</code>)，处理数据集，导入数据集后它后面还是会像之前微调<code>Bert</code> <a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/12/llm-application-3/#more">大模型应用系列(三) Bert微调-评论情感分析 | CodeRQ</a> 那样封装成dataLoader,如果把对话模板改了，封装过程可能也得改变，就得改它的源码，是比较困难的 ，这也是LLamaFactory为什么qwen1.5和qwen2.5使用相同模板，因为如果每个系列的模型都用不同模板，那要定义很多封装过程，维护成本太高。vllm提供了修改对话模板的接口，我们目的是保持vllm和微调时对话模板一致，所以我们选择更改vllm对话模板。</p>
+<p>具体做法：把<strong>2.2</strong>中的对话模板转化为<code>Jinja2</code>格式，启动vllm时传入参数。</p>
+<p>通过阅读LLamaFactory源码，我发现它在文件<code>LLaMA-Factory/src/llamafactory/data/template.py</code>中提供了获取<code>jinja2</code>格式对话模板的函数。</p>
+<p>这个方法的功能就是传入预训练模型的名称，返回<code>jinja2</code>格式的对话模板, 这个函数定义在类<code>template</code>中，但它私有化了，我们无法调用，</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">_get_jinja_template</span>(<span class="params">self, tokenizer: <span class="string">&quot;PreTrainedTokenizer&quot;</span></span>) -&gt; <span class="built_in">str</span>:</span><br><span class="line">    prefix = <span class="variable language_">self</span>._convert_slots_to_jinja(<span class="variable language_">self</span>.format_prefix.apply(), tokenizer)</span><br><span class="line">    system_message = <span class="variable language_">self</span>._convert_slots_to_jinja(</span><br><span class="line">        <span class="variable language_">self</span>.format_system.apply(), tokenizer, placeholder=<span class="string">&quot;system_message&quot;</span></span><br><span class="line">    )</span><br><span class="line">    user_message = <span class="variable language_">self</span>._convert_slots_to_jinja(<span class="variable language_">self</span>.format_user.apply(), tokenizer)</span><br><span class="line">    assistant_message = <span class="variable language_">self</span>._convert_slots_to_jinja(<span class="variable language_">self</span>.format_assistant.apply(), tokenizer)</span><br><span class="line">    jinja_template = <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="keyword">if</span> prefix:</span><br><span class="line">        jinja_template += <span class="string">&quot;&#123;&#123; &quot;</span> + prefix + <span class="string">&quot; &#125;&#125;&quot;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.default_system:</span><br><span class="line">            jinja_template += <span class="string">&quot;&#123;% set system_message = &#x27;&quot;</span> + <span class="variable language_">self</span>._jinja_escape(<span class="variable language_">self</span>.default_system) + <span class="string">&quot;&#x27; %&#125;&quot;</span></span><br><span class="line"></span><br><span class="line">            jinja_template += (</span><br><span class="line">                <span class="string">&quot;&#123;% if messages[0][&#x27;role&#x27;] == &#x27;system&#x27; %&#125;&#123;% set loop_messages = messages[1:] %&#125;&quot;</span></span><br><span class="line">                <span class="string">&quot;&#123;% set system_message = messages[0][&#x27;content&#x27;] %&#125;&#123;% else %&#125;&#123;% set loop_messages = messages %&#125;&#123;% endif %&#125;&quot;</span></span><br><span class="line">                <span class="string">&quot;&#123;% for message in loop_messages %&#125;&quot;</span></span><br><span class="line">                <span class="string">&quot;&#123;% if loop.index0 == 0 and system_message is defined %&#125;&quot;</span></span><br><span class="line">                <span class="string">&quot;&#123;% set content = &quot;</span> + system_message + <span class="string">&quot; + message[&#x27;content&#x27;] %&#125;&quot;</span></span><br><span class="line">                <span class="string">&quot;&#123;% else %&#125;&#123;% set content = message[&#x27;content&#x27;] %&#125;&#123;% endif %&#125;&quot;</span></span><br><span class="line">                <span class="string">&quot;&#123;% if message[&#x27;role&#x27;] == &#x27;user&#x27; %&#125;&quot;</span></span><br><span class="line">                <span class="string">&quot;&#123;&#123; &quot;</span> + user_message + <span class="string">&quot; &#125;&#125;&quot;</span></span><br><span class="line">                <span class="string">&quot;&#123;% elif message[&#x27;role&#x27;] == &#x27;assistant&#x27; %&#125;&quot;</span></span><br><span class="line">                <span class="string">&quot;&#123;&#123; &quot;</span> + assistant_message + <span class="string">&quot; &#125;&#125;&quot;</span></span><br><span class="line">                <span class="string">&quot;&#123;% endif %&#125;&quot;</span></span><br><span class="line">                <span class="string">&quot;&#123;% endfor %&#125;&quot;</span></span><br><span class="line">            )</span><br><span class="line">            <span class="keyword">return</span> jinja_template</span><br></pre></td></tr></table></figure>
+<p>它也没有提供调用这个函数的接口，但是提供了另一个把tokenizer中的对话模板转为LLamaFactory定义的<code>jinja2</code>格式模板的方法:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">fix_jinja_template</span>(<span class="params">self, tokenizer: <span class="string">&quot;PreTrainedTokenizer&quot;</span></span>) -&gt; <span class="literal">None</span>:</span><br><span class="line">    <span class="string">r&quot;&quot;&quot;Replace the jinja template in the tokenizer.&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">if</span> tokenizer.chat_template <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">or</span> <span class="variable language_">self</span>.replace_jinja_template:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            tokenizer.chat_template = <span class="variable language_">self</span>._get_jinja_template(tokenizer)</span><br><span class="line">        <span class="keyword">except</span> ValueError <span class="keyword">as</span> e:</span><br><span class="line">            logger.info_rank0(<span class="string">f&quot;Cannot add this chat template to tokenizer: <span class="subst">&#123;e&#125;</span>.&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>我们可以先定义一个<code>Tokenizer</code>（随便定义都可以），获取<code>template</code>对象，然后传入到<code>fix_jinja_template</code>函数中获取对话模板。具体代码如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># mytest.py</span></span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将项目根目录添加到 Python 路径</span></span><br><span class="line">root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))</span><br><span class="line">sys.path.append(root_dir)</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> llamafactory.data.template <span class="keyword">import</span> TEMPLATES</span><br><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoTokenizer</span><br><span class="line"></span><br><span class="line"><span class="comment"># 1. 初始化分词器（任意支持的分词器均可）只是为了获取一个tokenizer对象</span></span><br><span class="line">tokenizer = AutoTokenizer.from_pretrained(<span class="string">&quot;/root/autodl-tmp/Qwen2.5-0.5B-Instruct&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 获取模板对象</span></span><br><span class="line">template_name = <span class="string">&quot;qwen&quot;</span>  <span class="comment"># 替换为你需要查看的模板名称，要跟LLamaFactory的名称一致</span></span><br><span class="line">template = TEMPLATES[template_name]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 修复分词器的 Jinja 模板</span></span><br><span class="line">template.fix_jinja_template(tokenizer)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 直接输出模板的 Jinja 格式</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;=&quot;</span> * <span class="number">40</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;Template [<span class="subst">&#123;template_name&#125;</span>] 的 Jinja 格式:&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;=&quot;</span> * <span class="number">40</span>)</span><br><span class="line"><span class="built_in">print</span>(tokenizer.chat_template)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将模板内容保存到文件</span></span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;chat_template.jinja&quot;</span>, <span class="string">&quot;w&quot;</span>, encoding=<span class="string">&quot;utf-8&quot;</span>) <span class="keyword">as</span> file:</span><br><span class="line">    file.write(tokenizer.chat_template)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;模板已保存为 chat_template.jinja&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>把这个文件放在<code>template.py</code>的同级目录下。最后在同级目录下生成的<code>chat_template.jinja</code>文件即为LLamaFacotory的Qwen对话模板jinja格式。</p>
+<p>接着在启动vllm时通过<code>--chat-template</code> 指定对话模板:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vllm serve /root/autodl-tmp/Qwen2.5-0.5B-Instruct-ruozhiba --chat-template /root/autodl-tmp/LLaMA-Factory/src/llamafactory/data/chat_template.jinja</span><br></pre></td></tr></table></figure>
+<p>通过指定对话模板，vllm输出和原先训练数据一致。</p>
+<p><img src="/2025/03/30/llm-application-9/image-20250330211852058.png" alt="image-20250330211852058"></p>
+<h5 id="3-2-统一LMDeploy和LLamaFactory的对话模板"><a href="#3-2-统一LMDeploy和LLamaFactory的对话模板" class="headerlink" title="3.2 统一LMDeploy和LLamaFactory的对话模板"></a>3.2 统一LMDeploy和LLamaFactory的对话模板</h5><p>LMDeploy的对话模板是<code>json</code>格式，可以将上面得到的<code>jinjia2</code>格式转化为<code>json</code>格式，具体方法见官网<a target="_blank" rel="noopener" href="https://lmdeploy.readthedocs.io/zh-cn/latest/advance/chat_template.html">自定义对话模板 — lmdeploy</a></p>
+<p>或者LLamaFactoyr注册的对话模板本来就是<code>json</code>格式，直接打印以下函数的输出即可即可</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># copied from chatml template</span></span><br><span class="line">register_template(</span><br><span class="line">    name=<span class="string">&quot;qwen&quot;</span>,</span><br><span class="line">    format_user=StringFormatter(slots=[<span class="string">&quot;&lt;|im_start|&gt;user\n&#123;&#123;content&#125;&#125;&lt;|im_end|&gt;\n&lt;|im_start|&gt;assistant\n&quot;</span>]),</span><br><span class="line">    format_assistant=StringFormatter(slots=[<span class="string">&quot;&#123;&#123;content&#125;&#125;&lt;|im_end|&gt;\n&quot;</span>]),</span><br><span class="line">    format_system=StringFormatter(slots=[<span class="string">&quot;&lt;|im_start|&gt;system\n&#123;&#123;content&#125;&#125;&lt;|im_end|&gt;\n&quot;</span>]),</span><br><span class="line">    format_function=FunctionFormatter(slots=[<span class="string">&quot;&#123;&#123;content&#125;&#125;&lt;|im_end|&gt;\n&quot;</span>], tool_format=<span class="string">&quot;qwen&quot;</span>),</span><br><span class="line">    format_observation=StringFormatter(</span><br><span class="line">        slots=[<span class="string">&quot;&lt;|im_start|&gt;user\n&lt;tool_response&gt;\n&#123;&#123;content&#125;&#125;\n&lt;/tool_response&gt;&lt;|im_end|&gt;\n&lt;|im_start|&gt;assistant\n&quot;</span>]</span><br><span class="line">    ),</span><br><span class="line">    format_tools=ToolFormatter(tool_format=<span class="string">&quot;qwen&quot;</span>),</span><br><span class="line">    default_system=<span class="string">&quot;You are a helpful assistant.&quot;</span>,</span><br><span class="line">    stop_words=[<span class="string">&quot;&lt;|im_end|&gt;&quot;</span>],</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<h4 id="四-补充"><a href="#四-补充" class="headerlink" title="四. 补充"></a>四. 补充</h4><p>微调时用LLamFactory的模板会导致模型变差吗?</p>
+<p>不会，模板只改变输出格式，不改变模型能力，我们微调时使用LLamaFactory的chat方法测试，证明在这种模板下已经获得预期效果了，所以我们部署是要做到是还原模型的效果，所以部署工具用LLamaFactoryd 对话模板。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/03/30/llm-application-8/" rel="prev" title="大模型应用系列(八)  LoRA与QLoRA">
+      <i class="fa fa-chevron-left"></i> 大模型应用系列(八)  LoRA与QLoRA
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E5%8F%91%E7%8E%B0%E9%97%AE%E9%A2%98"><span class="nav-number">1.</span> <span class="nav-text">一. 发现问题</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-1-LLamaFactory"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 LLamaFactory</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-openWebui"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 openWebui</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-3-vllm"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 vllm</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">二. 分析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-Qwen-%E5%AF%B9%E8%AF%9D%E6%A8%A1%E6%9D%BF"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 Qwen 对话模板</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-llamaFactory-%E5%AF%B9%E8%AF%9D%E6%A8%A1%E6%9D%BF"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 llamaFactory 对话模板</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-vllm%E5%AF%B9%E8%AF%9D%E6%A8%A1%E6%9D%BF"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 vllm对话模板</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-OpenWebui%E5%AF%B9%E8%AF%9D%E6%A8%A1%E6%9D%BF"><span class="nav-number">2.4.</span> <span class="nav-text">2.3 OpenWebui对话模板</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">3.</span> <span class="nav-text">三. 解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-%E7%BB%9F%E4%B8%80LLamaFactory%E5%92%8Cvllm%E5%AF%B9%E8%AF%9D%E6%A8%A1%E6%9D%BF"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 统一LLamaFactory和vllm对话模板</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-%E7%BB%9F%E4%B8%80LMDeploy%E5%92%8CLLamaFactory%E7%9A%84%E5%AF%B9%E8%AF%9D%E6%A8%A1%E6%9D%BF"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 统一LMDeploy和LLamaFactory的对话模板</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B-%E8%A1%A5%E5%85%85"><span class="nav-number">4.</span> <span class="nav-text">四. 补充</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
