@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="LoRA与QLoRA的异同，以及如何在LLamaFactory上使用LoRA与QLoRA">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大模型应用系列(七)  LoRA与QLoRA">
+<meta property="og:url" content="http://example.com/2025/03/30/llm-application-8/index.html">
+<meta property="og:site_name" content="CodeRQ">
+<meta property="og:description" content="LoRA与QLoRA的异同，以及如何在LLamaFactory上使用LoRA与QLoRA">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-8/image-20250325224602064.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-8/image-20250325225237010.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-8/image-20250325230416093.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-8/image-20250325231029112.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-8/image-20250326002151737.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-8/image-20250326003115177.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-8/image-20250326003532963.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-8/image-20250326004207803.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-8/image-20250326004612163.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-8/image-20250326004620148.png">
+<meta property="article:published_time" content="2025-03-30T12:44:37.000Z">
+<meta property="article:modified_time" content="2025-03-30T12:47:58.746Z">
+<meta property="article:author" content="zheng rq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/03/30/llm-application-8/image-20250325224602064.png">
+
+<link rel="canonical" href="http://example.com/2025/03/30/llm-application-8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>大模型应用系列(七)  LoRA与QLoRA | CodeRQ</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CodeRQ</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/30/llm-application-8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CodeRQ">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          大模型应用系列(七)  LoRA与QLoRA
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-03-30 20:44:37 / 修改时间：20:47:58" itemprop="dateCreated datePublished" datetime="2025-03-30T20:44:37+08:00">2025-03-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E5%BE%AE%E8%B0%83%E4%B8%8E%E8%AE%AD%E7%BB%83/" itemprop="url" rel="index"><span itemprop="name">微调与训练</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>LoRA与QLoRA的异同，以及如何在LLamaFactory上使用LoRA与QLoRA</p>
+<span id="more"></span>
+<h4 id="一-补充"><a href="#一-补充" class="headerlink" title="一. 补充"></a>一. 补充</h4><h5 id="LoRA-和-QLoRA"><a href="#LoRA-和-QLoRA" class="headerlink" title="LoRA 和 QLoRA"></a>LoRA 和 QLoRA</h5><p>LoRA: LoRA是一种用于微调大模型的技术，通过低秩近似分解方法适配数十亿参数到特定领域。</p>
+<p>QLoRA: QLoRA是一种高效的大模型微调方法，显著降低了显存使用量，同时保持了bf16微调的性能。它通过一个固定的，4位量化的预训练语言模型进行反向传播梯度到低秩适配器来实现这一目标。</p>
+<p>大模型的大指的是参数量大，在微调过程中，我们可以采用降低模型参数精度来节约显存，以此来增大batch_size加快训练。</p>
+<p>问题：模型的量化是以牺牲模型精度为代价的，训练过程中使用量化不会降低模型的精度，因为训练过程中参数还没有确定，AI训练的结果不是准确的值，而是数据分布，模型之所以可以量化，是因为量化后虽然参数绝对值变化了，但他们拟合的分布不变。</p>
+<p>注意: 在量化微调中，量化只发生在内部训练过程，并不影响模型最终的数据类型，模型原有参数类型在量化微调训练中会量化，但参数保存时又会恢复，因此量化微调并不影响模型本身的参数类型。</p>
+<h5 id="微调的目标"><a href="#微调的目标" class="headerlink" title="微调的目标"></a>微调的目标</h5><p>微调的理想目标是让模型在测试数据集上达到拟合状态(损失收敛)， 根据测试集损失或者精度来表达，生成模型通过客观评价并不可靠。</p>
+<h5 id="模型微调多少个epoch才会拟合"><a href="#模型微调多少个epoch才会拟合" class="headerlink" title="模型微调多少个epoch才会拟合"></a>模型微调多少个epoch才会拟合</h5><p>一般3-5个epoch就会其效果，但多少个epoch拟合是未知的，模型拟合和两个因素有关：模型的复杂程度和数据集的复杂程度，一般来说，模型越复杂，数据集越复杂，需要的epoch越多。在具体实验中，一般会给一个较大的epoch(比如几千)，主要防止模型未达到拟合训练就结束了（因为训练过程人不会一直看着）。</p>
+<p>一般训练到损失收敛就可以了(loss不怎么下降了)</p>
+<h4 id="二-LLama-Factory的安装"><a href="#二-LLama-Factory的安装" class="headerlink" title="二. LLama-Factory的安装"></a>二. LLama-Factory的安装</h4><p>我的服务器配置为:</p>
+<p>RTX 4090, cuda 12.4 python=3.10 pytorch=2.5.1</p>
+<p>参考：<a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/30/llm-application-7/#more">大模型应用系列(七) LLama Factory和OpenWebui的安装和使用 | CodeRQ</a></p>
+<h4 id="三-准备模型和数据集"><a href="#三-准备模型和数据集" class="headerlink" title="三. 准备模型和数据集"></a>三. 准备模型和数据集</h4><p>使用的是多轮数据集，法律相关，可以从下面链接下载：</p>
+<p><a target="_blank" rel="noopener" href="https://download.csdn.net/download/weixin_46091520/90532538">大模型微调的法律知识多轮数据集资源-CSDN文库</a></p>
+<p>将数据集上传到data文件夹中，并在<code>dataset_info.json</code>中添加数据集文件信息:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;fintech&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;file_name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;fintechy.json&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br></pre></td></tr></table></figure>
+<p>模型下载可以参考: <a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/06/llm-application-2/#more">Huggingface的安装和使用 | CodeRQ</a></p>
+<p>这里选择的模型是<code>Qwen2.5-1.5B-Instruct</code></p>
+<h4 id="四-进行QLoRA微调"><a href="#四-进行QLoRA微调" class="headerlink" title="四. 进行QLoRA微调"></a>四. 进行QLoRA微调</h4><p>启动LLamaFatory</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd LLaMA-Factory</span><br><span class="line">llamafactory-cli webui</span><br></pre></td></tr></table></figure>
+<p>设置参数：要注意QLoRA的量化等级，指的是在训练过程中模型的量化等级，量化等级越高模型精度越低，跟模型大小也有关，如果模型很大，那量化等级可以开高一点。这里才1.5B，所以只开了INT8</p>
+<p><img src="/2025/03/30/llm-application-8/image-20250325224602064.png" alt="image-20250325224602064"></p>
+<p>开启QLoRA之后，还要调整LoRA参数，通过大量实验得出，QLoRA中LoRA的秩最低要32，最好是60左右，（一般是32到128之间）如果模型比较大，那可以小一点，但如果模型很小，LoRA的秩就要大一些。另外LoRA缩放系数一般设为LoRA的秩的两倍。LoRA秩越大，显存占用越大。</p>
+<p><img src="/2025/03/30/llm-application-8/image-20250325225237010.png" alt="image-20250325225237010"></p>
+<p>配置好后点击启动开始QLoRA微调，一开始loss反而上升是正常现象，一般五次后能下降就是正常的。</p>
+<p> <img src="/2025/03/30/llm-application-8/image-20250325230416093.png" alt="image-20250325230416093"></p>
+<p><img src="/2025/03/30/llm-application-8/image-20250325231029112.png" alt="image-20250325231029112"></p>
+<p>这里显存利用率还没到90%, 说明batch_size还可以加大。</p>
+<p><img src="/2025/03/30/llm-application-8/image-20250326002151737.png" alt="image-20250326002151737"></p>
+<p>训练到loss下降缓慢就可以停止了。 </p>
+<p>另外，为了进一步加快微调，还可以开启flashattn2， 但它要求GPU架构在sm80以上。</p>
+<h4 id="五-测试结果"><a href="#五-测试结果" class="headerlink" title="五. 测试结果"></a>五. 测试结果</h4><p><img src="/2025/03/30/llm-application-8/image-20250326003115177.png" alt="image-20250326003115177"></p>
+<p>符合训练集。</p>
+<h4 id="六-对比LoRA和QLoRA"><a href="#六-对比LoRA和QLoRA" class="headerlink" title="六. 对比LoRA和QLoRA"></a>六. 对比LoRA和QLoRA</h4><h5 id="6-1-使用LoRA微调"><a href="#6-1-使用LoRA微调" class="headerlink" title="6.1 使用LoRA微调"></a>6.1 使用LoRA微调</h5><p><img src="/2025/03/30/llm-application-8/image-20250326003532963.png" alt="image-20250326003532963"></p>
+<h5 id="6-2-使用QLoRA微调"><a href="#6-2-使用QLoRA微调" class="headerlink" title="6.2 使用QLoRA微调"></a>6.2 使用QLoRA微调</h5><p><img src="/2025/03/30/llm-application-8/image-20250326004207803.png" alt="image-20250326004207803"></p>
+<p>对比LoRA和QLoRA可以看出，QLoRA占用的显存更小，但虽然是int8量化，并不是两倍的关系，因为只是模型参数量化了，由于截断长度是512, 数据占了很大显存，模型只有1.5B，比较小，所以显存降低不明想。</p>
+<h5 id="6-3-开启flashttn2优化"><a href="#6-3-开启flashttn2优化" class="headerlink" title="6.3 开启flashttn2优化"></a>6.3 开启flashttn2优化</h5><p><img src="/2025/03/30/llm-application-8/image-20250326004612163.png" alt="image-20250326004612163"></p>
+<p><img src="/2025/03/30/llm-application-8/image-20250326004620148.png" alt="image-20250326004620148"></p>
+<p>可以看到，开启flashattn2后显存占用变高，但训练速度会更快。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/03/30/llm-application-7/" rel="prev" title="大模型应用系列(七)  LLama Factory和OpenWebui的安装和使用">
+      <i class="fa fa-chevron-left"></i> 大模型应用系列(七)  LLama Factory和OpenWebui的安装和使用
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E8%A1%A5%E5%85%85"><span class="nav-number">1.</span> <span class="nav-text">一. 补充</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#LoRA-%E5%92%8C-QLoRA"><span class="nav-number">1.1.</span> <span class="nav-text">LoRA 和 QLoRA</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%BE%AE%E8%B0%83%E7%9A%84%E7%9B%AE%E6%A0%87"><span class="nav-number">1.2.</span> <span class="nav-text">微调的目标</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E5%BE%AE%E8%B0%83%E5%A4%9A%E5%B0%91%E4%B8%AAepoch%E6%89%8D%E4%BC%9A%E6%8B%9F%E5%90%88"><span class="nav-number">1.3.</span> <span class="nav-text">模型微调多少个epoch才会拟合</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-LLama-Factory%E7%9A%84%E5%AE%89%E8%A3%85"><span class="nav-number">2.</span> <span class="nav-text">二. LLama-Factory的安装</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-%E5%87%86%E5%A4%87%E6%A8%A1%E5%9E%8B%E5%92%8C%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="nav-number">3.</span> <span class="nav-text">三. 准备模型和数据集</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B-%E8%BF%9B%E8%A1%8CQLoRA%E5%BE%AE%E8%B0%83"><span class="nav-number">4.</span> <span class="nav-text">四. 进行QLoRA微调</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%94-%E6%B5%8B%E8%AF%95%E7%BB%93%E6%9E%9C"><span class="nav-number">5.</span> <span class="nav-text">五. 测试结果</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%AD-%E5%AF%B9%E6%AF%94LoRA%E5%92%8CQLoRA"><span class="nav-number">6.</span> <span class="nav-text">六. 对比LoRA和QLoRA</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#6-1-%E4%BD%BF%E7%94%A8LoRA%E5%BE%AE%E8%B0%83"><span class="nav-number">6.1.</span> <span class="nav-text">6.1 使用LoRA微调</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#6-2-%E4%BD%BF%E7%94%A8QLoRA%E5%BE%AE%E8%B0%83"><span class="nav-number">6.2.</span> <span class="nav-text">6.2 使用QLoRA微调</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#6-3-%E5%BC%80%E5%90%AFflashttn2%E4%BC%98%E5%8C%96"><span class="nav-number">6.3.</span> <span class="nav-text">6.3 开启flashttn2优化</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">35</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
