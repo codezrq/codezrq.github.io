@@ -1039,7 +1039,7 @@
       </categories>
   </entry>
   <entry>
-    <title>大模型应用系列(七)  LoRA与QLoRA</title>
+    <title>大模型应用系列(八)  LoRA与QLoRA</title>
     <url>/2025/03/30/llm-application-8/</url>
     <content><![CDATA[<p>LoRA与QLoRA的异同，以及如何在LLamaFactory上使用LoRA与QLoRA</p>
 <span id="more"></span>
