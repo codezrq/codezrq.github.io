@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="介绍如何根据模型的参数量计算显存占用，介绍了分布式训练常见的通信原语，包括Reduce, Gather, Broadcast,Scatter,ReduceScatter,AllGather,AllReduce等，以及介绍Zero优化器三个级别各自的执行过程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="模型显存占用计算以及Zero优化器">
+<meta property="og:url" content="http://example.com/2025/03/30/zero-optimizer/index.html">
+<meta property="og:site_name" content="CodeRQ">
+<meta property="og:description" content="介绍如何根据模型的参数量计算显存占用，介绍了分布式训练常见的通信原语，包括Reduce, Gather, Broadcast,Scatter,ReduceScatter,AllGather,AllReduce等，以及介绍Zero优化器三个级别各自的执行过程。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330170740533.png">
+<meta property="og:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330171247355.png">
+<meta property="og:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330171343407.png">
+<meta property="og:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330171439241.png">
+<meta property="og:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330171733698.png">
+<meta property="og:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330171852507.png">
+<meta property="og:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330171935551.png">
+<meta property="og:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330172057505.png">
+<meta property="og:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330172409858.png">
+<meta property="og:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330172704241.png">
+<meta property="og:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330172824038.png">
+<meta property="article:published_time" content="2025-03-30T09:34:57.000Z">
+<meta property="article:modified_time" content="2025-03-30T09:41:50.978Z">
+<meta property="article:author" content="zheng rq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/03/30/zero-optimizer/image-20250330170740533.png">
+
+<link rel="canonical" href="http://example.com/2025/03/30/zero-optimizer/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>模型显存占用计算以及Zero优化器 | CodeRQ</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CodeRQ</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/30/zero-optimizer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CodeRQ">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          模型显存占用计算以及Zero优化器
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-03-30 17:34:57 / 修改时间：17:41:50" itemprop="dateCreated datePublished" datetime="2025-03-30T17:34:57+08:00">2025-03-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E6%A6%82%E5%BF%B5%E5%92%8C%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">概念和原理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>介绍如何根据模型的参数量计算显存占用，介绍了分布式训练常见的通信原语，包括Reduce, Gather, Broadcast,Scatter,ReduceScatter,AllGather,AllReduce等，以及介绍Zero优化器三个级别各自的执行过程。</p>
+<span id="more"></span>
+<p>零冗余优化器(ZeRO)通过对三个模型状态(优化器状态、梯度和模型参数)进行划分而不是复制他们，消除了数据并行进程中的内存冗余。该方法与传统的数据并行相比，内存效率得到极大的提高，而计算粒度和通信效率得到了保留。</p>
+<p>目前训练超大参数规模的模型仍然有许多显存方面的问题，目前常见的解决方案是数据并行(Data Parallelisms ，DP) 和模型并行(Model Parallelisms, MP)。基础的DP方法并不能降低每个GPU上的内存占用，因为他会拷贝模型。为了解决这个问题，有诸如流水线并行(Pipeline Parallelism, PP),MP或者借助CPU内存的方法，但这种方法都是以牺牲某些关键性能(如，内存，计算，通信开销)为代价。目前最有前景的方法是MP，即垂直地切分模型，将网络和参数切分到多个设备，需要每层之间进行大量的通信。</p>
+<h4 id="一-优化前"><a href="#一-优化前" class="headerlink" title="一. 优化前"></a>一. 优化前</h4><p>ZeRO(Zero Redundancy Optimizer)的开发便是用于解决DP和MP的问题。在理解ZeRO的原理之前，需要深入了解DP、MP的问题：</p>
+<p>● 内存为什么占用这么大</p>
+<p>● 是参数所占的真实空间，还是存在冗余</p>
+<p>● 可以如何优化</p>
+<p>训练期间大部分的内存被模型状态(Model States)所消耗，包括优化器参数(Optimizer states), 梯度(Gradients) 和模型参数(Model Parameters)所消耗。除此之外，残余状态(Residual States)消耗了剩余的内存，包括前向传播是得到的Activateions,即时计算通信的临时穿冲区还有没有被妥善管理的内存碎片。将内存分为两部分: Model States和Residual进行讨论：</p>
+<p>● Model States</p>
+<p>混合精度训练和Adam优化器基本已经是训练语言模型的标配, 其中模型参数，模型梯度都是FP16，如果优化器是Adam，则还有FP32的一阶动量(momentum)和二阶动量(variance)，混合精度训练同时存在FP16和FP32两种格式的数值，其中模型参数，模型梯度都是FP16，Adam的一阶动量和二阶动量是FP32,此外还有FP32的模型参数备份(backup)。(为什么要有FP32的模型参数备份？因为FP16累加误差会积累)，假设模型参数规模为$\Phi$, 那么Model States的内存总开销为:</p>
+<p>$Model States = Param + Gradient + Adam(momentum, variance) + backup = 2\Phi + 2\Phi + 2\times 4 \times \Phi + 4 \times \Phi = 16\Phi$</p>
+<p>如果是1.5B的模型，$Model States=16\times 1.5B=24GB$, Model States远大于模型存储模型参数的显存，所以存在巨大优化空间。</p>
+<p>● Residual States Memory</p>
+<p>首先是激活值 Activations，Activation是在网络前向传播过程中每层神经元的计算结果，在反向传播时将结合梯度和这些激活值更新模型参数，所以需要保留这些Activation，常用的优化有：</p>
+<p><strong>Activation ChaeckPointing</strong>, 即只保存特定点的Activation，并在反向传播时重新计算没有保存的Activations, 这种方法代价是额外的计算时间，具体选择哪些点保存，一般是保存计算代价高但内存占用小的Activation，具体策略可以是固定或者启发式的。</p>
+<p><strong>Temporary buffers，</strong>一些操作如Gradient AllReduce或Gradient norm computation在使用高性能库时会尝试将所有参数融合到一个单一缓冲区以提高吞吐量，并且这些缓冲区的大小大多数情况下跟模型大小有关。（<strong>为啥这会影响内存开销？</strong>因为，当模型大小很大时，由于某些操作/高性能库的原因，会等待装填或者分配一个非常大的融合缓冲区去执行操作，这虽然会带来带宽和效率上的优势，但是有时却成为了内存瓶颈）</p>
+<p>Memory Fragmentation, 如Activation原来存储在连续的空间，使用Activation checkpoint技术后释放一些激活值，这时其他激活值仍未释放，就会造成碎片化。</p>
+<h4 id="二-分布式训练常见的通信原语"><a href="#二-分布式训练常见的通信原语" class="headerlink" title="二. 分布式训练常见的通信原语"></a>二. 分布式训练常见的通信原语</h4><h5 id="2-1-Reduce"><a href="#2-1-Reduce" class="headerlink" title="2.1 Reduce"></a>2.1 Reduce</h5><p>reduce: 归约。属于多对一通信原语，多个数据发送者, 一个数据接收者。可以在集群内把多个节点的数据归约到一个节点上，如下图, 归约前每个节点有各自的数据，归约后接收节点有所有节点的数据的计算结果。常用于累加，累乘，求最值等操作。</p>
+<p> <img src="/2025/03/30/zero-optimizer/image-20250330170740533.png" alt="image-20250330170740533"></p>
+<h5 id="2-2-Gather"><a href="#2-2-Gather" class="headerlink" title="2.2 Gather"></a>2.2 Gather</h5><p>Gather：聚合。属于多对一通信，多个数据发送者，一个数据接收者，可以在集群内把多个节点的数据聚合到一个节点上，聚合前每个节点拥有一份完整数据的一部分，聚合后接收节点拥有完整数据，Gather只是把所有多个节点的数据放到一个节点上，reduce会进行映射操作(求和，求最值等)。</p>
+<p> <img src="/2025/03/30/zero-optimizer/image-20250330171247355.png" alt="image-20250330171247355">  <img src="/2025/03/30/zero-optimizer/image-20250330171343407.png" alt="image-20250330171343407"> </p>
+<h5 id="2-3-Broadcast"><a href="#2-3-Broadcast" class="headerlink" title="2.3 Broadcast"></a>2.3 Broadcast</h5><p>Broadcast: 广播。属于一对多通信原语，一个数据发送者，多个数据接收者。可以在集群内把一个节点的数据广播到其他节点上。广播后每个其他节点具有和发出节点相同的数据。</p>
+<p> <img src="/2025/03/30/zero-optimizer/image-20250330171439241.png" alt="image-20250330171439241"></p>
+<h5 id="2-4-Scatter"><a href="#2-4-Scatter" class="headerlink" title="2.4 Scatter"></a>2.4 Scatter</h5><p>Scatter：散开。属于一对多通信原语，一个数据发送者，多个数据接收者。可以在集群内把一个节点的数据发散到其他节点上，与Broadcast不同的是Scatter是先切分后发送，每个接收节点只收到发送节点的一部分数据(合起来是完整的)。</p>
+<p> <img src="/2025/03/30/zero-optimizer/image-20250330171733698.png" alt="image-20250330171733698"></p>
+<h5 id="2-5-ReduceScatter"><a href="#2-5-ReduceScatter" class="headerlink" title="2.5 ReduceScatter"></a>2.5 ReduceScatter</h5><p>ReduceScatter: 属于多对多通信。多个数据发送者，多个数据接收者。先把所有节点的数据通过reduce归约到同个节点，再从这个节点发散到其他节点。最终每个节点都拥有归约后完整数据的一部分。</p>
+<p> <img src="/2025/03/30/zero-optimizer/image-20250330171852507.png" alt="image-20250330171852507"></p>
+<h5 id="2-6-AllGather"><a href="#2-6-AllGather" class="headerlink" title="2.6 AllGather"></a>2.6 AllGather</h5><p>AllGather: 属于多对多通信。多个数据发送者，多个数据接收者。发送前每个数据有完整数据的一部分，先通过Gather操作把所有数据聚合到一个节点上，再通过Broadcast(广播)发送到所有节点上，AllGather后每个节点都有一份完整数据。</p>
+<p> <img src="/2025/03/30/zero-optimizer/image-20250330171935551.png" alt="image-20250330171935551"></p>
+<h5 id="2-7-AllReduce"><a href="#2-7-AllReduce" class="headerlink" title="2.7 AllReduce"></a>2.7 AllReduce</h5><p>AllReduce: 属于多对多通信。多个数据发送者，多个数据接收者。发送前每个节点有一份完整数据的旧版本，先归约更新为新版本，再发送到每个节点上。AllReduce后每个节点都有完整数据的新版本。AllReduce可以通过在主节点上进行Reduce+Broadcast(先归约更新数据, 再广播数据)实现, 但这种方式主节点负责所有数据的聚合和广播，会成为性能瓶颈。也可以通过ReduceScatter+allGather(先归约更新，再发散，最后先聚合后广播)，目前多用基于环的ReduceScatter和AllGather，高效实现AllReduce</p>
+<p> <img src="/2025/03/30/zero-optimizer/image-20250330172057505.png" alt="image-20250330172057505"></p>
+<h4 id="三-Zero优化器"><a href="#三-Zero优化器" class="headerlink" title="三. Zero优化器"></a>三. Zero优化器</h4><p>首先是将ModelStates （包含模型参数，梯度参数，优化器参数）划分到各个GPU上。</p>
+<h5 id="3-1-Zero-1"><a href="#3-1-Zero-1" class="headerlink" title="3.1 Zero-1"></a>3.1 Zero-1</h5><p>ZeRO-1: 对优化器参数进行划分，具体步骤如下(N个GPU)：</p>
+<ol>
+<li>把batch分成N份, 每个GPU一份</li>
+<li>执行一步前向和方向传播计算后，每个GPU各得到一份梯度</li>
+<li>对梯度执行all-reduce操作，所有节点都有一份完整梯度</li>
+<li>每个GPU得到完整梯度G后，对各自的权重进行更新，权重的更新由优化器状态和梯度共同决定，每个GPU只需要存储和更新1/N的优化器状态，并更新1/N的权重(模型参数)。</li>
+<li><p>每个GPU维护各自优化器里面更新的参数，最后执行all-gather，使得每个GPU都有更新后的权重。</p>
+<p><img src="/2025/03/30/zero-optimizer/image-20250330172409858.png" alt="image-20250330172409858"></p>
+</li>
+</ol>
+<h5 id="3-2-Zero-2"><a href="#3-2-Zero-2" class="headerlink" title="3.2 Zero-2"></a>3.2 Zero-2</h5><p>ZeRO-2: 对优化器和梯度进行划分，具体步骤如下:</p>
+<ol>
+<li>把batch分成N份，每个GPU一份</li>
+<li>执行一步前向和反向传播计算后，每个GPU得到一份梯度</li>
+<li>对梯度执行all-reduce，所有节点都有一份完整梯度</li>
+<li>聚合之后对梯度进行划分，比如GPU1只负责维护梯度G1，就只需要把G1的新梯度分为GPU1，其他的梯度就不需要保存。</li>
+<li>每个GPU用所维护的优化器和梯度更新相应的权重，即每块GPU维护独立的权重。</li>
+<li><p>最后对权重进行all-gather, 每个GPU都有完整的更新后的权重。</p>
+<p><img src="/2025/03/30/zero-optimizer/image-20250330172704241.png" alt="image-20250330172704241"></p>
+</li>
+</ol>
+<h5 id="3-3-Zero-3"><a href="#3-3-Zero-3" class="headerlink" title="3.3 Zero-3"></a>3.3 Zero-3</h5><p>ZeRO-3: 对优化器，梯度，权重进行划分，具体步骤如下：</p>
+<ol>
+<li>把batch分成N份，每个GPU一份，模型的权重参数也被分成N份。</li>
+<li>在进行前向计算之前，对权重执行all-gather操作取回分布在各GPU上的权重，组成完整的参数进行前向计算，计算完成后，把不属于自身维护的权重抛弃。</li>
+<li>在进行反向计算之前，对权重执行all-gather操作取回分布在各GPU上的权重，组成完整的参数进行反向传播计算，计算完成后，把不属于自身维护的权重抛弃。</li>
+<li>backward之后得到各自的梯度，对梯度执行all-gather操作，得到聚合的梯度之后更新自身维护的权重，然后把不是自身维护的权重抛弃。</li>
+<li><p>由于每个GPU只保存其自身维护的权重参数，因此无需对权重进行all-reduce。<br> 注: ZeRO-3是以通信换显存，ZeRO-3对权重参数进行了切分，但不是张量并行，因为在前向和反向计算时仍然用完整的权重来计算，张量并行在前向和反向时只用部分权重。</p>
+<p><img src="/2025/03/30/zero-optimizer/image-20250330172824038.png" alt="image-20250330172824038"></p>
+</li>
+</ol>
+<p>ZeRO-offload: 把显存占用多的部分卸载到CPU内存上，计算和激活值部分放到GPU上。<br>● 高计算: 前向传播和反向传播计算量高，相关权重参数计算和激活值计算仍然在GPU<br>● 低计算: 权重更新部分计算量低，以通信为主，且需要的显存大，放入CPU。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/03/21/llm-application-6/" rel="prev" title="大模型应用系列(六)  ollama,vllm,LMDeploy 部署大模型">
+      <i class="fa fa-chevron-left"></i> 大模型应用系列(六)  ollama,vllm,LMDeploy 部署大模型
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/03/30/llm-application-7/" rel="next" title="LLama Factory和OpenWebui的安装和使用">
+      LLama Factory和OpenWebui的安装和使用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E4%BC%98%E5%8C%96%E5%89%8D"><span class="nav-number">1.</span> <span class="nav-text">一. 优化前</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-%E5%88%86%E5%B8%83%E5%BC%8F%E8%AE%AD%E7%BB%83%E5%B8%B8%E8%A7%81%E7%9A%84%E9%80%9A%E4%BF%A1%E5%8E%9F%E8%AF%AD"><span class="nav-number">2.</span> <span class="nav-text">二. 分布式训练常见的通信原语</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-Reduce"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 Reduce</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-Gather"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 Gather</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-Broadcast"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 Broadcast</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-4-Scatter"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 Scatter</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-5-ReduceScatter"><span class="nav-number">2.5.</span> <span class="nav-text">2.5 ReduceScatter</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-6-AllGather"><span class="nav-number">2.6.</span> <span class="nav-text">2.6 AllGather</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-7-AllReduce"><span class="nav-number">2.7.</span> <span class="nav-text">2.7 AllReduce</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-Zero%E4%BC%98%E5%8C%96%E5%99%A8"><span class="nav-number">3.</span> <span class="nav-text">三. Zero优化器</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-Zero-1"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 Zero-1</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-Zero-2"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 Zero-2</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-Zero-3"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 Zero-3</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

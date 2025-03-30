@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="详细介绍了LLamaFactory和OpenWebui的安装和使用, 以及如何在LLamaFactory上进行推理，微调。以及如何通过脚本对模型进行Lora微调。最后解释量化原理。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLama Factory和OpenWebui的安装和使用">
+<meta property="og:url" content="http://example.com/2025/03/30/llm-application-7/index.html">
+<meta property="og:site_name" content="CodeRQ">
+<meta property="og:description" content="详细介绍了LLamaFactory和OpenWebui的安装和使用, 以及如何在LLamaFactory上进行推理，微调。以及如何通过脚本对模型进行Lora微调。最后解释量化原理。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322085717610.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322085822264.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322090324378.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322090639811.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322091121652.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322094406107.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322094557848.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322095440471.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322101243548.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322100441051.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322100524476.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322101553974.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322101623058.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322101913757.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322102441651.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322102507513.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322102635341.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322102736647.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322110317630.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322122711208.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322124104289.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322124026735.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322124217867.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322125150092.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322125228457.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322125529070.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322125931429.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322130116083.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322132401286.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322135645030.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322135940845.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322142754073.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322143824215.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250328003144480.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250328003251767.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250328005035684.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250323221203024.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/image-20250323221548136.png">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/v2-45fd7d5ede2b518c31e40c24a5085f32_r.jpg">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/v2-196d043ae9197b591b4e11fbb42e7025_r.jpg">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/v2-9e6a9b5ee93c5a6ceedefb6a010cbb3c_1440w.jpg">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/v2-aaac743a8729c5195eda146208fc2c6c_r.jpg">
+<meta property="og:image" content="http://example.com/2025/03/30/llm-application-7/v2-dbd849709bb56ddd2109a0353a2cdae3_r.jpg">
+<meta property="article:published_time" content="2025-03-30T12:37:49.000Z">
+<meta property="article:modified_time" content="2025-03-30T12:38:44.564Z">
+<meta property="article:author" content="zheng rq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/03/30/llm-application-7/image-20250322085717610.png">
+
+<link rel="canonical" href="http://example.com/2025/03/30/llm-application-7/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>LLama Factory和OpenWebui的安装和使用 | CodeRQ</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CodeRQ</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/30/llm-application-7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CodeRQ">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          LLama Factory和OpenWebui的安装和使用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-03-30 20:37:49 / 修改时间：20:38:44" itemprop="dateCreated datePublished" datetime="2025-03-30T20:37:49+08:00">2025-03-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E9%83%A8%E7%BD%B2/" itemprop="url" rel="index"><span itemprop="name">部署</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>详细介绍了LLamaFactory和OpenWebui的安装和使用, 以及如何在LLamaFactory上进行推理，微调。以及如何通过脚本对模型进行Lora微调。最后解释量化原理。</p>
+<span id="more"></span>
+<h4 id="一-LLama-Factory的安装"><a href="#一-LLama-Factory的安装" class="headerlink" title="一. LLama Factory的安装"></a>一. LLama Factory的安装</h4><p>我的服务器配置为:</p>
+<p>RTX 4090, cuda 12.4 python=3.10 pytorch=2.5.1</p>
+<p>本文涉及的所有模型，数据集下载方法参考:</p>
+<p><a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/06/llm-application-2/">Huggingface的安装和使用 | CodeRQ</a></p>
+<p>参考官网资料即可：</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/hiyouga/LLaMA-Factory/blob/main/README_zh.md#安装-llama-factory">LLaMA-Factory/README_zh.md at main · hiyouga/LLaMA-Factory · GitHub</a></p>
+<p>安装命令，首先拉去llamaFactory代码仓，然后进入代码仓目录，即LLamA-Factory， 接着执行安装指令。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone --depth 1 https://github.com/hiyouga/LLaMA-Factory.git</span><br><span class="line">cd LLaMA-Factory</span><br><span class="line">pip install -e . # 官网要装其他包，但建议先装基础就行，其他的运行时缺啥补啥就行。</span><br></pre></td></tr></table></figure>
+<p>可能网络问题连不上git，可以在本地拉取后上传到服务器。</p>
+<p>官网给出了使用的三种基本操作：LoRA微调，推理，合并</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">llamafactory-cli train examples/train_lora/llama3_lora_sft.yaml</span><br><span class="line">llamafactory-cli chat examples/inference/llama3_lora_sft.yaml</span><br><span class="line">llamafactory-cli export examples/merge_lora/llama3_lora_sft.yaml</span><br></pre></td></tr></table></figure>
+<p>但建议直接用可视化界面，监控方便一些。启动界面的时候路径一定要在 <code>LLaMA-Factory</code>中</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">llamafactory-cli webui</span><br></pre></td></tr></table></figure>
+<p>但是这个界面是在服务器上启动的，本地理论上是访问不到的，如果用vscode，它自带端口转发，会将服务器上的端口转发到本地，可以直接访问。</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322085717610.png" alt="image-20250322085717610"></p>
+<p>启动后界面如下：</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322085822264.png" alt="image-20250322085822264"></p>
+<h4 id="二-使用LLamaFacory进行LoRA微调"><a href="#二-使用LLamaFacory进行LoRA微调" class="headerlink" title="二. 使用LLamaFacory进行LoRA微调"></a>二. 使用LLamaFacory进行LoRA微调</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>数据集</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qwen2.5-0.5B-Instruct</td>
+<td>LLamaFactory自带数据集identity.json</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h5 id="2-1-准备数据集"><a href="#2-1-准备数据集" class="headerlink" title="2.1 准备数据集"></a>2.1 准备数据集</h5><p>LLamaFactory在文件夹<code>./LLamA-Factory/data/</code>下给出了一些实例数据集，选择其中的<code>identity.json</code>作为微调示例。示例数据如下，将其中的<code>&#123;&#123;name&#125;&#125;,&#123;&#123;author&#125;&#125;</code>替换成对应的数据即可。</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322090324378.png" alt="image-20250322090324378"></p>
+<p>我修改为如下内容：</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322090639811.png" alt="image-20250322090639811"></p>
+<p>如果是自己准备的数据集，也要放大data目录下，同时在其中的dataset_info.json文件中配置自己数据集的信息，这里使用的是示例数据集，因此已经配置好，配置完在UI界面才可以找到该数据集。</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322091121652.png" alt="image-20250322091121652"></p>
+<h5 id="2-2-准备模型"><a href="#2-2-准备模型" class="headerlink" title="2.2 准备模型"></a>2.2 准备模型</h5><p>从huggingface上下载<code>qwen2.5-0.5B-Instruct</code>，具体方法见前文。</p>
+<h5 id="2-3-在UI界面上配置模型和数据，开始LoRA微调"><a href="#2-3-在UI界面上配置模型和数据，开始LoRA微调" class="headerlink" title="2.3 在UI界面上配置模型和数据，开始LoRA微调"></a>2.3 在UI界面上配置模型和数据，开始LoRA微调</h5><p>配置如下:</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322094406107.png" alt="image-20250322094406107"></p>
+<p>点击开始按钮，开始训练，同时开启新的终端监测GPU使用情况，检测方法前文说过，</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322094557848.png" alt="image-20250322094557848"></p>
+<p>这里显存利用率较低，可以增加batch-size,一般怎加到利用率为90%为最佳，我改为50.</p>
+<p>如果点击中断后重新开始，会报错（报错要看后台）：</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322095440471.png" alt="image-20250322095440471"></p>
+<p>这是因为训练结果的保存目录已经创建，它默认不会覆盖，这个目录在LLamaFactory下的saves文件加中，将它里面的东西删除即可。（删到只剩saves）也可以改一下输出目录的名称：</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322101243548.png" alt="image-20250322101243548"></p>
+<p>但是发现个问题，AutoDL上训练如果batch-size开太大有问题，显存在动但训练进度不动。我发现设置为10就可以，但显存也没满。AutoDL的毛病，其他服务器应该就不会。</p>
+<p>重新点击开始。后台看到训练在进行：</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322100441051.png" alt="image-20250322100441051"></p>
+<p>界面中会给出损失曲线：</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322100524476.png" alt="image-20250322100524476"></p>
+<p>浅蓝色的是实际的loss曲线，深蓝色是loss曲线平滑后的结果，便于观察趋势，当loss曲线趋于平滑，即变化不大，就可以终止训练了。</p>
+<p>训练的权重会保存在saves文件夹下，默认每100个epoch保存一次。</p>
+<p>如果中断后想从上次训练的checkpoints继续训练，则加载模型时加载对应的LoRA参数，同时修改输出目录，点击开始即可。</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322101553974.png" alt="image-20250322101553974"></p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322101623058.png" alt="image-20250322101623058"></p>
+<p>可以看到，一开始loss就很小，说明是从上次的检查点开始的</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322101913757.png" alt="image-20250322101913757"></p>
+<h4 id="三-测试训练效果"><a href="#三-测试训练效果" class="headerlink" title="三. 测试训练效果"></a>三. 测试训练效果</h4><p>使用LLamaFactory的chat功能</p>
+<h5 id="3-1首先加载原模型："><a href="#3-1首先加载原模型：" class="headerlink" title="3.1首先加载原模型："></a>3.1首先加载原模型：</h5><p><img src="/2025/03/30/llm-application-7/image-20250322102441651.png" alt="image-20250322102441651"></p>
+<p>可以直接在下面对话款对话，结果如下:</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322102507513.png" alt="image-20250322102507513"></p>
+<h5 id="3-2-加载训练后的模型"><a href="#3-2-加载训练后的模型" class="headerlink" title="3.2 加载训练后的模型"></a>3.2 加载训练后的模型</h5><p>先卸载刚才的模型，</p>
+<p>在检查点路径中选择对应的检查点，绝对路径</p>
+<p>点击加载模型</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322102635341.png" alt="image-20250322102635341"></p>
+<p>结果如下：</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322102736647.png" alt="image-20250322102736647"></p>
+<p>输出和训练数据风格一致，说明训练起效果了。</p>
+<h4 id="四-在自己创建的数据集上微调"><a href="#四-在自己创建的数据集上微调" class="headerlink" title="四. 在自己创建的数据集上微调"></a>四. 在自己创建的数据集上微调</h4><h5 id="4-1-制作训练集"><a href="#4-1-制作训练集" class="headerlink" title="4.1 制作训练集"></a>4.1 制作训练集</h5><p>首先从官网上观察数据集格式，数据集是json文件, 其中数据是json object 列表，分为单轮对话和多轮对话。</p>
+<p>单轮对话格式如下: 其中<code>instruction</code>才是输入，<code>input</code> 是对<code>instruction</code>的补充，可以为空。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span></span><br><span class="line">  <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;instruction&quot;</span><span class="punctuation">:</span> <span class="string">&quot;识别并解释给定列表中的两个科学理论：细胞理论和日心说。&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;output&quot;</span><span class="punctuation">:</span> <span class="string">&quot;细胞理论是生物科学的一个理论，它认为所有生命体都是由微小的基本单元——细胞所构成。这是生物学的一个基础理论，认为细胞是所有生物的基本结构和功能单位，所有的生物都是由一个或多个细胞组成，细胞只能通过细胞分裂产生新的细胞。这一理论由薛定谔、施瓦内和雪莱于1839年首次提出。\n\n日心说是指太阳是太阳系的中心，也就是说，行星围绕太阳旋转的理论。这个理论打破了传统的地心说观点，认为地球并不是宇宙的中心。日心说的提出者是尼古拉·哥白尼，他在16世纪初发表了他的著作《天体运行论》，阐述了太阳系行星围绕太阳运行的模型，为天文学的发展做出了巨大贡献。&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;instruction&quot;</span><span class="punctuation">:</span> <span class="string">&quot;输入三支篮球队的名称并生成一个适当的口号。&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span> <span class="string">&quot;输入：俄克拉荷马城雷霆队，芝加哥公牛队，布鲁克林网队。&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;output&quot;</span><span class="punctuation">:</span> <span class="string">&quot;输出： \&quot;雷霆，公牛和网队：各显神通，角逐群雄!\&quot;&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+<p>多轮对话格式如下: 注意，<code>instruction</code> 是本轮对话，即第三轮，并且多轮之间要有逻辑关系，不然微调出来的模型是混乱的。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span></span><br><span class="line">  <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;instruction&quot;</span><span class="punctuation">:</span> <span class="string">&quot;人类指令（必填）&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span> <span class="string">&quot;人类输入（选填）&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;output&quot;</span><span class="punctuation">:</span> <span class="string">&quot;模型回答（必填）&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;system&quot;</span><span class="punctuation">:</span> <span class="string">&quot;系统提示词（选填）&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;history&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="punctuation">[</span><span class="string">&quot;第一轮指令（选填）&quot;</span><span class="punctuation">,</span> <span class="string">&quot;第一轮回答（选填）&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="punctuation">[</span><span class="string">&quot;第二轮指令（选填）&quot;</span><span class="punctuation">,</span> <span class="string">&quot;第二轮回答（选填）&quot;</span><span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+<p>我选择弱智吧的问答作为训练集，可以从HF-mirror下载（下载方法见前文(<strong>插入链接</strong>)<code>LooksJuicy/ruozhiba</code> 内容如下:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span></span><br><span class="line">  <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;instruction&quot;</span><span class="punctuation">:</span> <span class="string">&quot;只剩一个心脏了还能活吗？&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;output&quot;</span><span class="punctuation">:</span> <span class="string">&quot;能，人本来就只有一个心脏。&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;instruction&quot;</span><span class="punctuation">:</span> <span class="string">&quot;爸爸再婚，我是不是就有了个新娘？&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;output&quot;</span><span class="punctuation">:</span> <span class="string">&quot;不是的，你有了一个继母。\&quot;新娘\&quot;是指新婚的女方，而你爸爸再婚，他的新婚妻子对你来说是继母。&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line"> <span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+<p>要把它转为LLamaFactory可以识别的格式，转化脚本如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="comment"># 要修改文件路径</span></span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&#x27;./data/ruozhiba/ruozhiba_qa.json&#x27;</span>, <span class="string">&#x27;r&#x27;</span>, encoding=<span class="string">&#x27;utf-8&#x27;</span>) <span class="keyword">as</span> file:</span><br><span class="line">    data_list = json.load(file)</span><br><span class="line"></span><br><span class="line">result_list = []</span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> data_list:</span><br><span class="line">    result_list.append(&#123;<span class="string">&quot;instruction&quot;</span>:each[<span class="string">&#x27;instruction&#x27;</span>],</span><br><span class="line">                        <span class="string">&quot;input&quot;</span>: <span class="string">&quot;&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;output&quot;</span>: each[<span class="string">&#x27;output&#x27;</span>]&#125;)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">len</span>(result_list))</span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;./data/ruozhiba/duozhiba_qa_llamaFactory.json&quot;</span>, <span class="string">&#x27;w&#x27;</span>, encoding=<span class="string">&#x27;utf-8&#x27;</span>) <span class="keyword">as</span> file:</span><br><span class="line">    json.dump(result_list, file, ensure_ascii=<span class="literal">False</span>, indent=<span class="number">4</span>)</span><br></pre></td></tr></table></figure>
+<p>修改后格式如下:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;instruction&quot;</span><span class="punctuation">:</span> <span class="string">&quot;只剩一个心脏了还能活吗？&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;output&quot;</span><span class="punctuation">:</span> <span class="string">&quot;能，人本来就只有一个心脏。&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;instruction&quot;</span><span class="punctuation">:</span> <span class="string">&quot;爸爸再婚，我是不是就有了个新娘？&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;output&quot;</span><span class="punctuation">:</span> <span class="string">&quot;不是的，你有了一个继母。\&quot;新娘\&quot;是指新婚的女方，而你爸爸再婚，他的新婚妻子对你来说是继母。&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+<h5 id="4-2-模型微调"><a href="#4-2-模型微调" class="headerlink" title="4.2 模型微调"></a>4.2 模型微调</h5><p>注意配置数据集时先将处理好的数据集放到data目录下，然后在<code>dataset_info.json</code> 中配置文件信息。插入：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;duozhiba_qa_llamaFactory&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;file_name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;duozhiba_qa_llamaFactory.json&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br></pre></td></tr></table></figure>
+<p>参考3.3的配置方法，微调Qwen2.5-0.5B-Instruct, 另外，可以选择多个数据集，会混合起来训练。</p>
+<p> <img src="/2025/03/30/llm-application-7/image-20250322110317630.png" alt="image-20250322110317630"></p>
+<p>训练到损失趋于平缓即可停止。</p>
+<p> <img src="/2025/03/30/llm-application-7/image-20250322122711208.png" alt="image-20250322122711208"></p>
+<h4 id="五-测试训练效果"><a href="#五-测试训练效果" class="headerlink" title="五. 测试训练效果"></a>五. 测试训练效果</h4><p>LLama-Factory给出了三种微调后的处理方式：Evaluation&amp;Predict（测试）, Chat（对话），Export(模型合并，量化)</p>
+<h5 id="5-1-Evaluation-amp-Predict"><a href="#5-1-Evaluation-amp-Predict" class="headerlink" title="5.1 Evaluation &amp; Predict"></a>5.1 Evaluation &amp; Predict</h5><p>选择模型，最后保存的checkpoint，测试集(如果没有特别划分，可以直接用训练集，这里直接用训练集)，截断长度和训练时一致，batch_size可以改变，具体配置如下:</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322124104289.png" alt="image-20250322124104289"></p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322124026735.png" alt="image-20250322124026735"></p>
+<p>点击开始，后台会报错，因为一些依赖没有安装，缺啥补啥就行。</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322124217867.png" alt="image-20250322124217867"></p>
+<p>只会进行一个epoch。测试结果如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;predict_bleu-4&quot;: 88.64074418449198,</span><br><span class="line">    &quot;predict_model_preparation_time&quot;: 0.0065,</span><br><span class="line">    &quot;predict_rouge-1&quot;: 92.81370474598931,</span><br><span class="line">    &quot;predict_rouge-2&quot;: 90.33300949197861,</span><br><span class="line">    &quot;predict_rouge-l&quot;: 91.9221340909091,</span><br><span class="line">    &quot;predict_runtime&quot;: 329.3329,</span><br><span class="line">    &quot;predict_samples_per_second&quot;: 4.543,</span><br><span class="line">    &quot;predict_steps_per_second&quot;: 0.455</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>各个指标的含义在8.1中解释。</p>
+<h5 id="5-2-chat"><a href="#5-2-chat" class="headerlink" title="5.2 chat"></a>5.2 chat</h5><p>同 四，加载基座模型，设置LoRA配置即可。</p>
+<p>效果如下:</p>
+<p> <img src="/2025/03/30/llm-application-7/image-20250322125150092.png" alt="image-20250322125150092" style="zoom:50%;"></p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322125228457.png" alt="image-20250322125228457"></p>
+<p>和训练数据类似，说明微调起效果了。</p>
+<p><strong>注意：</strong>每次输入一次对话产生输出后，要清空历史，chat对话框默认是上下文对话，如果不清空历史，上文会影响本轮输出，结果会出错。比如</p>
+<p> <img src="/2025/03/30/llm-application-7/image-20250322125529070.png" alt="image-20250322125529070"></p>
+<h5 id="5-3-合并模型Export"><a href="#5-3-合并模型Export" class="headerlink" title="5.3 合并模型Export"></a>5.3 合并模型Export</h5><p>设置好基座模型，LoRA路径，导出目录即可。</p>
+<p>其中最大分块大小一般选4G，因为一些机器超过4会有问题。</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322125931429.png" alt="image-20250322125931429"></p>
+<p>点击开始。导出后会在目标路径生成一个和base模型格式一样的文件</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322130116083.png" alt="image-20250322130116083"></p>
+<p>直接运行该模型就能得到微调后的效果。</p>
+<h5 id="5-4-量化"><a href="#5-4-量化" class="headerlink" title="5.4 量化"></a>5.4 量化</h5><p>量化主要时用int8甚至更少的比特数表示参数，是为了降低对硬件的依赖，但同样的会造成模型效果的变差，这里量化微调后的模型，LLama-Factory只支持量化合并后的模型，所以只能合并后再量化.</p>
+<p>这里量化到int8，量化过程中需要校准，校准数据集都可以，具体校准方法在补充中说明。</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322132401286.png" alt="image-20250322132401286"></p>
+<p>需要安装一些包，缺啥补啥就行</p>
+<p>注意：auto-gptq包和pytorch版本，cuda版本，python版本有关，我的版本可以直接安装，有时不可以，就先创建一个新的虚拟环境(按照我的配置，特别是python，cuda,pytorch) 然后先安装auto-gtpq，再安装llamafactory，就不容易出错。</p>
+<p>另外，量化过程需要从huggingface上下载文件，如果服务器没有梯子，可以配置huggingface国内源，方法之前的文章有写，直接用命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export HF_ENDPOINT=https://hf-mirror.com</span><br></pre></td></tr></table></figure>
+<p>量化完成后出现量化后的模型：</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322135645030.png" alt="image-20250322135645030"></p>
+<p>测试该模型效果：</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322135940845.png" alt="image-20250322135940845"></p>
+<p>结果混乱了，并不是量化过程出错。但说明这次量化失败了，主要这个模型本来就很小，量化后精度损失太大了，按理来说，模型越大，量化后精度损失越小。</p>
+<h4 id="六-使用OpenWebui"><a href="#六-使用OpenWebui" class="headerlink" title="六. 使用OpenWebui"></a>六. 使用OpenWebui</h4><h5 id="6-1-open-webui-下载"><a href="#6-1-open-webui-下载" class="headerlink" title="6.1 open webui 下载"></a>6.1 open webui 下载</h5><p>注意：openwebui要在python=3.11下安装，所以要新开一个虚拟环境，新开后直接安装就行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">conda create -n openwebui python==3.11 -y</span><br><span class="line">conda activate openwebui</span><br><span class="line">pip install open-webui</span><br></pre></td></tr></table></figure>
+<h5 id="6-2-启动"><a href="#6-2-启动" class="headerlink" title="6.2 启动"></a>6.2 启动</h5><p>首先启动vllm，启动教程前面文章讲过了: <a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/21/llm-application-6/#more">ollama,vllm,LMDeploy 部署大模型 | CodeRQ</a></p>
+<p>也可以用其他工具部署，只要记住接口就行了。</p>
+<p>接着启动open-webui</p>
+<p>启动前要配置几个东西:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">export HF_ENDPOINT=https://hf-mirror.com # 要从huggingface下载东西，配置国内huggingface镜像源</span><br><span class="line">export ENABLE_OLLAMA_API=False # open-webui默认用ollama部署，如果用的vllm或者其他，则关闭，如果用ollama就不用</span><br><span class="line">export OPENAI_API_BASE_URL=http://127.0.0.1:8000/v1 # 服务对应的端口，vllm端口在8000</span><br></pre></td></tr></table></figure>
+<p>配置完了直接启动</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">open-webui serve</span><br></pre></td></tr></table></figure>
+<p>就会启动了，但第一次启动会比较慢，要安装东西，要等一等。</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250322142754073.png" alt="image-20250322142754073"></p>
+<h5 id><a href="#" class="headerlink" title></a><img src="/2025/03/30/llm-application-7/image-20250322143824215.png" alt="image-20250322143824215"></h5><p>我这里服务器卡住了，按理到这里就是成功了，会弹窗出来。</p>
+<h5 id="6-3-解决弹不出窗口的问题"><a href="#6-3-解决弹不出窗口的问题" class="headerlink" title="6.3 解决弹不出窗口的问题"></a>6.3 解决弹不出窗口的问题</h5><p>一开始我以为是服务器问题，没有深究，后来通过查阅资料，发现是新版Ollama的问题，我们之前启动LLama-Factory的时候其实服务是启动在服务器上的，之所以我们本地能通过浏览器访问，是因为vscode帮我们做了端口转发，而open-webui启动的时候不会自动做端口转发，所以我们需要自己做端口转发。</p>
+<p>在vscode中配置端口转发，把服务器的8080端口转发到本地，即可在本地打开</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250328003144480.png" alt="image-20250328003144480"></p>
+<p>首次登录需要设置邮箱密码。</p>
+<p> <img src="/2025/03/30/llm-application-7/image-20250328003251767.png" alt="image-20250328003251767"></p>
+<p>设置完密码还需要等很久，之后会出现对话界面</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250328005035684.png" alt="image-20250328005035684"></p>
+<h4 id="七-通过脚本直接Lora微调Qwen"><a href="#七-通过脚本直接Lora微调Qwen" class="headerlink" title="七. 通过脚本直接Lora微调Qwen"></a>七. 通过脚本直接Lora微调Qwen</h4><p>参考连接 <a target="_blank" rel="noopener" href="https://github.com/datawhalechina/self-llm/blob/master/examples/Chat-嬛嬛/readme.md">self-llm/examples/Chat-嬛嬛/readme.md at master · datawhalechina/self-llm</a></p>
+<p>主要LoRA微调 Qwen2.5-0.5B-Instruct，使其输出分格类似甄嬛。直接通过脚本微调。</p>
+<h5 id="7-1-获取数据集"><a href="#7-1-获取数据集" class="headerlink" title="7.1  获取数据集"></a>7.1  获取数据集</h5><p>通过以下链接获取，然后上传到服务器。 <a target="_blank" rel="noopener" href="https://github.com/datawhalechina/self-llm/blob/master/dataset/huanhuan.json">self-llm/dataset/huanhuan.json at master · datawhalechina/self-llm</a></p>
+<h5 id="7-2-配置环境"><a href="#7-2-配置环境" class="headerlink" title="7.2 配置环境"></a>7.2 配置环境</h5><p>我的配置为: PyTorch 2.5.1; Python 3.12(ubuntu22.04); CUDA 12.4</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">conda create -n myenv python==<span class="number">3.12</span> -y</span><br><span class="line">conda activate myenv</span><br><span class="line">pip install transformers accelerate peft datasets</span><br></pre></td></tr></table></figure>
+<h5 id="7-3-模型微调"><a href="#7-3-模型微调" class="headerlink" title="7.3 模型微调"></a>7.3 模型微调</h5><p>可以参考 <strong>3.3和5.2</strong> 的方法使用LLama-Factory进行微调，这里展示直接通过脚本微调的方式。训练代码如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> datasets <span class="keyword">import</span> Dataset</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoTokenizer, AutoModelForCausalLM, DataCollatorForSeq2Seq, TrainingArguments, Trainer, GenerationConfig</span><br><span class="line"><span class="keyword">from</span> peft <span class="keyword">import</span> LoraConfig, TaskType, get_peft_model</span><br><span class="line"></span><br><span class="line"><span class="comment"># 基座模型路径</span></span><br><span class="line">model_path = <span class="string">&quot;&quot;</span></span><br><span class="line"><span class="comment"># 训练集路径</span></span><br><span class="line">train_path = <span class="string">&quot;&quot;</span></span><br><span class="line"><span class="comment"># 微调的lora参数输出路径</span></span><br><span class="line">output_path = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 处理训练集</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">process_func</span>(<span class="params">example</span>):</span><br><span class="line">    MAX_LENGTH = <span class="number">384</span>    <span class="comment"># Llama分词器会将一个中文字切分为多个token，因此需要放开一些最大长度，保证数据的完整性</span></span><br><span class="line">    input_ids, attention_mask, labels = [], [], []</span><br><span class="line">    instruction = tokenizer(<span class="string">f&quot;&lt;|begin_of_text|&gt;&lt;|start_header_id|&gt;system&lt;|end_header_id|&gt;\n\nCutting Knowledge Date: December 2023\nToday Date: 26 Jul 2024\n\n现在你要扮演皇帝身边的女人--甄嬛&lt;|eot_id|&gt;&lt;|start_header_id|&gt;user&lt;|end_header_id|&gt;\n\n<span class="subst">&#123;example[<span class="string">&#x27;instruction&#x27;</span>] + example[<span class="string">&#x27;input&#x27;</span>]&#125;</span>&lt;|eot_id|&gt;&lt;|start_header_id|&gt;assistant&lt;|end_header_id|&gt;\n\n&quot;</span>, add_special_tokens=<span class="literal">False</span>)  <span class="comment"># add_special_tokens 不在开头加 special_tokens</span></span><br><span class="line">    response = tokenizer(<span class="string">f&quot;<span class="subst">&#123;example[<span class="string">&#x27;output&#x27;</span>]&#125;</span>&lt;|eot_id|&gt;&quot;</span>, add_special_tokens=<span class="literal">False</span>)</span><br><span class="line">    input_ids = instruction[<span class="string">&quot;input_ids&quot;</span>] + response[<span class="string">&quot;input_ids&quot;</span>] + [tokenizer.pad_token_id]</span><br><span class="line">    attention_mask = instruction[<span class="string">&quot;attention_mask&quot;</span>] + response[<span class="string">&quot;attention_mask&quot;</span>] + [<span class="number">1</span>]  <span class="comment"># 因为eos token咱们也是要关注的所以 补充为1</span></span><br><span class="line">    labels = [-<span class="number">100</span>] * <span class="built_in">len</span>(instruction[<span class="string">&quot;input_ids&quot;</span>]) + response[<span class="string">&quot;input_ids&quot;</span>] + [tokenizer.pad_token_id]  </span><br><span class="line">    <span class="comment"># 尽量不要截断</span></span><br><span class="line"><span class="comment">#    if len(input_ids) &gt; MAX_LENGTH:  # 做一个截断</span></span><br><span class="line"><span class="comment">#       input_ids = input_ids[:MAX_LENGTH]</span></span><br><span class="line"><span class="comment">#      attention_mask = attention_mask[:MAX_LENGTH]</span></span><br><span class="line"><span class="comment">#        labels = labels[:MAX_LENGTH]</span></span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">&quot;input_ids&quot;</span>: input_ids,</span><br><span class="line">        <span class="string">&quot;attention_mask&quot;</span>: attention_mask,</span><br><span class="line">        <span class="string">&quot;labels&quot;</span>: labels</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    <span class="comment"># 加载模型</span></span><br><span class="line">    model = AutoModelForCausalLM.from_pretrained(model_path, device_map=<span class="string">&quot;auto&quot;</span>,torch_dtype=torch.bfloat16)</span><br><span class="line">    model.enable_input_require_grads() <span class="comment"># 开启梯度检查点时，要执行该方法</span></span><br><span class="line">    <span class="comment"># 加载分词器</span></span><br><span class="line">    tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=<span class="literal">False</span>, trust_remote_code=<span class="literal">True</span>)</span><br><span class="line">    tokenizer.pad_token = tokenizer.eos_token</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 将JSON文件转换为CSV文件</span></span><br><span class="line">    <span class="comment"># 加载训练集</span></span><br><span class="line">    df = pd.read_json(train_path)</span><br><span class="line">    ds = Dataset.from_pandas(df)</span><br><span class="line">    tokenized_id = ds.<span class="built_in">map</span>(process_func, remove_columns=ds.column_names)</span><br><span class="line">		</span><br><span class="line">    config = LoraConfig(</span><br><span class="line">        task_type=TaskType.CAUSAL_LM, </span><br><span class="line">        target_modules=[<span class="string">&quot;q_proj&quot;</span>, <span class="string">&quot;k_proj&quot;</span>, <span class="string">&quot;v_proj&quot;</span>, <span class="string">&quot;o_proj&quot;</span>, <span class="string">&quot;gate_proj&quot;</span>, <span class="string">&quot;up_proj&quot;</span>, <span class="string">&quot;down_proj&quot;</span>],</span><br><span class="line">        inference_mode=<span class="literal">False</span>, <span class="comment"># 训练模式</span></span><br><span class="line">        r=<span class="number">8</span>, <span class="comment"># Lora 秩</span></span><br><span class="line">        lora_alpha=<span class="number">32</span>, <span class="comment"># Lora alaph，具体作用参见 Lora 原理</span></span><br><span class="line">        lora_dropout=<span class="number">0.1</span><span class="comment"># Dropout 比例</span></span><br><span class="line">    )</span><br><span class="line">    model = get_peft_model(model, config)</span><br><span class="line">    model.print_trainable_parameters() <span class="comment"># 打印总训练参数</span></span><br><span class="line"></span><br><span class="line">    args = TrainingArguments(</span><br><span class="line">        output_dir=output_path,</span><br><span class="line">        per_device_train_batch_size=<span class="number">4</span>,</span><br><span class="line">        gradient_accumulation_steps=<span class="number">4</span>,</span><br><span class="line">        logging_steps=<span class="number">10</span>,</span><br><span class="line">        num_train_epochs=<span class="number">3</span>,</span><br><span class="line">        save_steps=<span class="number">100</span>, <span class="comment"># 为了快速演示，这里设置10，建议你设置成100，每100个steps保存一次</span></span><br><span class="line">        learning_rate=<span class="number">1e-4</span>,</span><br><span class="line">        save_on_each_node=<span class="literal">True</span>,</span><br><span class="line">        gradient_checkpointing=<span class="literal">True</span></span><br><span class="line">    )</span><br><span class="line">    trainer = Trainer(</span><br><span class="line">        model=model,</span><br><span class="line">        args=args,</span><br><span class="line">        train_dataset=tokenized_id,</span><br><span class="line">        data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=<span class="literal">True</span>),</span><br><span class="line">    )</span><br><span class="line">    trainer.train() <span class="comment"># 开始训练 </span></span><br><span class="line">    <span class="comment"># 在训练参数中设置了自动保存策略此处并不需要手动保存。</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>运行<code>train.py</code> ，开始训练:</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250323221203024.png" alt="image-20250323221203024"></p>
+<h5 id="8-4-模型合并"><a href="#8-4-模型合并" class="headerlink" title="8.4 模型合并"></a>8.4 模型合并</h5><p>训练是输出是lora参数，并不是整个模型，如果想用vllm或者其他工具部署，可以将lora参数合并到基座模型，导出微调后的整个模型。合并和导出代码如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> peft <span class="keyword">import</span> PeftModel</span><br><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoTokenizer, AutoModelForCausalLM, LlamaTokenizer</span><br><span class="line"><span class="keyword">from</span> transformers.generation.utils <span class="keyword">import</span> GenerationConfig</span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">apply_lora</span>(<span class="params">model_name_or_path, output_path, lora_path</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Loading the base model from <span class="subst">&#123;model_name_or_path&#125;</span>&quot;</span>)</span><br><span class="line">    base_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=<span class="literal">False</span>, trust_remote_code=<span class="literal">True</span>)</span><br><span class="line">    base = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map=<span class="string">&quot;cuda:0&quot;</span>, torch_dtype=torch.bfloat16, trust_remote_code=<span class="literal">True</span>)</span><br><span class="line">    <span class="comment"># base.generation_config = GenerationConfig.from_pretrained(model_name_or_path)</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Loading the LoRA adapter from <span class="subst">&#123;lora_path&#125;</span>&quot;</span>)</span><br><span class="line"> </span><br><span class="line">    lora_model = PeftModel.from_pretrained(</span><br><span class="line">        base,</span><br><span class="line">        lora_path,</span><br><span class="line">        torch_dtype=torch.float16,</span><br><span class="line">    )</span><br><span class="line"> </span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;Applying the LoRA&quot;</span>)</span><br><span class="line">    model = lora_model.merge_and_unload()</span><br><span class="line"> </span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Saving the target model to <span class="subst">&#123;output_path&#125;</span>&quot;</span>)</span><br><span class="line">    model.save_pretrained(output_path)</span><br><span class="line">    base_tokenizer.save_pretrained(output_path)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    <span class="comment"># 更换为自己对应的路径</span></span><br><span class="line">    lora_path = <span class="string">&quot;/root/autodl-tmp/output/huanhuan-lora/checkpoint-699&quot;</span></span><br><span class="line">    model_path = <span class="string">&quot;/root/autodl-tmp/Qwen2.5-0.5B-Instruct&quot;</span></span><br><span class="line">    output = <span class="string">&quot;/root/autodl-tmp/Qwen2.5-0.5B-Instruct-huanhuan&quot;</span></span><br><span class="line"></span><br><span class="line">    apply_lora(model_path,output,lora_path)</span><br></pre></td></tr></table></figure>
+<h5 id="8-5-测试模型"><a href="#8-5-测试模型" class="headerlink" title="8.5 测试模型"></a>8.5 测试模型</h5><p>合并后的模型和基座模型结构一样，可以用上面的工具部署，这里仅为了测试效果，所以直接通过脚本测试。代码如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoModelForCausalLM, AutoTokenizer</span><br><span class="line"></span><br><span class="line">model_name = <span class="string">&quot;/root/autodl-tmp/Qwen2.5-0.5B-Instruct-huanhuan&quot;</span></span><br><span class="line"></span><br><span class="line">model = AutoModelForCausalLM.from_pretrained(</span><br><span class="line">    model_name,</span><br><span class="line">    torch_dtype=<span class="string">&quot;auto&quot;</span>,</span><br><span class="line">    device_map=<span class="string">&quot;auto&quot;</span></span><br><span class="line">)</span><br><span class="line">tokenizer = AutoTokenizer.from_pretrained(model_name)</span><br><span class="line"></span><br><span class="line">prompt = <span class="string">&quot;你是谁?&quot;</span></span><br><span class="line">messages = [</span><br><span class="line">    &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;system&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="string">&quot;现在你要扮演皇帝身边的女人--甄嬛&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: prompt&#125;</span><br><span class="line">]</span><br><span class="line">text = tokenizer.apply_chat_template(</span><br><span class="line">    messages,</span><br><span class="line">    tokenize=<span class="literal">False</span>,</span><br><span class="line">    add_generation_prompt=<span class="literal">True</span></span><br><span class="line">)</span><br><span class="line">model_inputs = tokenizer([text], return_tensors=<span class="string">&quot;pt&quot;</span>).to(model.device)</span><br><span class="line"></span><br><span class="line">generated_ids = model.generate(</span><br><span class="line">    **model_inputs,</span><br><span class="line">    max_new_tokens=<span class="number">512</span></span><br><span class="line">)</span><br><span class="line">generated_ids = [</span><br><span class="line">    output_ids[<span class="built_in">len</span>(input_ids):] <span class="keyword">for</span> input_ids, output_ids <span class="keyword">in</span> <span class="built_in">zip</span>(model_inputs.input_ids, generated_ids)</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">response = tokenizer.batch_decode(generated_ids, skip_special_tokens=<span class="literal">True</span>)[<span class="number">0</span>]</span><br><span class="line"><span class="built_in">print</span>(response)</span><br></pre></td></tr></table></figure>
+<p>运行后输出如下:</p>
+<p><img src="/2025/03/30/llm-application-7/image-20250323221548136.png" alt="image-20250323221548136"></p>
+<p>符合预期效果，说明微调起效。</p>
+<h4 id="八-补充"><a href="#八-补充" class="headerlink" title="八. 补充"></a>八. 补充</h4><h5 id="8-1-LLamaFactory-evaluation中各个指标的含义"><a href="#8-1-LLamaFactory-evaluation中各个指标的含义" class="headerlink" title="8.1 LLamaFactory evaluation中各个指标的含义"></a>8.1 LLamaFactory evaluation中各个指标的含义</h5><p>在 5.1 中通过LLama-Factory进行测试，结果如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;predict_bleu-4&quot;: 88.64074418449198,</span><br><span class="line">    &quot;predict_model_preparation_time&quot;: 0.0065,</span><br><span class="line">    &quot;predict_rouge-1&quot;: 92.81370474598931,</span><br><span class="line">    &quot;predict_rouge-2&quot;: 90.33300949197861,</span><br><span class="line">    &quot;predict_rouge-l&quot;: 91.9221340909091,</span><br><span class="line">    &quot;predict_runtime&quot;: 329.3329,</span><br><span class="line">    &quot;predict_samples_per_second&quot;: 4.543,</span><br><span class="line">    &quot;predict_steps_per_second&quot;: 0.455</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这几个结果的含义如下:</p>
+<ol>
+<li>predict_bleu-4</li>
+</ol>
+<h5 id="8-2-量化校准的原理"><a href="#8-2-量化校准的原理" class="headerlink" title="8.2  量化校准的原理"></a>8.2  量化校准的原理</h5><h6 id="8-2-1-为什么需要量化"><a href="#8-2-1-为什么需要量化" class="headerlink" title="8.2.1 为什么需要量化"></a>8.2.1 为什么需要量化</h6><p>量化的主要目的是节约显存，提升计算效率以及加快通信。如下表，deepseek-r1-7b模型以不同类ing加载和随不同数据类型所占用的显存也不一样</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>FP32</th>
+<th>FP16</th>
+<th>Int8</th>
+<th>Int3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>显存占用</td>
+<td>28G</td>
+<td>14G</td>
+<td>7G</td>
+<td>3.5G</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>总的来说，量化就是把Float类型(FP32,FP16)的模型参数和激活值，用整数(Int8. Int4)来代替，同时尽可能减少量化后模型推理的误差。</p>
+<h6 id="8-2-2-对称量化vs非对称量化"><a href="#8-2-2-对称量化vs非对称量化" class="headerlink" title="8.2.2 对称量化vs非对称量化"></a>8.2.2 对称量化vs非对称量化</h6><p>（1）<strong>对称量化：</strong>如下图，对称量化的原理就是找到， xf 中绝对值的最大值，然后对其进行缩放得到量化后的值，然后进行反量化得到原来的值，可以看出量化是存在一定误差的，具体原理如下图：</p>
+<p><img src="/2025/03/30/llm-application-7/v2-45fd7d5ede2b518c31e40c24a5085f32_r.jpg" alt="img"></p>
+<p>这样量化的缺点就是，坐标轴上有一段数值空间被浪费了，对应图中-127那一部分。基于这个缺点，为了让量化后的坐标轴上的数值被充分利用，引入非对称量化。</p>
+<p>（2）<strong>非对称量化：</strong>非对称量化有一个额外的参数Z调整零点的映射，这个参数通常称为零点。非对称量化表示的范围没有严格的限制，可以根据浮点值的范围，选取任意的想要表示的范围。因此非对称量化的效果通常比对称量化好，但是需要额外存储以及推理时计算零点相关的内容。</p>
+<p><img src="/2025/03/30/llm-application-7/v2-196d043ae9197b591b4e11fbb42e7025_r.jpg" alt="img"></p>
+<p>因此，对称量化具有计算简单，精度低等特点，非对称量化的计算有一个额外的参数Z调整零点的映射，因此计算复杂，但精度相对较高。</p>
+<p>（3）<strong>在矩阵乘法中的应用</strong>：下图为对称量化在居中乘法当中的应用示意图（非对称量化也类似），通过量化，可以把浮点矩阵的乘法，转化为整数矩阵的乘法，虽然存在一定误差，但误差不大。在矩阵乘法中采用量化可以降低计算复杂度，提升矩阵乘法效率。</p>
+<p><img src="/2025/03/30/llm-application-7/v2-9e6a9b5ee93c5a6ceedefb6a010cbb3c_1440w.jpg" alt="img"></p>
+<h6 id="8-2-3-如何对神经网络进行量化"><a href="#8-2-3-如何对神经网络进行量化" class="headerlink" title="8.2.3 如何对神经网络进行量化"></a>8.2.3 如何对神经网络进行量化</h6><p><strong>为什么量化对神经网络精度影响不大？</strong></p>
+<ol>
+<li>因为一般权重和输入都经过Normalization, 基本数值范围都不大。</li>
+<li>因为激活函数，数值影响会被平滑。</li>
+<li>绝大部分神经网络都是分类问题，最后都是概率值，只要最后某种类别的概率高于其他类别就可以，不需要绝对数值。</li>
+</ol>
+<h6 id="8-2-4-动态量化vs静态量化"><a href="#8-2-4-动态量化vs静态量化" class="headerlink" title="8.2.4 动态量化vs静态量化"></a>8.2.4 动态量化vs静态量化</h6><p>量化在神经网络中的是对每一层而言，每一层进行量化计算，每一层输出时进行反量化。具体而言，量化在神经网络当中的应用又可分为动态量化（Post Training Quantization Dynamic, PTQ Dynamic）与静态量化(Post Training Quantization Static), PTQ Static</p>
+<p><strong>(1) 动态量化流程</strong></p>
+<ol>
+<li>将训练好的模型权重量化为Int8，并保存量化参数。</li>
+<li>在模型推理时，对每一层输入的FP32激活值，动态进行量化为Int8。</li>
+<li>在每一层对量化后的Int8权重和Int8激活值进行计算。</li>
+<li>在每一层输出时将结果反量化为FP32。</li>
+<li>将FP32激活值传入到下一层。</li>
+</ol>
+<p>可用下图表示：</p>
+<p><img src="/2025/03/30/llm-application-7/v2-aaac743a8729c5195eda146208fc2c6c_r.jpg" alt="img"></p>
+<p>动态量化存在的问题：</p>
+<ol>
+<li>每一次推理每一层都要对输入统计量化参数，耗时。</li>
+<li>每一层计算完都转化为FP32，存入显存，占用显存带宽。</li>
+</ol>
+<p><strong>（2）静态量化流程</strong></p>
+<p>针对动态量化的问题1，通过用有代表性的输入数据跑一遍整个网络，通过统计得到每层大概的量化参数来解决；问题2，这一层的输出是下一层的输入。下一层还是要量化，通过在这一层直接量化好再传给下一层方法来解决。这就是静态量化。</p>
+<ol>
+<li>将训练好的模型权重量化为Int8, 并保存量化参数。</li>
+<li>校准：利用一些数据进行模型推理，用这些数据在神经网络每一层产生的激活估算除激活值的量化参数。这样就不用推理时每次根据实际激活值计算量化参数。</li>
+<li>在每一层对量化后的Int8权重和Int8激活值进行计算。</li>
+<li>在每一层输出时将结果反量化为FP32，同时根据校准产生的激活值量化参数，把激活值量化为Int8，把量化参数放入量化后的激活值中。</li>
+<li>将Int8的激活值和它的量化参数传入到下一层。</li>
+</ol>
+<p>可用下图表示：</p>
+<p><img src="/2025/03/30/llm-application-7/v2-dbd849709bb56ddd2109a0353a2cdae3_r.jpg" alt="img"></p>
+<h5 id="8-3-提醒"><a href="#8-3-提醒" class="headerlink" title="8.3 提醒"></a>8.3 提醒</h5><p>整个项目东西有点多，有几点容易出错：</p>
+<ul>
+<li>时刻注意，你要在虚拟环境中，开启webui的命令行路径在LLama-Factory文件夹中。</li>
+<li>有时下载包后仍显示没有该包，要重启终端。</li>
+<li>尽量用python3.10，兼容性好一些。</li>
+<li>openwebui要用python3.11</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/03/30/zero-optimizer/" rel="prev" title="模型显存占用计算以及Zero优化器">
+      <i class="fa fa-chevron-left"></i> 模型显存占用计算以及Zero优化器
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-LLama-Factory%E7%9A%84%E5%AE%89%E8%A3%85"><span class="nav-number">1.</span> <span class="nav-text">一. LLama Factory的安装</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-%E4%BD%BF%E7%94%A8LLamaFacory%E8%BF%9B%E8%A1%8CLoRA%E5%BE%AE%E8%B0%83"><span class="nav-number">2.</span> <span class="nav-text">二. 使用LLamaFacory进行LoRA微调</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-%E5%87%86%E5%A4%87%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 准备数据集</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-%E5%87%86%E5%A4%87%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 准备模型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-%E5%9C%A8UI%E7%95%8C%E9%9D%A2%E4%B8%8A%E9%85%8D%E7%BD%AE%E6%A8%A1%E5%9E%8B%E5%92%8C%E6%95%B0%E6%8D%AE%EF%BC%8C%E5%BC%80%E5%A7%8BLoRA%E5%BE%AE%E8%B0%83"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 在UI界面上配置模型和数据，开始LoRA微调</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-%E6%B5%8B%E8%AF%95%E8%AE%AD%E7%BB%83%E6%95%88%E6%9E%9C"><span class="nav-number">3.</span> <span class="nav-text">三. 测试训练效果</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1%E9%A6%96%E5%85%88%E5%8A%A0%E8%BD%BD%E5%8E%9F%E6%A8%A1%E5%9E%8B%EF%BC%9A"><span class="nav-number">3.1.</span> <span class="nav-text">3.1首先加载原模型：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-%E5%8A%A0%E8%BD%BD%E8%AE%AD%E7%BB%83%E5%90%8E%E7%9A%84%E6%A8%A1%E5%9E%8B"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 加载训练后的模型</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B-%E5%9C%A8%E8%87%AA%E5%B7%B1%E5%88%9B%E5%BB%BA%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8A%E5%BE%AE%E8%B0%83"><span class="nav-number">4.</span> <span class="nav-text">四. 在自己创建的数据集上微调</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-1-%E5%88%B6%E4%BD%9C%E8%AE%AD%E7%BB%83%E9%9B%86"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 制作训练集</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-2-%E6%A8%A1%E5%9E%8B%E5%BE%AE%E8%B0%83"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 模型微调</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%94-%E6%B5%8B%E8%AF%95%E8%AE%AD%E7%BB%83%E6%95%88%E6%9E%9C"><span class="nav-number">5.</span> <span class="nav-text">五. 测试训练效果</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-Evaluation-amp-Predict"><span class="nav-number">5.1.</span> <span class="nav-text">5.1 Evaluation &amp; Predict</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-2-chat"><span class="nav-number">5.2.</span> <span class="nav-text">5.2 chat</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-3-%E5%90%88%E5%B9%B6%E6%A8%A1%E5%9E%8BExport"><span class="nav-number">5.3.</span> <span class="nav-text">5.3 合并模型Export</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-4-%E9%87%8F%E5%8C%96"><span class="nav-number">5.4.</span> <span class="nav-text">5.4 量化</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%AD-%E4%BD%BF%E7%94%A8OpenWebui"><span class="nav-number">6.</span> <span class="nav-text">六. 使用OpenWebui</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#6-1-open-webui-%E4%B8%8B%E8%BD%BD"><span class="nav-number">6.1.</span> <span class="nav-text">6.1 open webui 下载</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#6-2-%E5%90%AF%E5%8A%A8"><span class="nav-number">6.2.</span> <span class="nav-text">6.2 启动</span></a></li><li class="nav-item nav-level-5"><a class="nav-link"><span class="nav-number">6.3.</span> <span class="nav-text"></span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#6-3-%E8%A7%A3%E5%86%B3%E5%BC%B9%E4%B8%8D%E5%87%BA%E7%AA%97%E5%8F%A3%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">6.4.</span> <span class="nav-text">6.3 解决弹不出窗口的问题</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%83-%E9%80%9A%E8%BF%87%E8%84%9A%E6%9C%AC%E7%9B%B4%E6%8E%A5Lora%E5%BE%AE%E8%B0%83Qwen"><span class="nav-number">7.</span> <span class="nav-text">七. 通过脚本直接Lora微调Qwen</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#7-1-%E8%8E%B7%E5%8F%96%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="nav-number">7.1.</span> <span class="nav-text">7.1  获取数据集</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#7-2-%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83"><span class="nav-number">7.2.</span> <span class="nav-text">7.2 配置环境</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#7-3-%E6%A8%A1%E5%9E%8B%E5%BE%AE%E8%B0%83"><span class="nav-number">7.3.</span> <span class="nav-text">7.3 模型微调</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-4-%E6%A8%A1%E5%9E%8B%E5%90%88%E5%B9%B6"><span class="nav-number">7.4.</span> <span class="nav-text">8.4 模型合并</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-5-%E6%B5%8B%E8%AF%95%E6%A8%A1%E5%9E%8B"><span class="nav-number">7.5.</span> <span class="nav-text">8.5 测试模型</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%AB-%E8%A1%A5%E5%85%85"><span class="nav-number">8.</span> <span class="nav-text">八. 补充</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#8-1-LLamaFactory-evaluation%E4%B8%AD%E5%90%84%E4%B8%AA%E6%8C%87%E6%A0%87%E7%9A%84%E5%90%AB%E4%B9%89"><span class="nav-number">8.1.</span> <span class="nav-text">8.1 LLamaFactory evaluation中各个指标的含义</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-2-%E9%87%8F%E5%8C%96%E6%A0%A1%E5%87%86%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">8.2.</span> <span class="nav-text">8.2  量化校准的原理</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#8-2-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E9%87%8F%E5%8C%96"><span class="nav-number">8.2.1.</span> <span class="nav-text">8.2.1 为什么需要量化</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#8-2-2-%E5%AF%B9%E7%A7%B0%E9%87%8F%E5%8C%96vs%E9%9D%9E%E5%AF%B9%E7%A7%B0%E9%87%8F%E5%8C%96"><span class="nav-number">8.2.2.</span> <span class="nav-text">8.2.2 对称量化vs非对称量化</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#8-2-3-%E5%A6%82%E4%BD%95%E5%AF%B9%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E8%BF%9B%E8%A1%8C%E9%87%8F%E5%8C%96"><span class="nav-number">8.2.3.</span> <span class="nav-text">8.2.3 如何对神经网络进行量化</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#8-2-4-%E5%8A%A8%E6%80%81%E9%87%8F%E5%8C%96vs%E9%9D%99%E6%80%81%E9%87%8F%E5%8C%96"><span class="nav-number">8.2.4.</span> <span class="nav-text">8.2.4 动态量化vs静态量化</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-3-%E6%8F%90%E9%86%92"><span class="nav-number">8.3.</span> <span class="nav-text">8.3 提醒</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
