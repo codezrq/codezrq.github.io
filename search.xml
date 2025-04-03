@@ -529,7 +529,7 @@
 <p>从<a href="https://huggingface.co/">https://huggingface.co/</a> 上查找对应的模型，然后用如下命令下载, 比如要下载模型<code>gpt2-chinese-cluecorpussmall</code>到当前目录下的 <code>./gpt2-chinese-cluecorpussmall</code>，则用如下命令:</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">huggingface-cli download --resume-download Qwen/Qwen2.5-0.5B-Instruct --local-dir Qwen2.5-0.5B-Instruct</span><br></pre></td></tr></table></figure>
 <p>下载数据集用如下命令:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">huggingface-cli download --repo-type dataset lavita/medical-qa-shared-task-v1-toy</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">huggingface-cli download --repo-type dataset lavita/medical-qa-shared-task-v1-toy --local-dir edical-qa-shared-task-v1-toy</span><br></pre></td></tr></table></figure>
 <p><strong>注意:</strong> 从huggingface上下载需要科学上网</p>
 <p>如果没有科学上网，可以从huggingface的国内镜像下载(笔者常用，推荐)</p>
 <p><a href="https://hf-mirror.com/">HF-MIRRO</a></p>
@@ -1124,7 +1124,7 @@
       </categories>
   </entry>
   <entry>
-    <title>llm-application-9</title>
+    <title>大模型应用系列(九) 对话模板对齐</title>
     <url>/2025/03/30/llm-application-9/</url>
     <content><![CDATA[<p>解决在微调和部署时对话模板不统一的问题。</p>
 <span id="more"></span>
