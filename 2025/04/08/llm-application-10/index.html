@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="介绍DeepSeep框架，使用LLamaFactory和XTuner进行分布式微调。同时介绍XTuner的安装和使用，以及XTuner如何进行模型转换与合并。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大模型应用系列(十) 分布式训练与微调">
+<meta property="og:url" content="http://example.com/2025/04/08/llm-application-10/index.html">
+<meta property="og:site_name" content="乌漆嘛黑">
+<meta property="og:description" content="介绍DeepSeep框架，使用LLamaFactory和XTuner进行分布式微调。同时介绍XTuner的安装和使用，以及XTuner如何进行模型转换与合并。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250330234340891.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250330235932416.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250331001130765.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250331002852312.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250331002947798.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250401013043498.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250401013614520.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250401013830561.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250401015444506.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250401020001966.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250401021220636.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250401021313368.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250401021943436.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250401022909125.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250330234901084.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250330235025334.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250330235148764.png">
+<meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250331235306029.png">
+<meta property="article:published_time" content="2025-04-07T16:46:19.000Z">
+<meta property="article:modified_time" content="2025-04-07T16:52:09.921Z">
+<meta property="article:author" content="zheng rq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/04/08/llm-application-10/image-20250330234340891.png">
+
+<link rel="canonical" href="http://example.com/2025/04/08/llm-application-10/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>大模型应用系列(十) 分布式训练与微调 | 乌漆嘛黑</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">乌漆嘛黑</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/08/llm-application-10/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="乌漆嘛黑">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          大模型应用系列(十) 分布式训练与微调
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-04-08 00:46:19 / 修改时间：00:52:09" itemprop="dateCreated datePublished" datetime="2025-04-08T00:46:19+08:00">2025-04-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E8%AE%AD%E7%BB%83%E4%B8%8E%E5%BE%AE%E8%B0%83/" itemprop="url" rel="index"><span itemprop="name">训练与微调</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>介绍DeepSeep框架，使用LLamaFactory和XTuner进行分布式微调。同时介绍XTuner的安装和使用，以及XTuner如何进行模型转换与合并。</p>
+<span id="more"></span>
+<h4 id="一-大模型分布式训练微调的基本概念"><a href="#一-大模型分布式训练微调的基本概念" class="headerlink" title="一. 大模型分布式训练微调的基本概念"></a>一. 大模型分布式训练微调的基本概念</h4><h5 id="1-1-为什么需要分布式训练"><a href="#1-1-为什么需要分布式训练" class="headerlink" title="1.1 为什么需要分布式训练"></a>1.1 为什么需要分布式训练</h5><ol>
+<li>模型规模爆炸： 现代大模型（如GPT-3、 LLaMA等） 参数量达千亿级别， 单卡GPU无法存储完整模型。  </li>
+<li>计算资源需求： 训练大模型需要海量计算（如GPT-3需数万GPU小时） ， 分布式训练可加速训练过程。  </li>
+<li>内存瓶颈： 单卡显存不足以容纳大模型参数、 梯度及优化器状态。  </li>
+</ol>
+<h5 id="1-2-大模型分布式训练的基本概念"><a href="#1-2-大模型分布式训练的基本概念" class="headerlink" title="1.2 大模型分布式训练的基本概念"></a>1.2 大模型分布式训练的基本概念</h5><h6 id="1-2-1-分布式训练的核心技术"><a href="#1-2-1-分布式训练的核心技术" class="headerlink" title="1.2.1 分布式训练的核心技术"></a>1.2.1 分布式训练的核心技术</h6><ol>
+<li>数据并行</li>
+</ol>
+<p>​        原理：将数据划分为多个批次，分发到不同的设备，每个设备拥有完整的模型副本。</p>
+<p>​        同步方式: 通过All-Reduce操作同步梯度。</p>
+<p>​        挑战：通信开销大，显存占用高（需存储完整模型参数和优化器状态）</p>
+<ol>
+<li>模型并行</li>
+</ol>
+<p>​        原理：将模型切分到不同设备（如按层或张量分片）。</p>
+<p>​        类型：</p>
+<p>​        横向并行（层拆分）：将模型的层分配到不同设备。</p>
+<p>​        纵向并行（张量拆分）：如Megatron-LM将矩阵乘法分片。</p>
+<p>​        挑战：设备间通信频繁，负载均衡需要精细设计。</p>
+<ol>
+<li>流水线并行</li>
+</ol>
+<p>​        原理：将模型按层划分为多个阶段（stage），数据分块后按流水线执行。</p>
+<p>​        优化：微批次（Micro-batching）减少流水线气泡（Bubble）。</p>
+<p>​        挑战：需平衡阶段划分，避免资源闲置。</p>
+<ol>
+<li>混合并行（3D并行）</li>
+</ol>
+<p>组合策略，结合数据并行，模型并行，流水线并行，典型应用如训练千亿级模型。</p>
+<p>案例：微软Turing-NLG, Meta 的LLaMA-2。</p>
+<h4 id="二-DeepSpeed框架介绍"><a href="#二-DeepSpeed框架介绍" class="headerlink" title="二. DeepSpeed框架介绍"></a>二. DeepSpeed框架介绍</h4><h5 id="2-1-DeeepSeep概述"><a href="#2-1-DeeepSeep概述" class="headerlink" title="2.1 DeeepSeep概述"></a>2.1 DeeepSeep概述</h5><p>定位：微软开源的分布式训练优化框架，支持千亿参数模型训练。</p>
+<p>核心目标：减低大模型训练成本，提升显存和计算效率。</p>
+<p>集成生态：与PyTorch无缝兼容，支持Hugging Face Transformer库。</p>
+<h5 id="2-2-核心技术"><a href="#2-2-核心技术" class="headerlink" title="2.2 核心技术"></a>2.2 核心技术</h5><p>ZeRO(Zero Redundancy Optimizer) 优化器 ，具体参考<a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/30/zero-optimizer/">模型显存占用计算以及Zero优化器 | 乌漆嘛黑</a></p>
+<p>原理：通过分片优化器状态，模型梯度，模型参数，消除数据并行中的显存冗余。</p>
+<p>阶段划分：</p>
+<p>​    ZeRO-1：优化器状态分片。</p>
+<p>​    ZeRO-2：优化器状态分片+梯度分片。</p>
+<p>​    ZeRO-3：优化器状态分片+梯度分片+参数分片。</p>
+<p>优势：显存随设备数线性下降，支持训练更大模型。</p>
+<h5 id="2-3-其他技术"><a href="#2-3-其他技术" class="headerlink" title="2.3 其他技术"></a>2.3 其他技术</h5><p><strong>梯度检查点(Activation Checkpointing)：</strong>用时间换空间，减少激活值显存占用。</p>
+<p><strong>CPU Offloading：</strong>将优化器状态和梯度卸载到CPU内存。</p>
+<p><strong>混合进度训练：</strong>FP16/BP16与动态损失缩放(Loss Scaling)。</p>
+<h5 id="2-4-其他特性"><a href="#2-4-其他特性" class="headerlink" title="2.4 其他特性"></a>2.4 其他特性</h5><p><strong>大规模推理支持：</strong> 模型并行推理（如 ZeRO-Inference）。</p>
+<p><strong>自适应通信优化：</strong> 自动选择最佳通信策略（如 All-Reduce vs All-Gather）。</p>
+<h5 id="2-5-优势与特点"><a href="#2-5-优势与特点" class="headerlink" title="2.5 优势与特点"></a>2.5 优势与特点</h5><p><strong>显存效率高：</strong>ZeRO-3可将显存占用降低至1/设备数。</p>
+<p><strong>易用性强：</strong>通过少量代码修改即可应用（如DeepSeed配置JSON文件）</p>
+<p><strong>扩展性优秀：</strong>支持千卡集群训练。</p>
+<h5 id="2-6-使用场景"><a href="#2-6-使用场景" class="headerlink" title="2.6 使用场景"></a>2.6 使用场景</h5><p>训练百亿/千亿参数模型（如GPT-3，Turing-NLG）.</p>
+<p>资源受限环境：单机多卡训练时通过Offloading扩展模型规模。</p>
+<p>加速训练：通过ZeRO-2加速中等规模模型训练。</p>
+<h4 id="三-使用LLamaFactory进行分布式微调"><a href="#三-使用LLamaFactory进行分布式微调" class="headerlink" title="三. 使用LLamaFactory进行分布式微调"></a>三. 使用LLamaFactory进行分布式微调</h4><h5 id="3-1-LLamaFactory-安装"><a href="#3-1-LLamaFactory-安装" class="headerlink" title="3.1 LLamaFactory 安装"></a>3.1 LLamaFactory 安装</h5><p>参考<a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/30/llm-application-7/#more">大模型应用系列(七) LLama Factory和OpenWebui的安装和使用 | 乌漆嘛黑</a></p>
+<p>另外还要安装deepspeed</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install deepspeed</span><br></pre></td></tr></table></figure>
+<p>我的服务器配置是: </p>
+<p>PyTorch 2.5.1</p>
+<p>Python 3.12(ubuntu22.04)</p>
+<p>CUDA 12.4</p>
+<p>RTX 4090(24GB) * 2</p>
+<p><strong>CPU</strong>32 vCPU Intel(R) Xeon(R) Gold 6430</p>
+<h5 id="3-2-选择配置"><a href="#3-2-选择配置" class="headerlink" title="3.2 选择配置"></a>3.2 选择配置</h5><p>其他配置和之前一样，主要是配置DeepSpeed参数，</p>
+<h6 id="3-2-1-Zero-1"><a href="#3-2-1-Zero-1" class="headerlink" title="3.2.1 Zero-1"></a>3.2.1 Zero-1</h6><p>如果选择none，那么两张卡上都会放置完整模型。none的时候不会用deepspeed，只是常规的数据并行.（用<code>nvitop</code>监控）</p>
+<p><img src="/2025/04/08/llm-application-10/image-20250330234340891.png" alt="image-20250330234340891"></p>
+<p>一般在分布式训练时，选择<code>Zero-2</code>比较好。即配置中<code>DeepSpeed stage</code>设置为2。</p>
+<h6 id="3-2-2-Zero-2"><a href="#3-2-2-Zero-2" class="headerlink" title="3.2.2 Zero-2"></a>3.2.2 Zero-2</h6><p><img src="/2025/04/08/llm-application-10/image-20250330235932416.png" alt="image-20250330235932416"></p>
+<p>从<code>nvitop</code>上不能明显看出显存减少，但可以从训练速度上体验到<code>Zero-2</code>比<code>zero-1</code>快，并且这种差距会随着GPU性能的提高而扩大。</p>
+<h6 id="3-2-3-Zero-3-offload"><a href="#3-2-3-Zero-3-offload" class="headerlink" title="3.2.3 Zero-3+offload"></a>3.2.3 Zero-3+offload</h6><p>要想把显存占用率降到最低，就要使用Zero-3同时开启offload</p>
+<p>可以看到显存降低了很多，但训练速度明显变慢了，慢多少取决于显存和内存的通信效率。</p>
+<p> <img src="/2025/04/08/llm-application-10/image-20250331001130765.png" alt="image-20250331001130765"></p>
+<p><strong>注意：</strong> 一般在分布式训练时，都使用<code>Zero-2</code>。</p>
+<h5 id="3-3-多机多卡训练"><a href="#3-3-多机多卡训练" class="headerlink" title="3.3 多机多卡训练"></a>3.3 多机多卡训练</h5><p>以上时单机多卡分布式训练</p>
+<p>LLama-Factory 也提供了多机多卡训练，但无法通过界面化配置，具体训练方式见官网<a target="_blank" rel="noopener" href="https://llamafactory.readthedocs.io/zh-cn/latest/advanced/distributed.html">分布训练 - LLaMA Factory</a></p>
+<h4 id="四-XTuner的安装和使用"><a href="#四-XTuner的安装和使用" class="headerlink" title="四. XTuner的安装和使用"></a>四. XTuner的安装和使用</h4><p>官网：<a target="_blank" rel="noopener" href="https://xtuner.readthedocs.io/zh-cn/latest/index.html">欢迎来到 XTuner 的中文文档 — XTuner 0.2.0rc0 文档</a></p>
+<p>XTuner也是一个微调训练框架，它不支持界面化操作，但比LLamaFactory更灵活，速度也快一些。</p>
+<h5 id="4-1-XTuner的安装"><a href="#4-1-XTuner的安装" class="headerlink" title="4.1 XTuner的安装"></a>4.1 XTuner的安装</h5><p>官方提供了通过<code>pip</code>安装和源码安装两种方式，但我们在微调过程中经常要用到源码，所以推荐直接从源码安装。XTuner需要python3.10的环境。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">conda create -n xtuner python==3.10 -y # 创建环境</span><br><span class="line">conda activate xtuner # 激活环境</span><br><span class="line">git clone https://github.com/InternLM/xtuner.git # 获取xtuner源码</span><br><span class="line">cd xtuner</span><br><span class="line">pip install -e &#x27;.[all]&#x27; # 安装</span><br></pre></td></tr></table></figure>
+<p>验证安装是否成功</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xtuner list-cfg </span><br></pre></td></tr></table></figure>
+<h5 id="4-2-使用XTuner进行微调"><a href="#4-2-使用XTuner进行微调" class="headerlink" title="4.2 使用XTuner进行微调"></a>4.2 使用XTuner进行微调</h5><p>XTuner进行训练时需要写配置文件。首先，你微调的模型必须XTuner支持，源码中的<code>xtuner/xtuner/config</code> 目录下的所有文件名就是XTuner支持的模型</p>
+<p> <img src="/2025/04/08/llm-application-10/image-20250331002852312.png" alt="image-20250331002852312"></p>
+<p>比如它就不支持<code>qwen2.5</code></p>
+<p> <img src="/2025/04/08/llm-application-10/image-20250331002947798.png" alt="image-20250331002947798"></p>
+<h6 id="4-2-1-准备数据集"><a href="#4-2-1-准备数据集" class="headerlink" title="4.2.1 准备数据集"></a>4.2.1 准备数据集</h6><p>官网给出了XTuner微调支持的数据集格式，如下：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;messages&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span> <span class="attr">&quot;role&quot;</span><span class="punctuation">:</span> <span class="string">&quot;system&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;xxx.&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="punctuation">&#123;</span> <span class="attr">&quot;role&quot;</span><span class="punctuation">:</span> <span class="string">&quot;user&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;xxx.&quot;</span> <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="punctuation">&#123;</span> <span class="attr">&quot;role&quot;</span><span class="punctuation">:</span> <span class="string">&quot;assistant&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;xxx.&quot;</span><span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;messages&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span> <span class="attr">&quot;role&quot;</span><span class="punctuation">:</span> <span class="string">&quot;system&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;xxx.&quot;</span> <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="punctuation">&#123;</span> <span class="attr">&quot;role&quot;</span><span class="punctuation">:</span> <span class="string">&quot;user&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;xxx.&quot;</span> <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="punctuation">&#123;</span> <span class="attr">&quot;role&quot;</span><span class="punctuation">:</span> <span class="string">&quot;assistant&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;xxx.&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;loss&quot;</span><span class="punctuation">:</span> False<span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="punctuation">&#123;</span> <span class="attr">&quot;role&quot;</span><span class="punctuation">:</span> <span class="string">&quot;user&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;xxx.&quot;</span> <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="punctuation">&#123;</span> <span class="attr">&quot;role&quot;</span><span class="punctuation">:</span> <span class="string">&quot;assistant&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;xxx.&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;loss&quot;</span><span class="punctuation">:</span> True<span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+<p>它也支持下面的格式，这其实是目前比较推荐的格式。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span></span><br><span class="line">	<span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;conversation&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">            <span class="punctuation">&#123;</span></span><br><span class="line">                <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span> <span class="string">&quot;只剩一个心脏了还能活吗？&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;output&quot;</span><span class="punctuation">:</span> <span class="string">&quot;能，人本来就只有一个心脏。&quot;</span></span><br><span class="line">            <span class="punctuation">&#125;</span></span><br><span class="line">        <span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line"><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+<p>所以要把我们的自定义数据集调整为上述格式，这里以<code>ruozhiba</code>数据集为例, 使用如下脚本转换, 我们转换为第二种</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"></span><br><span class="line"><span class="comment"># 源数据文件路径</span></span><br><span class="line">source_file = <span class="string">&#x27;data/ruozhiba_qaswift.json&#x27;</span></span><br><span class="line"><span class="comment"># 目标数据文件路径</span></span><br><span class="line">target_file = <span class="string">&#x27;data/target_data.json&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 读取源数据</span></span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(source_file, <span class="string">&#x27;r&#x27;</span>, encoding=<span class="string">&#x27;utf-8&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">    source_data = json.load(f)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 转换数据</span></span><br><span class="line">target_data = []</span><br><span class="line"><span class="keyword">for</span> item <span class="keyword">in</span> source_data:</span><br><span class="line">    conversation = &#123;</span><br><span class="line">        <span class="string">&quot;conversation&quot;</span>: [</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="string">&quot;input&quot;</span>: item[<span class="string">&quot;query&quot;</span>],</span><br><span class="line">                <span class="string">&quot;output&quot;</span>: item[<span class="string">&quot;response&quot;</span>]</span><br><span class="line">            &#125;</span><br><span class="line">        ]</span><br><span class="line">    &#125;</span><br><span class="line">    target_data.append(conversation)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 保存转换后的数据</span></span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(target_file, <span class="string">&#x27;w&#x27;</span>, encoding=<span class="string">&#x27;utf-8&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">    json.dump(target_data, f, ensure_ascii=<span class="literal">False</span>, indent=<span class="number">4</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;数据已成功转换并保存到 <span class="subst">&#123;target_file&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>在XTuner根目录新建数据文件夹<code>data</code>把数据集放到其中。</p>
+<h6 id="4-2-2-修改配置文件"><a href="#4-2-2-修改配置文件" class="headerlink" title="4.2.2 修改配置文件"></a>4.2.2 修改配置文件</h6><p>创建微调训练相关的配置文件在左侧的文件列表，xtuner 的文件夹里，有两个文件，一个是含有<code>full</code>是用于做预训练的配置文件，一个是含有<code>qlora</code>，用于微调。</p>
+<p>这里选择的文件为：</p>
+<p><code>/root/autodl-tmp/xtuner/xtuner/configs/qwen/qwen1_5/qwen1_5_0_5b_chat/qwen1_5_0_5b_chat_qlora_alpaca_e3.py</code></p>
+<p>复制一份放到根目录。</p>
+<p>接下来修改配置文件，主要修改以下几部分：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">######################## PART 1</span></span><br><span class="line"><span class="comment">#预训练模型存放的位置</span></span><br><span class="line">pretrained_model_name_or_path = <span class="string">&#x27;/root/llm/internlm2-1.8b-chat&#x27;</span> <span class="comment">#基座模型路径</span></span><br><span class="line"><span class="comment">#微调数据存放的位置，名称改为data_files</span></span><br><span class="line">data_files = <span class="string">&#x27;/root/public/data/target_data.json&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 训练中最大的文本长度</span></span><br><span class="line">max_length = <span class="number">512</span></span><br><span class="line"><span class="comment"># 每一批训练样本的大小</span></span><br><span class="line">batch_size = <span class="number">2</span></span><br><span class="line"><span class="comment">#最大训练轮数</span></span><br><span class="line">max_epochs = <span class="number">3</span></span><br><span class="line"><span class="comment">#验证数据</span></span><br><span class="line">evaluation_inputs = [</span><br><span class="line"><span class="string">&#x27;只剩一个心脏了还能活吗？&#x27;</span>, <span class="string">&#x27;爸爸再婚，我是不是就有了个新娘？&#x27;</span>,</span><br><span class="line"><span class="string">&#x27;樟脑丸是我吃过最难吃的硬糖有奇怪的味道怎么还有人买&#x27;</span>,<span class="string">&#x27;马上要上游泳课了，昨天洗的泳裤还没</span></span><br><span class="line"><span class="string">干，怎么办&#x27;</span>,</span><br><span class="line"><span class="string">&#x27;我只出生了一次，为什么每年都要庆生&#x27;</span></span><br><span class="line">] </span><br><span class="line"></span><br><span class="line"><span class="comment">################ PART 2</span></span><br><span class="line"><span class="comment"># 配置Lora和QLora, 如果只想用LoRA, 则注释掉整个quantization_config, lora中一般设置r=32-64, lora_alpha = 2 * r</span></span><br><span class="line">model = <span class="built_in">dict</span>(</span><br><span class="line">    <span class="built_in">type</span>=SupervisedFinetune,</span><br><span class="line">    use_varlen_attn=use_varlen_attn,</span><br><span class="line">    llm=<span class="built_in">dict</span>(</span><br><span class="line">        <span class="built_in">type</span>=AutoModelForCausalLM.from_pretrained,</span><br><span class="line">        pretrained_model_name_or_path=pretrained_model_name_or_path,</span><br><span class="line">        trust_remote_code=<span class="literal">True</span>,</span><br><span class="line">        torch_dtype=torch.float16,</span><br><span class="line">        quantization_config=<span class="built_in">dict</span>(           <span class="comment">#####如果想用LoRA, 注释掉这部分</span></span><br><span class="line">            <span class="built_in">type</span>=BitsAndBytesConfig,</span><br><span class="line">            load_in_4bit=<span class="literal">True</span>,</span><br><span class="line">            load_in_8bit=<span class="literal">False</span>,</span><br><span class="line">            llm_int8_threshold=<span class="number">6.0</span>,</span><br><span class="line">            llm_int8_has_fp16_weight=<span class="literal">False</span>,</span><br><span class="line">            bnb_4bit_compute_dtype=torch.float16,</span><br><span class="line">            bnb_4bit_use_double_quant=<span class="literal">True</span>,</span><br><span class="line">            bnb_4bit_quant_type=<span class="string">&quot;nf4&quot;</span>,</span><br><span class="line">        ),                                  <span class="comment">##############################</span></span><br><span class="line">    ),</span><br><span class="line">    lora=<span class="built_in">dict</span>(</span><br><span class="line">        <span class="built_in">type</span>=LoraConfig,</span><br><span class="line">        r=<span class="number">64</span>,</span><br><span class="line">        lora_alpha=<span class="number">128</span>,</span><br><span class="line">        lora_dropout=<span class="number">0.1</span>,</span><br><span class="line">        bias=<span class="string">&quot;none&quot;</span>,</span><br><span class="line">        task_type=<span class="string">&quot;CAUSAL_LM&quot;</span>,</span><br><span class="line">    ),</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">### PART 3中</span></span><br><span class="line"><span class="comment"># 我们自己的数据集是json格式的, 所以替换为自己的数据集路径, 映射函数设置为空，我们已经把数据整理好了，不用映射了。</span></span><br><span class="line">dataset=<span class="built_in">dict</span>(<span class="built_in">type</span>=load_dataset, path=<span class="string">&quot;json&quot;</span>,data_files=data_files)</span><br><span class="line">dataset_map_fn=<span class="literal">None</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h6 id="4-2-3-单卡微调"><a href="#4-2-3-单卡微调" class="headerlink" title="4.2.3 单卡微调"></a>4.2.3 单卡微调</h6><p>再xtuner目录下使用如下命令开始微调, 产生的日志文件存放在<code>/root/autodl-tmp/xtuner/work_dirs/qwen1_5_0_5b_chat_qlora_alpaca_e3</code> 目录下。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xtuner train qwen1_5_0_5b_chat_qlora_alpaca_e3.py</span><br></pre></td></tr></table></figure>
+<p><img src="/2025/04/08/llm-application-10/image-20250401013043498.png" alt="image-20250401013043498"></p>
+<p>如果出现数据集处理，一般就是启动成功了。</p>
+<p><img src="/2025/04/08/llm-application-10/image-20250401013614520.png" alt="image-20250401013614520"></p>
+<p>占用一张卡，同时从训练进度可以感受到，它比LLamaFactory快。</p>
+<p>XTuner使用的是主观测试，所以固定轮次后会执行测试数据。</p>
+<p><img src="/2025/04/08/llm-application-10/image-20250401013830561.png" alt="image-20250401013830561"></p>
+<h6 id="4-2-4-分布式训练"><a href="#4-2-4-分布式训练" class="headerlink" title="4.2.4 分布式训练"></a>4.2.4 分布式训练</h6><p>安装了DeepSpeed后，在执行命令之后加上DeepSpeed配置。</p>
+<p>先指定GPU个数，如果是多级多卡还得指定节点数。后面加上deepspeed并指定Zerto等级</p>
+<p>单机多卡：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NPROC_PER_NODE=$&#123;GPU_NUM&#125; xtuner train qwen1_5_0_5b_chat_qlora_alpaca_e3.py --deepspeed deepspeed_zero2</span><br></pre></td></tr></table></figure>
+<p>比如我是单机双卡, 则指令为:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NPROC_PER_NODE=2 xtuner train qwen1_5_0_5b_chat_qlora_alpaca_e3.py --deepspeed deepspeed_zero2</span><br></pre></td></tr></table></figure>
+<p>多机多卡：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">excuete on node 0</span></span><br><span class="line">NPROC_PER_NODE=8 NNODES=2 PORT=$PORT ADDR=$NODE_0_ADDR NODE_RANK=0 xtuner train mixtral_8x7b_instruct_full_oasst1_e3 --deepspeed deepspeed_zero2</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">excuete on node 1</span></span><br><span class="line">NPROC_PER_NODE=8 NNODES=2 PORT=$PORT ADDR=$NODE_0_ADDR NODE_RANK=1 xtuner train mixtral_8x7b_instruct_full_oasst1_e3 --deepspeed deepspeed_zero2</span><br></pre></td></tr></table></figure>
+<p><strong>注：</strong> <code>$PORT</code> 表示通信端口、<code>$NODE_0_ADDR</code> 表示 node 0 的 IP 地址。 二者并不是系统自带的环境变量，需要根据实际情况，替换为实际使用的值。</p>
+<p>单机双卡GPU使用情况如下：可以看到两张卡都用了。</p>
+<p><img src="/2025/04/08/llm-application-10/image-20250401015444506.png" alt="image-20250401015444506"></p>
+<p>模型训练后会自动保存成 PTH 模型，保存在workdir中（例如 iter_2000.pth ，如果使用了 DeepSpeed，则将会是一个文件夹，一张卡一个文件）  </p>
+<p> <img src="/2025/04/08/llm-application-10/image-20250401020001966.png" alt="image-20250401020001966"></p>
+<h6 id="4-2-5-模型转换"><a href="#4-2-5-模型转换" class="headerlink" title="4.2.5 模型转换"></a>4.2.5 模型转换</h6><p>微调后的LoRA是用pytorch保存的，无法直接合并，要先转为huggingface格式使用如下命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xtuner convert pth_to_hf $&#123;FINETUNE_CFG&#125; $&#123;PTH_PATH&#125; $&#123;SAVE_PATH&#125;</span><br></pre></td></tr></table></figure>
+<p>其中<code>$&#123;FINETUNE_CFG&#125;</code> 为配置文件路径，<code>$&#123;PTH_PATH&#125;</code>  为检查点路径，如果是单卡就是一个文件，如果是多卡就是文件夹，<code>$&#123;SAVE_PATH&#125;</code> 是保存路径。比如我的命令如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xtuner convert pth_to_hf /root/autodl-tmp/xtuner/work_dirs/qwen1_5_0_5b_chat_qlora_alpaca_e3/qwen1_5_0_5b_chat_qlora_alpaca_e3.py /root/autodl-tmp/xtuner/work_dirs/qwen1_5_0_5b_chat_qlora_alpaca_e3/iter_600.pth /root/autodl-tmp/hf</span><br></pre></td></tr></table></figure>
+<p>运行后转换成功，</p>
+<p><img src="/2025/04/08/llm-application-10/image-20250401021220636.png" alt="image-20250401021220636"></p>
+<p>此时保存路径下会出现LoRA适配器参数。</p>
+<p> <img src="/2025/04/08/llm-application-10/image-20250401021313368.png" alt="image-20250401021313368"></p>
+<h6 id="4-2-6-合并模型"><a href="#4-2-6-合并模型" class="headerlink" title="4.2.6 合并模型"></a>4.2.6 合并模型</h6><p>如果使用了 LoRA / QLoRA 微调，则模型转换后将得到 adapter 参数，而并不包含原 LLM 参数。如果你期望获得合并后的模型权重（例如用于后续评测），那么可以利用 xtuner convert merge ：  </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xtuner convert merge $&#123;LLM&#125; $&#123;LLM_ADAPTER&#125; $&#123;SAVE_PATH&#125;</span><br></pre></td></tr></table></figure>
+<p>其中<code>$&#123;LLM&#125;</code>是基座模型路径, <code>$&#123;LLM_ADAPTER&#125;</code> 是LoRA适配器路径 <code>$&#123;SAVE_PATH&#125;</code> 是模型保存路径。这里我命令如下:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xtuner convert merge /root/autodl-tmp/Qwen1.5-0.5B-Chat /root/autodl-tmp/hf /root/autodl-tmp/Qwen2.5-0.5B-Chat-ruozhiba-600</span><br></pre></td></tr></table></figure>
+<p>执行后显示合并成功。</p>
+<p><img src="/2025/04/08/llm-application-10/image-20250401021943436.png" alt="image-20250401021943436"></p>
+<h6 id="4-2-7-继续训练"><a href="#4-2-7-继续训练" class="headerlink" title="4.2.7 继续训练"></a>4.2.7 继续训练</h6><p>在配置文件中指定加载检查点即可</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">load from <span class="built_in">which</span> checkpoint</span></span><br><span class="line">load_from = None</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">我这里改为如下，注意路径用字符串，如果是多卡的检查点，就到文件夹，如果是单卡就到文件</span></span><br><span class="line">load_from = &#x27;/root/autodl-tmp/xtuner/work_dirs/qwen1_5_0_5b_chat_qlora_alpaca_e3/iter_600.pth&#x27;</span><br></pre></td></tr></table></figure>
+<p>接着执行上述训练指令。可以看到，loss从一个较小的数开始，而不是一开始的2.几，说明模型是从检查点开始的。</p>
+<p><img src="/2025/04/08/llm-application-10/image-20250401022909125.png" alt="image-20250401022909125"></p>
+<h4 id="五-注意"><a href="#五-注意" class="headerlink" title="五. 注意"></a>五. 注意</h4><h5 id="5-1-显存释放问题"><a href="#5-1-显存释放问题" class="headerlink" title="5.1 显存释放问题"></a>5.1 显存释放问题</h5><p>可能是AutoDL的问题，在使用LLamaFactory进行多卡训练时，点击 中断 后，只 会释放一个GPU的显存</p>
+<p><img src="/2025/04/08/llm-application-10/image-20250330234901084.png" alt="image-20250330234901084"></p>
+<p>解决办法是关闭llamafactory, 杀死运行的python进程。（使用<code>top</code>查看进程）</p>
+<p><img src="/2025/04/08/llm-application-10/image-20250330235025334.png" alt="image-20250330235025334"></p>
+<p>使用如下命令杀死进程</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kill 5271</span><br></pre></td></tr></table></figure>
+<p><img src="/2025/04/08/llm-application-10/image-20250330235148764.png" alt="image-20250330235148764"></p>
+<h5 id="5-2-数据集及配置"><a href="#5-2-数据集及配置" class="headerlink" title="5.2  数据集及配置"></a>5.2  数据集及配置</h5><p>XTuner内置众多的 map_fn <a target="_blank" rel="noopener" href="https://xtuner.readthedocs.io/zh-cn/latest/training/open_source_dataset.html">开源指令微调数据集（LLM） — XTuner 0.2.0rc0 文档</a> ，可以满足大多数开源数据集的需要。此处我们罗列一些常用 map_fn 及其对应的原始字段和参考数据集：将数据集整理成对应的格式，然后再配置中指明对应的映射函数即可。</p>
+<p> <img src="/2025/04/08/llm-application-10/image-20250331235306029.png" alt="image-20250331235306029"></p>
+<p>如果想要用其他对话模板，则需要额外的配置，比如LLamaFactory用的数据集格式为<code>alpace</code>，如果想用之前在LLamaFactory的数据集，则需进行额外配置。<code>alpaca_map_fn</code>如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Copyright (c) OpenMMLab. All rights reserved.</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">alpaca_map_fn</span>(<span class="params">example</span>):</span><br><span class="line">    <span class="keyword">if</span> example.get(<span class="string">&quot;output&quot;</span>) == <span class="string">&quot;&lt;nooutput&gt;&quot;</span>:</span><br><span class="line">        <span class="keyword">return</span> &#123;<span class="string">&quot;conversation&quot;</span>: []&#125;</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> &#123;</span><br><span class="line">            <span class="string">&quot;conversation&quot;</span>: [</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="string">&quot;input&quot;</span>: <span class="string">f&quot;<span class="subst">&#123;example[<span class="string">&#x27;instruction&#x27;</span>]&#125;</span>\n<span class="subst">&#123;example[<span class="string">&#x27;input&#x27;</span>]&#125;</span>&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;output&quot;</span>: example[<span class="string">&quot;output&quot;</span>],</span><br><span class="line">                &#125;</span><br><span class="line">            ]</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出，这个函数最终也是转换成<strong>4.2.1</strong>中的格式，这也是为什么4.2.2中不用额外指定映射函数的原因，因为我们已经把数据集整理成XTuner格式了，其他格式也是通过映射函数转化为XTuner格式的。<code>alpcaca</code>格式包含<code>instruction,input,output</code>三个字段，所以使用的弱智吧数据集格式如下:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;instruction&quot;</span><span class="punctuation">:</span> <span class="string">&quot;只剩一个心脏了还能活吗？&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;output&quot;</span><span class="punctuation">:</span> <span class="string">&quot;能，人本来就只有一个心脏。&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+<p>配置文件修改也有区别， 这里只给出不同的，其他的像4.2.2中修改即可</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">########## PART 1</span></span><br><span class="line"><span class="comment"># Model</span></span><br><span class="line">pretrained_model_name_or_path = <span class="string">&quot;/root/autodl-tmp/Qwen1.5-0.5B-Chat&quot;</span> <span class="comment"># 模型路径</span></span><br><span class="line">use_varlen_attn = <span class="literal">False</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Data</span></span><br><span class="line">alpaca_en_path = <span class="string">&quot;/root/autodl-tmp/xtuner/data&quot;</span>  <span class="comment"># 数据集路径，注意，只到数据集所在文件夹的路径，比如我的数据集文件路径为/root/autodl-tmp/xtuner/data/ruozhiba.json</span></span><br><span class="line">prompt_template = PROMPT_TEMPLATE.qwen_chat</span><br><span class="line">max_length = <span class="number">512</span></span><br><span class="line">pack_to_max_length = <span class="literal">True</span></span><br><span class="line"></span><br><span class="line"><span class="comment">############## PART 3</span></span><br><span class="line"><span class="comment"># 主要区别在这个函数的配置，</span></span><br><span class="line">alpaca_en = <span class="built_in">dict</span>(</span><br><span class="line">    <span class="built_in">type</span>=process_hf_dataset,</span><br><span class="line">    dataset=<span class="built_in">dict</span>(<span class="built_in">type</span>=load_dataset, path=alpaca_en_path),    <span class="comment"># 这里不用改了</span></span><br><span class="line">    tokenizer=tokenizer,</span><br><span class="line">    max_length=max_length,</span><br><span class="line">    dataset_map_fn=alpaca_map_fn,     <span class="comment"># 如果是其他格式是数据集格式，则输入相应的映射函数，这里用的是alpaca</span></span><br><span class="line">    template_map_fn=<span class="built_in">dict</span>(<span class="built_in">type</span>=template_map_fn_factory, template=prompt_template),</span><br><span class="line">    remove_unused_columns=<span class="literal">True</span>,</span><br><span class="line">    shuffle_before_pack=<span class="literal">True</span>,</span><br><span class="line">    pack_to_max_length=pack_to_max_length,</span><br><span class="line">    use_varlen_attn=use_varlen_attn,</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>通过以上配置，即可正常训练</p>
+<h5 id="5-3-XTuner-环境安装问题"><a href="#5-3-XTuner-环境安装问题" class="headerlink" title="5.3 XTuner 环境安装问题"></a>5.3 XTuner 环境安装问题</h5><p>报错 No module named ‘triton.ops’ 或者一直显示命令格式不对</p>
+<p>这个是因为用了pytorch，将pytorch降到2.5.1可以解决, 首先修改<code>/root/autodl-tmp/xtuner/requirements/runtime.txt</code> 指定其中的pytorch版本</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">torch==2.5.1</span><br><span class="line">torchvision==0.20.1</span><br></pre></td></tr></table></figure>
+<p>然后重新安装</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install -e &#x27;.[all]&#x27; # 安装</span><br></pre></td></tr></table></figure>
+<p>如果安装后还是一直报错，把虚拟环境删除，指定pytorch版本冲重新安装。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/03/30/llm-application-9/" rel="prev" title="大模型应用系列(九) 对话模板对齐">
+      <i class="fa fa-chevron-left"></i> 大模型应用系列(九) 对话模板对齐
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%88%86%E5%B8%83%E5%BC%8F%E8%AE%AD%E7%BB%83%E5%BE%AE%E8%B0%83%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">一. 大模型分布式训练微调的基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%88%86%E5%B8%83%E5%BC%8F%E8%AE%AD%E7%BB%83"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 为什么需要分布式训练</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%88%86%E5%B8%83%E5%BC%8F%E8%AE%AD%E7%BB%83%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 大模型分布式训练的基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#1-2-1-%E5%88%86%E5%B8%83%E5%BC%8F%E8%AE%AD%E7%BB%83%E7%9A%84%E6%A0%B8%E5%BF%83%E6%8A%80%E6%9C%AF"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.2.1 分布式训练的核心技术</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-DeepSpeed%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.</span> <span class="nav-text">二. DeepSpeed框架介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-DeeepSeep%E6%A6%82%E8%BF%B0"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 DeeepSeep概述</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-%E6%A0%B8%E5%BF%83%E6%8A%80%E6%9C%AF"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 核心技术</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-%E5%85%B6%E4%BB%96%E6%8A%80%E6%9C%AF"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 其他技术</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-4-%E5%85%B6%E4%BB%96%E7%89%B9%E6%80%A7"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 其他特性</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-5-%E4%BC%98%E5%8A%BF%E4%B8%8E%E7%89%B9%E7%82%B9"><span class="nav-number">2.5.</span> <span class="nav-text">2.5 优势与特点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-6-%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">2.6.</span> <span class="nav-text">2.6 使用场景</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-%E4%BD%BF%E7%94%A8LLamaFactory%E8%BF%9B%E8%A1%8C%E5%88%86%E5%B8%83%E5%BC%8F%E5%BE%AE%E8%B0%83"><span class="nav-number">3.</span> <span class="nav-text">三. 使用LLamaFactory进行分布式微调</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-LLamaFactory-%E5%AE%89%E8%A3%85"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 LLamaFactory 安装</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-%E9%80%89%E6%8B%A9%E9%85%8D%E7%BD%AE"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 选择配置</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#3-2-1-Zero-1"><span class="nav-number">3.2.1.</span> <span class="nav-text">3.2.1 Zero-1</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-2-2-Zero-2"><span class="nav-number">3.2.2.</span> <span class="nav-text">3.2.2 Zero-2</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-2-3-Zero-3-offload"><span class="nav-number">3.2.3.</span> <span class="nav-text">3.2.3 Zero-3+offload</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-%E5%A4%9A%E6%9C%BA%E5%A4%9A%E5%8D%A1%E8%AE%AD%E7%BB%83"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 多机多卡训练</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B-XTuner%E7%9A%84%E5%AE%89%E8%A3%85%E5%92%8C%E4%BD%BF%E7%94%A8"><span class="nav-number">4.</span> <span class="nav-text">四. XTuner的安装和使用</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-1-XTuner%E7%9A%84%E5%AE%89%E8%A3%85"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 XTuner的安装</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-2-%E4%BD%BF%E7%94%A8XTuner%E8%BF%9B%E8%A1%8C%E5%BE%AE%E8%B0%83"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 使用XTuner进行微调</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#4-2-1-%E5%87%86%E5%A4%87%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="nav-number">4.2.1.</span> <span class="nav-text">4.2.1 准备数据集</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#4-2-2-%E4%BF%AE%E6%94%B9%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">4.2.2.</span> <span class="nav-text">4.2.2 修改配置文件</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#4-2-3-%E5%8D%95%E5%8D%A1%E5%BE%AE%E8%B0%83"><span class="nav-number">4.2.3.</span> <span class="nav-text">4.2.3 单卡微调</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#4-2-4-%E5%88%86%E5%B8%83%E5%BC%8F%E8%AE%AD%E7%BB%83"><span class="nav-number">4.2.4.</span> <span class="nav-text">4.2.4 分布式训练</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#4-2-5-%E6%A8%A1%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-number">4.2.5.</span> <span class="nav-text">4.2.5 模型转换</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#4-2-6-%E5%90%88%E5%B9%B6%E6%A8%A1%E5%9E%8B"><span class="nav-number">4.2.6.</span> <span class="nav-text">4.2.6 合并模型</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#4-2-7-%E7%BB%A7%E7%BB%AD%E8%AE%AD%E7%BB%83"><span class="nav-number">4.2.7.</span> <span class="nav-text">4.2.7 继续训练</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%94-%E6%B3%A8%E6%84%8F"><span class="nav-number">5.</span> <span class="nav-text">五. 注意</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-%E6%98%BE%E5%AD%98%E9%87%8A%E6%94%BE%E9%97%AE%E9%A2%98"><span class="nav-number">5.1.</span> <span class="nav-text">5.1 显存释放问题</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-2-%E6%95%B0%E6%8D%AE%E9%9B%86%E5%8F%8A%E9%85%8D%E7%BD%AE"><span class="nav-number">5.2.</span> <span class="nav-text">5.2  数据集及配置</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-3-XTuner-%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85%E9%97%AE%E9%A2%98"><span class="nav-number">5.3.</span> <span class="nav-text">5.3 XTuner 环境安装问题</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">37</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
