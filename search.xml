@@ -3549,12 +3549,26 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 <li><p>部署方案</p>
 <ul>
 <li>huggingface transformers</li>
-<li><p>专门的推理加速框架</p>
-<p>| 云端                                   | 移动端             |<br>| ——————————————————— | ————————— |<br>| lmdeploy, vllm, tensorrt-llm,deepspeed | llama.cpp, mlc-llm |</p>
-</li>
+<li>专门的推理加速框架</li>
 </ul>
 </li>
 </ol>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>云端</th>
+<th>移动端</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lmdeploy, vllm, tensorrt-llm,deepspeed</td>
+<td>llama.cpp, mlc-llm</td>
+</tr>
+</tbody>
+</table>
+</div>
 <h4 id="二-LMDeploy简介"><a href="#二-LMDeploy简介" class="headerlink" title="二. LMDeploy简介"></a>二. LMDeploy简介</h4><p>LMDeploy是LLM在英伟达设备上部署的全流程解决方案。包括模型轻量化，推理和服务。</p>
 <p>项目地址: <a href="https://github.com/InternLM/lmdeploy">InternLM/lmdeploy: LMDeploy is a toolkit for compressing, deploying, and serving LLMs.</a></p>
 <p>中文文档: <a href="https://lmdeploy.readthedocs.io/zh-cn/latest/index.html">欢迎来到 LMDeploy 的中文教程！ — lmdeploy</a></p>
