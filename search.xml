@@ -799,7 +799,7 @@
 <p> <img src="/2025/03/21/llm-application-6/image-20250318231857684.png" alt="image-20250318231857684"></p>
 <h4 id="五-LMDeploy-部署Qwen"><a href="#五-LMDeploy-部署Qwen" class="headerlink" title="五. LMDeploy 部署Qwen"></a>五. LMDeploy 部署Qwen</h4><p>官网: <a href="https://lmdeploy.readthedocs.io/zh-cn/latest/get_started/installation.html">安装 — lmdeploy</a></p>
 <h5 id="5-1-安装LMDeploy"><a href="#5-1-安装LMDeploy" class="headerlink" title="5.1 安装LMDeploy"></a>5.1 安装LMDeploy</h5><p>首先创建新的虚拟环境，我创建的版本是 LMDeploy支持的python版本是3.8-3.12， 支持的cuda是12+以上，11+也可以，我的版本是cuda12.4</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda create -n lmdeployEnv python=3.8 -y</span><br><span class="line">conda activate lmdeployEnv</span><br><span class="line">pip install lmdeploy</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda create -n lmdeploy python=3.8 -y</span><br><span class="line">conda activate lmdeploy</span><br><span class="line">pip install lmdeploy</span><br></pre></td></tr></table></figure>
 <p>从hf-mirror下载模型，比如我下载了qwen2.5-0.5B-Instruct，使用</p>
 <h5 id="5-2-启动服务"><a href="#5-2-启动服务" class="headerlink" title="5.2 启动服务"></a>5.2 启动服务</h5><p>lmdeploy部署命令</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy serve api_server /root/autodl-tmp/Qwen2.5-0.5B-Instruct --server-port 8000</span><br></pre></td></tr></table></figure>
@@ -824,7 +824,7 @@
 ]]></content>
       <categories>
         <category>大模型应用</category>
-        <category>部署</category>
+        <category>推理与部署</category>
       </categories>
   </entry>
   <entry>
@@ -1174,7 +1174,7 @@
 ]]></content>
       <categories>
         <category>大模型应用</category>
-        <category>部署</category>
+        <category>推理与部署</category>
       </categories>
   </entry>
   <entry>
@@ -3479,6 +3479,227 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
       <categories>
         <category>大模型应用</category>
         <category>训练与微调</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>大模型应用系列(十一) LMDeploy量化部署</title>
+    <url>/2025/04/11/llm-application-11/</url>
+    <content><![CDATA[<p>介绍量化的概念，使用lmdeploy进行模型量化与kv-cache量化部署。</p>
+<span id="more"></span>
+<h4 id="一-概述"><a href="#一-概述" class="headerlink" title="一. 概述"></a>一. 概述</h4><h5 id="1-1-大模型推理"><a href="#1-1-大模型推理" class="headerlink" title="1.1 大模型推理"></a>1.1 大模型推理</h5><ol>
+<li>内存开销巨大</li>
+</ol>
+<ul>
+<li>庞大的参数量，7B模型权重就需要14+GB显存</li>
+<li>采用自回归生成token,需要kv-cache，带来巨大的显存开销</li>
+</ul>
+<ol>
+<li>动态shape</li>
+</ol>
+<ul>
+<li>请求数不固定</li>
+<li>Token逐个生成，且数量不定</li>
+</ul>
+<ol>
+<li>相对视觉模型，LLM结构简单</li>
+</ol>
+<ul>
+<li>Transformer结构，大部分是decoder-only结构。</li>
+</ul>
+<h5 id="1-2-模型部署"><a href="#1-2-模型部署" class="headerlink" title="1.2 模型部署"></a>1.2 模型部署</h5><ol>
+<li><p>定义:</p>
+<p> 将训练好的模型在特定的软硬件环境中启动的过程，使模型能够接收输入并返回预测结果；为了满足性能和效率的需求，常常需要对模型进行优化，例如模型压缩(剪枝，量化，知识蒸馏)和硬件加速。</p>
+</li>
+<li><p>产品形态</p>
+<p> 云端，边缘计算端，移动端</p>
+</li>
+<li><p>计算设备</p>
+<p> CPU, GPU, NPU, TPU等。</p>
+</li>
+</ol>
+<h5 id="1-3-大模型部署挑战"><a href="#1-3-大模型部署挑战" class="headerlink" title="1.3 大模型部署挑战"></a>1.3 大模型部署挑战</h5><ol>
+<li><p>设备</p>
+<p> 如何应对巨大的存储问题？低存储设备（消费级显卡，手机等）如何部署？</p>
+</li>
+<li><p>推理</p>
+<ul>
+<li>如何加速token的生成</li>
+<li>如何解决动态shape，让推理可以不间断</li>
+<li>如何有效管理和利用显存</li>
+</ul>
+</li>
+<li><p>服务</p>
+<ul>
+<li>如何提升系统整体吞吐量？</li>
+<li>对于个体用户，如何降低相应时间？</li>
+</ul>
+</li>
+</ol>
+<h5 id="1-4-大模型部署方案"><a href="#1-4-大模型部署方案" class="headerlink" title="1.4 大模型部署方案"></a>1.4 大模型部署方案</h5><ol>
+<li><p>常见技术</p>
+<ul>
+<li>张量并行</li>
+<li>transformer计算和访存优化</li>
+<li>低比特量化</li>
+<li>Continuous Batch</li>
+<li>Page Attention</li>
+<li>Blocked kv-cache</li>
+</ul>
+</li>
+<li><p>部署方案</p>
+<ul>
+<li>huggingface transformers</li>
+<li><p>专门的推理加速框架</p>
+<p>| 云端                                   | 移动端             |<br>| ——————————————————— | ————————— |<br>| lmdeploy, vllm, tensorrt-llm,deepspeed | llama.cpp, mlc-llm |</p>
+</li>
+</ul>
+</li>
+</ol>
+<h4 id="二-LMDeploy简介"><a href="#二-LMDeploy简介" class="headerlink" title="二. LMDeploy简介"></a>二. LMDeploy简介</h4><p>LMDeploy是LLM在英伟达设备上部署的全流程解决方案。包括模型轻量化，推理和服务。</p>
+<p>项目地址: <a href="https://github.com/InternLM/lmdeploy">InternLM/lmdeploy: LMDeploy is a toolkit for compressing, deploying, and serving LLMs.</a></p>
+<p>中文文档: <a href="https://lmdeploy.readthedocs.io/zh-cn/latest/index.html">欢迎来到 LMDeploy 的中文教程！ — lmdeploy</a></p>
+<h5 id="2-1-核心功能"><a href="#2-1-核心功能" class="headerlink" title="2.1 核心功能"></a>2.1 核心功能</h5><ol>
+<li><strong>高效的推理:</strong> LMDeploy开发了continus Batch, Blocked KV-cache，动态拆分和融合，张量并行，高效的计算kernel等重要特性。推理性能是vLLM的1.8倍。</li>
+<li><strong>可靠的量化:</strong> LMDeploy支持权重量化和kv量化。4bit模型推理效率是FP16下的2.4倍。量化模型的可靠性已通过 OpenCompass评测得到充分验证。</li>
+<li><strong>便捷的服务:</strong> 通过请求分发服务，LMDeploy支持多模型在多机，多卡上的推理服务。</li>
+<li><strong>有状态推理:</strong> 通过缓存多轮对话过程中attention的KV，记住对话历史，从而避免重复处理历史绘画，显著提升长文本多轮对话场景中的效率。</li>
+<li><strong>卓越的兼容:</strong> LMDeploy 支持 KV-cache量化，AWQ, Automatic Prefix Caching同时使用</li>
+</ol>
+<h5 id="2-2-性能"><a href="#2-2-性能" class="headerlink" title="2.2 性能"></a>2.2 性能</h5><p>LMDeploy TurboMind 引擎拥有卓越的推理能力，在各种规模的模型上，每秒处理的请求数是 vLLM 的 1.36 ~ 1.85 倍。在静态推理能力方面，TurboMind 4bit 模型推理速度（out token/s）远高于 FP16/BF16 推理。在小 batch 时，提高到 2.4 倍。</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250408222914416.png" alt="image-20250408222914416"></p>
+<p>LMDeploy支持2种推理引擎: TurboMind和PyTorch，它们侧重不同，前者追求性能的极致优化，后者纯用python开发，着重降低开发者门槛。在实际部署时，首选TurboMind。</p>
+<h5 id="2-3-量化"><a href="#2-3-量化" class="headerlink" title="2.3 量化"></a>2.3 量化</h5><ol>
+<li><p>两个基本概念</p>
+<ul>
+<li>计算密集(compute-bound): 推理的绝大部分时间消耗在数值计算上；针对计算密集场景，可以通过使用更快的硬件计算单元来提升计算速度，比如量化为W8A8使用INT8 Tensor Core来加速计算。</li>
+<li><p>访存密集(memory-bound): 推理时，绝大部分时间消耗在数据读取上；针对访存密集型场景，一般是通过提高计算访存比来提升性能。</p>
+<p>LLM是典型的访存密集型任务，常见的LLM模型是Decode Only结构，推理时大部分时间消耗在逐Token生成阶段(Decoding阶段)，时典型的访存密集型场景。可以通过roofline模型来判断时计算密集型还是访存密集型。</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>如图: 可以看到只有在Batch Size 达到这个量级时，计算才会成为推理的瓶颈，但由于LLM模型本身就很大，推理时的KV-cache也会占用很多显存，还有一些其他的因素影响(如Persistent Batch), 实际推理时很难做到batchSize=128这么大，所以一般LLM服务都是访存密集型。</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250408225102213.png" alt="image-20250408225102213"></p>
+<ol>
+<li><p>Weight Only量化一举多得</p>
+<p> 4 bit Weight Only量化，将FP16的模型权重量化为NT4, 访存量直接降为FP16模型的1/4，大幅降低了访存成本，提升了Decoding的速度。</p>
+<p> 加速的同时还节省了显存，同样的设备能够支持更大的模型以及更长的对话长度。</p>
+</li>
+</ol>
+<h5 id="2-4-如何做Weight-Only的量化"><a href="#2-4-如何做Weight-Only的量化" class="headerlink" title="2.4 如何做Weight Only的量化"></a>2.4 如何做Weight Only的量化</h5><p>LMDeploy使用MIT HAN LAB 开源的AWQ算法，量化为4bit模型，推理时，<strong>先把4bit反量化回FP16(在Kernel内部进行，从Global Memory读取时仍时4bit)，使用的是FP16计算。</strong>这样会造成一定的精度损失，但比直接用INT4计算准确。</p>
+<h5 id="2-5-推理引擎TurboMind"><a href="#2-5-推理引擎TurboMind" class="headerlink" title="2.5 推理引擎TurboMind"></a>2.5 推理引擎TurboMind</h5><ol>
+<li>continue batching: <ul>
+<li>请求可以及时加入batch中推理。</li>
+<li>Batch中已经完成的推理请求及时退出。</li>
+</ul>
+</li>
+<li>有状态推理<ul>
+<li>无状态推理: 每次请求均携带历史对话记录</li>
+<li>有状态推理: 请求不带历史记录，历史记录在推理侧缓存。</li>
+<li>LMDeploy使用有状态推理，推理侧缓存历史对话的kv-cache。</li>
+</ul>
+</li>
+<li>Blocked kv-cache <ul>
+<li>Attention支持不连续的kv-cache</li>
+<li>block(Page attention)</li>
+</ul>
+</li>
+</ol>
+<h4 id="三-LMDeploy量化部署"><a href="#三-LMDeploy量化部署" class="headerlink" title="三.LMDeploy量化部署"></a>三.LMDeploy量化部署</h4><h5 id="3-1-对量化前的模型做部署验证"><a href="#3-1-对量化前的模型做部署验证" class="headerlink" title="3.1 对量化前的模型做部署验证"></a>3.1 对量化前的模型做部署验证</h5><p>模型下载参考<a href="https://codezrq.github.io/2025/03/06/llm-application-2/#more">大模型应用系列(二) Huggingface的安装和使用 | 乌漆嘛黑</a></p>
+<p>这里以量化qwen2.5-7B为例，从模型的config.json文件可知，模型的权重被存储为bfloat16格式，对于一个7B(70亿)参数的模型，每个参数使用FP16表示(2个Byte)，则模型的权重大小约为:</p>
+<p>$70\times 10^9 parameters\times 2 Bytes /parameter=14GB$</p>
+<p>所以需要大于14GB的显存。</p>
+<h5 id="3-2-创建环境"><a href="#3-2-创建环境" class="headerlink" title="3.2 创建环境"></a>3.2 创建环境</h5><p>可以参考 <a href="https://codezrq.github.io/2025/03/21/llm-application-6/">大模型应用系列(六) ollama,vllm,LMDeploy 部署大模型 | 乌漆嘛黑</a></p>
+<p>如果想要查看lmdeploy的具体命令，可以用以下命令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy -h</span><br></pre></td></tr></table></figure>
+<p>可以看到lmdeploy支持以下几个子命令</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250410220957885.png" alt="image-20250410220957885"></p>
+<p>输入子命令查看指令可进一步查看子命令参数</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy chat -h</span><br></pre></td></tr></table></figure>
+<p>  <img src="/2025/04/11/llm-application-11/image-20250410221036121.png" alt="image-20250410221036121"></p>
+<p>接着使用LMdeploy验证模型，进入创建好的环境并启动模型</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lmdeploy chat /root/autodl-tmp/Qwen2.5-7B-Instruct</span><br></pre></td></tr></table></figure>
+<p><img src="/2025/04/11/llm-application-11/image-20250409012836564.png" alt="image-20250409012836564"></p>
+<p>报错oom了，我的显存是24GB，上面计算模型需要14GB，模型在运行时，占用的显存可大致分为三部分：模型参数本身占用的显存、kv cache占用的显存，以及中间运算结果占用的显存。LMDeploy的kv cache管理器可以通过设置 控制kv缓存占用剩余显存的最大比例。默认的比例为0.8 。我们可以通过<code>--cache-max-entry-count</code>指定kv-cache的最大比例，比如设置为0.4:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy chat /root/autodl-tmp/Qwen2.5-7B-Instruct --cache-max-entry-count 0.4</span><br></pre></td></tr></table></figure>
+<p>此时就可以正常启动了。</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250410221712560.png" alt="image-20250410221712560"></p>
+<h5 id="3-3-LMDeploy量化部署"><a href="#3-3-LMDeploy量化部署" class="headerlink" title="3.3 LMDeploy量化部署"></a>3.3 LMDeploy量化部署</h5><h6 id="3-3-1-lmdeploy-部署"><a href="#3-3-1-lmdeploy-部署" class="headerlink" title="3.3.1 lmdeploy 部署"></a>3.3.1 lmdeploy 部署</h6><p>使用以下命令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lmdeploy serve api_server /root/autodl-tmp/Qwen2.5-7B-Instruct --model-format hf --quant-policy 0 --server-name 0.0.0.0 --server-port 23333 --tp 1 --cache-max-entry-count 0.4</span><br></pre></td></tr></table></figure>
+<p>对命令的各个参数解释如下，也可以通过<code>lmdeploy serve api_server -h</code> 查看说明</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy serve api_server：这个命令用于启动API服务器。</span><br><span class="line">/root/autodl-tmp/Qwen2.5-7B-Instruct：这是模型的路径。</span><br><span class="line">--model-format hf：这个参数指定了模型的格式。hf代表“Hugging Face”格式。</span><br><span class="line">--quant-policy 0：这个参数指定了kv-cache的量化策略。取值为&#123;0,4,8&#125;，0表示不量化，4表示INT4量化，8表示INT8量化</span><br><span class="line">--server-name 0.0.0.0：这个参数指定了服务器的名称。在这里，0.0.0.0是一个特殊的IP地址，它表</span><br><span class="line">示所有网络接口。</span><br><span class="line">--server-port 23333：这个参数指定了服务器的端口号。在这里，23333是服务器将监听的端口号。</span><br><span class="line">--tp 1：这个参数表示并行数量（GPU数量）。</span><br><span class="line">--cache-max-entry-count 0.4： 指定分配给kv-cache的显存比例</span><br></pre></td></tr></table></figure>
+<p>接着以命令行形式连接API服务器，以脚本形式连接在之前的openai兼容形式连接已经介绍过。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy serve api_client http://localhost:23333</span><br></pre></td></tr></table></figure>
+<h6 id="3-3-2-LMDeploy-Lite"><a href="#3-3-2-LMDeploy-Lite" class="headerlink" title="3.3.2 LMDeploy Lite"></a>3.3.2 LMDeploy Lite</h6><p>随着模型变得越来越大，我们需要一些大模型压缩技术来降低模型部署的成本，并提升模型的推理性能。LMDeploy 提供了权重量化和 kv -cache两种策略。  </p>
+<p>部署时管理kv-cache主要有两个方式: 指定分配给kv-cache的内存大小(<code>--cache-max-entry-count</code>), 以及kv-cache量化策略(<code>--quant-policy</code>) , 自 v0.4.0 起，LMDeploy 支持在线 kv cache int4/int8 量化，量化方式为 per-head per-token 的非对称量化。此外，通过 LMDeploy 应用 kv 量化非常简单，只需要设定 quant_policy 和 cache-max-entrycount 参数。目前，LMDeploy 规定 qant_policy=4 表示 kv int4 量化， quant_policy=8 表示 kv int8量化。  </p>
+<p>可以通过以下命令使用kv-cache量化</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy serve api_server /root/autodl-tmp/Qwen2.5-7B-Instruct --model-format hf --quant-policy 0 --server-name 0.0.0.0 --server-port 23333 --tp 1 --cache-max-entry-count 0.4</span><br></pre></td></tr></table></figure>
+<p>可以看出，量化与不量化的显存占用时相同的，这是因为kv-cache在命令中指定了显存比例，不论是否量化都会预分配那么多，但是如果测试就可以体会到，量化后可以输入更长的文本</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>不量化</th>
+<th>INT4量化</th>
+<th>INT8量化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="/2025/04/11/llm-application-11/image-20250410224400992.png" alt="image-20250410224400992"></td>
+<td><img src="/2025/04/11/llm-application-11/image-20250410224249327.png" alt="image-20250410224249327"></td>
+<td><img src="/2025/04/11/llm-application-11/image-20250410224345938.png" alt="image-20250410224345938"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h6 id="3-3-3-W4A16模型量化部署"><a href="#3-3-3-W4A16模型量化部署" class="headerlink" title="3.3.3 W4A16模型量化部署"></a>3.3.3 W4A16模型量化部署</h6><p>模型量化旨在减少模型大小并提高推理速度，同时留出更多显存给kv-cache，能支持更长的prompt。量化通过将模型参数的权重和激活从高精度(比如FP16)量化为低精度(INT4,INT8)，LMDeploy模型量化使用的是W4A16:</p>
+<ul>
+<li>W4: 表示权重量化为4位整数(int4)。这意味着模型中的权重参数将从它们原始的浮点表示(例如FP32、BF16或FP16)转换为4位的整数表示。这样做可以显著减少模型的大小。  </li>
+<li>A16: 这表示激活(或输入/输出)仍然保持在16位浮点数（例如FP16或BF16）。激活是在神经网络中传播的数据，通常在每层运算之后产生。  </li>
+</ul>
+<p>因此W4A16意味着权重(Weight)被量化为INT4，激活(Activation)保持FP16。</p>
+<p>使用如下命令进行W4A16量化</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy lite auto_awq /root/autodl-tmp/Qwen2.5-7B-Instruct --calib-dataset &#x27;ptb&#x27; --calib-samples 128 --calib-seqlen 2048 --w-bits 4 --w-group-size 128 --batch-size 1 --work-dir /root/autodl-tmp/Qwen2.5-7B-Instruct-W4A16</span><br></pre></td></tr></table></figure>
+<p>命令参数解释如下：也可以通过<code>lmdeploy lite auto_awq -h</code>命令查看</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy lite auto_awq: lite这是LMDeploy的命令，用于启动量化过程，而auto_awq代表自动权重</span><br><span class="line">量化（auto-weight-quantization）。</span><br><span class="line">/root/autodl-tmp/Qwen2.5-7B-Instruct: 模型文件的路径。</span><br><span class="line">--calib-dataset &#x27;ptb&#x27;: 这个参数指定了一个校准数据集，这里使用的是’ptb’（Penn Treebank，一</span><br><span class="line">个常用的语言模型数据集）。</span><br><span class="line">--calib-samples 128: 这指定了用于校准的样本数量—128个样本</span><br><span class="line">--calib-seqlen 2048: 这指定了校准过程中使用的序列长度—1024</span><br><span class="line">--w-bits 4: 这表示权重（weights）的位数将被量化为4位。</span><br><span class="line">--work-dir /root/autodl-tmp/Qwen2.5-7B-Instruct-W4A16: 这是工作目录的路径，用于存储量</span><br><span class="line">化后的模型和中间结果。</span><br></pre></td></tr></table></figure>
+<p>量化过程中要下载校准数据集，校准数据集在huggface上，如果访问不了外网会报错，需要在服务器上安装梯子，如果没有，可以用一种麻烦的方法，见<strong>4.1</strong></p>
+<p>解决了以上问题，就可以开始量化，量化过程会花一些时间，要等一等。</p>
+<p><img src="/2025/04/11/llm-application-11/image-20250411000254839.png" alt="image-20250411000254839"></p>
+<p>结束后进入目录<code>/root/autodl-tmp</code>使用如下命令查看文件及其大小:</p>
+<p><code>du -sh *</code> 显示如下:</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250411000421175.png" alt="image-20250411000421175"></p>
+<p>可以看到量化后的模型比原模型大小小了很多。量化后的模型可以和原模型一样使用</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy chat /root/autodl-tmp/Qwen2.5-7B-Instruct-W4A16 --model-format awq</span><br></pre></td></tr></table></figure>
+<p> <img src="/2025/04/11/llm-application-11/image-20250411000806041.png" alt="image-20250411000806041"></p>
+<h6 id="3-3-4-离线转换TurboMind格式"><a href="#3-3-4-离线转换TurboMind格式" class="headerlink" title="3.3.4 离线转换TurboMind格式"></a>3.3.4 离线转换TurboMind格式</h6><p>离线转换需要在启动服务之前，将模型转为 lmdeploy TurboMind 的格式，如下所示。  </p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy convert Qwen2.5-7B-Instruct /root/autodl-tmp/Qwen2.5-7B-Instruct</span><br></pre></td></tr></table></figure>
+<p>第一个参数是模型名称，用于选择对话模板。第二个参数是模型路径。</p>
+<p>执行完成后将会在当前目录生成一个 workspace 的文件夹。这里面包含的就是 TurboMind 和 Triton “模型推理”需要到的文件。  里面的参数文件如下:</p>
+<p><img src="/2025/04/11/llm-application-11/image-20250411002033159.png" alt="image-20250411002033159"></p>
+<p>每一份参数第一个 0 表示“层”的索引，后面的那个0表示 Tensor 并行的索引，因为我们只有一张卡，所以被拆分成 1 份。如果有两张卡可以用来推理，则会生成0和1两份，也就是说，会把同一个参数拆成两份。比如 <code>layers.0.attention.w_qkv.0.weight</code> 会变成 <code>layers.0.attention.w_qkv.0.weight</code>和 <code>layers.0.attention.w_qkv.1.weight</code>。执行 <code>lmdeploy convert</code> 命令时，可以通过 <code>--tp</code>指定（tp 表示 tensor parallel，该参数默认值为1也就是一张卡）  。</p>
+<p>转化为TurboMind格式后，就可以正常启动命令行本地对话了。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lmdeploy chat /root/autodl-tmp/workspace</span><br></pre></td></tr></table></figure>
+<p>启动后就可以和它进行对话了。  </p>
+<h5 id="3-4-网页Demo演示"><a href="#3-4-网页Demo演示" class="headerlink" title="3.4 网页Demo演示"></a>3.4 网页Demo演示</h5><p>这里用<code>Gradio</code>作为前端Demo</p>
+<p>先启动服务器，可以用上面的任一方式。这里用kv-cache量化部署方式，</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lmdeploy serve api_server /root/autodl-tmp/workspace --model-format hf --quant-policy 0 --server-name 0.0.0.0 --server-port 23333 --tp 1 --cache-max-entry-count 0.4</span><br></pre></td></tr></table></figure>
+<p>接着在另一个终端启动Gradio, 如果报错缺少包，就pip缺啥装啥。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Gradio+ApiServer。必须先开启 Server，此时 Gradio 为 Client</span></span><br><span class="line">lmdeploy serve gradio http://0.0.0.0:23333</span><br></pre></td></tr></table></figure>
+<p>效果如下：</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250411004334933.png" alt="image-20250411004334933"></p>
+<h4 id="四-补充"><a href="#四-补充" class="headerlink" title="四. 补充"></a>四. 补充</h4><h5 id="4-1-LMDeploy-模型量化时报错"><a href="#4-1-LMDeploy-模型量化时报错" class="headerlink" title="4.1 LMDeploy 模型量化时报错"></a>4.1 LMDeploy 模型量化时报错</h5><p>在 <strong>3.3.3</strong> 中可能会报错，<code>TypeError: &#39;NoneType&#39; object is not callable</code> , 原因是<code>datasets 3.0</code> 无法下载数据集``</p>
+<p><img src="/2025/04/11/llm-application-11/image-20250410231740355.png" alt="image-20250410231740355"></p>
+<p>将下载datasets的其他版本即可。运行下列指令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pip install datasets==2.19.2</span><br></pre></td></tr></table></figure>
+<p>如果服务器上没有梯子，下载数据集时还会报错<code>ConnectionError: Couldn&#39;t reach https://raw.githubusercontent.com/wojzaremba/lstm/master/data/ptb.train.txt (error 429)</code><img src="/2025/04/11/llm-application-11/image-20250410234058182.png" alt="image-20250410234058182"></p>
+<p>可以先在本地翻墙把文件下载下来，使用如下代码</p>
+<figure class="highlight py"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> datasets <span class="keyword">import</span> load_dataset</span><br><span class="line"></span><br><span class="line">traindata = load_dataset(<span class="string">&#x27;ptb_text_only&#x27;</span>, <span class="string">&#x27;penn_treebank&#x27;</span>, split=<span class="string">&#x27;train&#x27;</span>, trust_remote_code=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+<p>下载的文件缓存在<code>C:\Users\用户名\.cache\huggingface\datasets</code>中，把里面的<code>ptb_text_only</code> 上传到服务器的<code>~/.cache/huggingface/datasets</code> 目录下即可，其他huggingface下载的数据集都可以通过这种方式解决。服务器上查询隐藏文件可以用<code>ls --all</code>。</p>
+]]></content>
+      <categories>
+        <category>大模型应用</category>
+        <category>推理与部署</category>
       </categories>
   </entry>
 </search>

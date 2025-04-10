@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="介绍量化的概念，使用lmdeploy进行模型量化与kv-cache量化部署。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大模型应用系列(十一) LMDeploy量化部署">
+<meta property="og:url" content="http://example.com/2025/04/11/llm-application-11/index.html">
+<meta property="og:site_name" content="乌漆嘛黑">
+<meta property="og:description" content="介绍量化的概念，使用lmdeploy进行模型量化与kv-cache量化部署。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250408222914416.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250408225102213.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250410220957885.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250410221036121.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250409012836564.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250410221712560.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250410224400992.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250410224249327.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250410224345938.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250411000254839.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250411000421175.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250411000806041.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250411002033159.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250411004334933.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250410231740355.png">
+<meta property="og:image" content="http://example.com/2025/04/11/llm-application-11/image-20250410234058182.png">
+<meta property="article:published_time" content="2025-04-10T16:46:04.000Z">
+<meta property="article:modified_time" content="2025-04-10T16:49:46.549Z">
+<meta property="article:author" content="zheng rq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/04/11/llm-application-11/image-20250408222914416.png">
+
+<link rel="canonical" href="http://example.com/2025/04/11/llm-application-11/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>大模型应用系列(十一) LMDeploy量化部署 | 乌漆嘛黑</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">乌漆嘛黑</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/11/llm-application-11/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="乌漆嘛黑">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          大模型应用系列(十一) LMDeploy量化部署
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-04-11 00:46:04 / 修改时间：00:49:46" itemprop="dateCreated datePublished" datetime="2025-04-11T00:46:04+08:00">2025-04-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E6%8E%A8%E7%90%86%E4%B8%8E%E9%83%A8%E7%BD%B2/" itemprop="url" rel="index"><span itemprop="name">推理与部署</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>介绍量化的概念，使用lmdeploy进行模型量化与kv-cache量化部署。</p>
+<span id="more"></span>
+<h4 id="一-概述"><a href="#一-概述" class="headerlink" title="一. 概述"></a>一. 概述</h4><h5 id="1-1-大模型推理"><a href="#1-1-大模型推理" class="headerlink" title="1.1 大模型推理"></a>1.1 大模型推理</h5><ol>
+<li>内存开销巨大</li>
+</ol>
+<ul>
+<li>庞大的参数量，7B模型权重就需要14+GB显存</li>
+<li>采用自回归生成token,需要kv-cache，带来巨大的显存开销</li>
+</ul>
+<ol>
+<li>动态shape</li>
+</ol>
+<ul>
+<li>请求数不固定</li>
+<li>Token逐个生成，且数量不定</li>
+</ul>
+<ol>
+<li>相对视觉模型，LLM结构简单</li>
+</ol>
+<ul>
+<li>Transformer结构，大部分是decoder-only结构。</li>
+</ul>
+<h5 id="1-2-模型部署"><a href="#1-2-模型部署" class="headerlink" title="1.2 模型部署"></a>1.2 模型部署</h5><ol>
+<li><p>定义:</p>
+<p> 将训练好的模型在特定的软硬件环境中启动的过程，使模型能够接收输入并返回预测结果；为了满足性能和效率的需求，常常需要对模型进行优化，例如模型压缩(剪枝，量化，知识蒸馏)和硬件加速。</p>
+</li>
+<li><p>产品形态</p>
+<p> 云端，边缘计算端，移动端</p>
+</li>
+<li><p>计算设备</p>
+<p> CPU, GPU, NPU, TPU等。</p>
+</li>
+</ol>
+<h5 id="1-3-大模型部署挑战"><a href="#1-3-大模型部署挑战" class="headerlink" title="1.3 大模型部署挑战"></a>1.3 大模型部署挑战</h5><ol>
+<li><p>设备</p>
+<p> 如何应对巨大的存储问题？低存储设备（消费级显卡，手机等）如何部署？</p>
+</li>
+<li><p>推理</p>
+<ul>
+<li>如何加速token的生成</li>
+<li>如何解决动态shape，让推理可以不间断</li>
+<li>如何有效管理和利用显存</li>
+</ul>
+</li>
+<li><p>服务</p>
+<ul>
+<li>如何提升系统整体吞吐量？</li>
+<li>对于个体用户，如何降低相应时间？</li>
+</ul>
+</li>
+</ol>
+<h5 id="1-4-大模型部署方案"><a href="#1-4-大模型部署方案" class="headerlink" title="1.4 大模型部署方案"></a>1.4 大模型部署方案</h5><ol>
+<li><p>常见技术</p>
+<ul>
+<li>张量并行</li>
+<li>transformer计算和访存优化</li>
+<li>低比特量化</li>
+<li>Continuous Batch</li>
+<li>Page Attention</li>
+<li>Blocked kv-cache</li>
+</ul>
+</li>
+<li><p>部署方案</p>
+<ul>
+<li>huggingface transformers</li>
+<li><p>专门的推理加速框架</p>
+<p>| 云端                                   | 移动端             |<br>| ——————————————————— | ————————— |<br>| lmdeploy, vllm, tensorrt-llm,deepspeed | llama.cpp, mlc-llm |</p>
+</li>
+</ul>
+</li>
+</ol>
+<h4 id="二-LMDeploy简介"><a href="#二-LMDeploy简介" class="headerlink" title="二. LMDeploy简介"></a>二. LMDeploy简介</h4><p>LMDeploy是LLM在英伟达设备上部署的全流程解决方案。包括模型轻量化，推理和服务。</p>
+<p>项目地址: <a target="_blank" rel="noopener" href="https://github.com/InternLM/lmdeploy">InternLM/lmdeploy: LMDeploy is a toolkit for compressing, deploying, and serving LLMs.</a></p>
+<p>中文文档: <a target="_blank" rel="noopener" href="https://lmdeploy.readthedocs.io/zh-cn/latest/index.html">欢迎来到 LMDeploy 的中文教程！ — lmdeploy</a></p>
+<h5 id="2-1-核心功能"><a href="#2-1-核心功能" class="headerlink" title="2.1 核心功能"></a>2.1 核心功能</h5><ol>
+<li><strong>高效的推理:</strong> LMDeploy开发了continus Batch, Blocked KV-cache，动态拆分和融合，张量并行，高效的计算kernel等重要特性。推理性能是vLLM的1.8倍。</li>
+<li><strong>可靠的量化:</strong> LMDeploy支持权重量化和kv量化。4bit模型推理效率是FP16下的2.4倍。量化模型的可靠性已通过 OpenCompass评测得到充分验证。</li>
+<li><strong>便捷的服务:</strong> 通过请求分发服务，LMDeploy支持多模型在多机，多卡上的推理服务。</li>
+<li><strong>有状态推理:</strong> 通过缓存多轮对话过程中attention的KV，记住对话历史，从而避免重复处理历史绘画，显著提升长文本多轮对话场景中的效率。</li>
+<li><strong>卓越的兼容:</strong> LMDeploy 支持 KV-cache量化，AWQ, Automatic Prefix Caching同时使用</li>
+</ol>
+<h5 id="2-2-性能"><a href="#2-2-性能" class="headerlink" title="2.2 性能"></a>2.2 性能</h5><p>LMDeploy TurboMind 引擎拥有卓越的推理能力，在各种规模的模型上，每秒处理的请求数是 vLLM 的 1.36 ~ 1.85 倍。在静态推理能力方面，TurboMind 4bit 模型推理速度（out token/s）远高于 FP16/BF16 推理。在小 batch 时，提高到 2.4 倍。</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250408222914416.png" alt="image-20250408222914416"></p>
+<p>LMDeploy支持2种推理引擎: TurboMind和PyTorch，它们侧重不同，前者追求性能的极致优化，后者纯用python开发，着重降低开发者门槛。在实际部署时，首选TurboMind。</p>
+<h5 id="2-3-量化"><a href="#2-3-量化" class="headerlink" title="2.3 量化"></a>2.3 量化</h5><ol>
+<li><p>两个基本概念</p>
+<ul>
+<li>计算密集(compute-bound): 推理的绝大部分时间消耗在数值计算上；针对计算密集场景，可以通过使用更快的硬件计算单元来提升计算速度，比如量化为W8A8使用INT8 Tensor Core来加速计算。</li>
+<li><p>访存密集(memory-bound): 推理时，绝大部分时间消耗在数据读取上；针对访存密集型场景，一般是通过提高计算访存比来提升性能。</p>
+<p>LLM是典型的访存密集型任务，常见的LLM模型是Decode Only结构，推理时大部分时间消耗在逐Token生成阶段(Decoding阶段)，时典型的访存密集型场景。可以通过roofline模型来判断时计算密集型还是访存密集型。</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>如图: 可以看到只有在Batch Size 达到这个量级时，计算才会成为推理的瓶颈，但由于LLM模型本身就很大，推理时的KV-cache也会占用很多显存，还有一些其他的因素影响(如Persistent Batch), 实际推理时很难做到batchSize=128这么大，所以一般LLM服务都是访存密集型。</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250408225102213.png" alt="image-20250408225102213"></p>
+<ol>
+<li><p>Weight Only量化一举多得</p>
+<p> 4 bit Weight Only量化，将FP16的模型权重量化为NT4, 访存量直接降为FP16模型的1/4，大幅降低了访存成本，提升了Decoding的速度。</p>
+<p> 加速的同时还节省了显存，同样的设备能够支持更大的模型以及更长的对话长度。</p>
+</li>
+</ol>
+<h5 id="2-4-如何做Weight-Only的量化"><a href="#2-4-如何做Weight-Only的量化" class="headerlink" title="2.4 如何做Weight Only的量化"></a>2.4 如何做Weight Only的量化</h5><p>LMDeploy使用MIT HAN LAB 开源的AWQ算法，量化为4bit模型，推理时，<strong>先把4bit反量化回FP16(在Kernel内部进行，从Global Memory读取时仍时4bit)，使用的是FP16计算。</strong>这样会造成一定的精度损失，但比直接用INT4计算准确。</p>
+<h5 id="2-5-推理引擎TurboMind"><a href="#2-5-推理引擎TurboMind" class="headerlink" title="2.5 推理引擎TurboMind"></a>2.5 推理引擎TurboMind</h5><ol>
+<li>continue batching: <ul>
+<li>请求可以及时加入batch中推理。</li>
+<li>Batch中已经完成的推理请求及时退出。</li>
+</ul>
+</li>
+<li>有状态推理<ul>
+<li>无状态推理: 每次请求均携带历史对话记录</li>
+<li>有状态推理: 请求不带历史记录，历史记录在推理侧缓存。</li>
+<li>LMDeploy使用有状态推理，推理侧缓存历史对话的kv-cache。</li>
+</ul>
+</li>
+<li>Blocked kv-cache <ul>
+<li>Attention支持不连续的kv-cache</li>
+<li>block(Page attention)</li>
+</ul>
+</li>
+</ol>
+<h4 id="三-LMDeploy量化部署"><a href="#三-LMDeploy量化部署" class="headerlink" title="三.LMDeploy量化部署"></a>三.LMDeploy量化部署</h4><h5 id="3-1-对量化前的模型做部署验证"><a href="#3-1-对量化前的模型做部署验证" class="headerlink" title="3.1 对量化前的模型做部署验证"></a>3.1 对量化前的模型做部署验证</h5><p>模型下载参考<a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/06/llm-application-2/#more">大模型应用系列(二) Huggingface的安装和使用 | 乌漆嘛黑</a></p>
+<p>这里以量化qwen2.5-7B为例，从模型的config.json文件可知，模型的权重被存储为bfloat16格式，对于一个7B(70亿)参数的模型，每个参数使用FP16表示(2个Byte)，则模型的权重大小约为:</p>
+<p>$70\times 10^9 parameters\times 2 Bytes /parameter=14GB$</p>
+<p>所以需要大于14GB的显存。</p>
+<h5 id="3-2-创建环境"><a href="#3-2-创建环境" class="headerlink" title="3.2 创建环境"></a>3.2 创建环境</h5><p>可以参考 <a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/21/llm-application-6/">大模型应用系列(六) ollama,vllm,LMDeploy 部署大模型 | 乌漆嘛黑</a></p>
+<p>如果想要查看lmdeploy的具体命令，可以用以下命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy -h</span><br></pre></td></tr></table></figure>
+<p>可以看到lmdeploy支持以下几个子命令</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250410220957885.png" alt="image-20250410220957885"></p>
+<p>输入子命令查看指令可进一步查看子命令参数</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy chat -h</span><br></pre></td></tr></table></figure>
+<p>  <img src="/2025/04/11/llm-application-11/image-20250410221036121.png" alt="image-20250410221036121"></p>
+<p>接着使用LMdeploy验证模型，进入创建好的环境并启动模型</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy chat /root/autodl-tmp/Qwen2.5-7B-Instruct</span><br></pre></td></tr></table></figure>
+<p><img src="/2025/04/11/llm-application-11/image-20250409012836564.png" alt="image-20250409012836564"></p>
+<p>报错oom了，我的显存是24GB，上面计算模型需要14GB，模型在运行时，占用的显存可大致分为三部分：模型参数本身占用的显存、kv cache占用的显存，以及中间运算结果占用的显存。LMDeploy的kv cache管理器可以通过设置 控制kv缓存占用剩余显存的最大比例。默认的比例为0.8 。我们可以通过<code>--cache-max-entry-count</code>指定kv-cache的最大比例，比如设置为0.4:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy chat /root/autodl-tmp/Qwen2.5-7B-Instruct --cache-max-entry-count 0.4</span><br></pre></td></tr></table></figure>
+<p>此时就可以正常启动了。</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250410221712560.png" alt="image-20250410221712560"></p>
+<h5 id="3-3-LMDeploy量化部署"><a href="#3-3-LMDeploy量化部署" class="headerlink" title="3.3 LMDeploy量化部署"></a>3.3 LMDeploy量化部署</h5><h6 id="3-3-1-lmdeploy-部署"><a href="#3-3-1-lmdeploy-部署" class="headerlink" title="3.3.1 lmdeploy 部署"></a>3.3.1 lmdeploy 部署</h6><p>使用以下命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy serve api_server /root/autodl-tmp/Qwen2.5-7B-Instruct --model-format hf --quant-policy 0 --server-name 0.0.0.0 --server-port 23333 --tp 1 --cache-max-entry-count 0.4</span><br></pre></td></tr></table></figure>
+<p>对命令的各个参数解释如下，也可以通过<code>lmdeploy serve api_server -h</code> 查看说明</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy serve api_server：这个命令用于启动API服务器。</span><br><span class="line">/root/autodl-tmp/Qwen2.5-7B-Instruct：这是模型的路径。</span><br><span class="line">--model-format hf：这个参数指定了模型的格式。hf代表“Hugging Face”格式。</span><br><span class="line">--quant-policy 0：这个参数指定了kv-cache的量化策略。取值为&#123;0,4,8&#125;，0表示不量化，4表示INT4量化，8表示INT8量化</span><br><span class="line">--server-name 0.0.0.0：这个参数指定了服务器的名称。在这里，0.0.0.0是一个特殊的IP地址，它表</span><br><span class="line">示所有网络接口。</span><br><span class="line">--server-port 23333：这个参数指定了服务器的端口号。在这里，23333是服务器将监听的端口号。</span><br><span class="line">--tp 1：这个参数表示并行数量（GPU数量）。</span><br><span class="line">--cache-max-entry-count 0.4： 指定分配给kv-cache的显存比例</span><br></pre></td></tr></table></figure>
+<p>接着以命令行形式连接API服务器，以脚本形式连接在之前的openai兼容形式连接已经介绍过。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy serve api_client http://localhost:23333</span><br></pre></td></tr></table></figure>
+<h6 id="3-3-2-LMDeploy-Lite"><a href="#3-3-2-LMDeploy-Lite" class="headerlink" title="3.3.2 LMDeploy Lite"></a>3.3.2 LMDeploy Lite</h6><p>随着模型变得越来越大，我们需要一些大模型压缩技术来降低模型部署的成本，并提升模型的推理性能。LMDeploy 提供了权重量化和 kv -cache两种策略。  </p>
+<p>部署时管理kv-cache主要有两个方式: 指定分配给kv-cache的内存大小(<code>--cache-max-entry-count</code>), 以及kv-cache量化策略(<code>--quant-policy</code>) , 自 v0.4.0 起，LMDeploy 支持在线 kv cache int4/int8 量化，量化方式为 per-head per-token 的非对称量化。此外，通过 LMDeploy 应用 kv 量化非常简单，只需要设定 quant_policy 和 cache-max-entrycount 参数。目前，LMDeploy 规定 qant_policy=4 表示 kv int4 量化， quant_policy=8 表示 kv int8量化。  </p>
+<p>可以通过以下命令使用kv-cache量化</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy serve api_server /root/autodl-tmp/Qwen2.5-7B-Instruct --model-format hf --quant-policy 0 --server-name 0.0.0.0 --server-port 23333 --tp 1 --cache-max-entry-count 0.4</span><br></pre></td></tr></table></figure>
+<p>可以看出，量化与不量化的显存占用时相同的，这是因为kv-cache在命令中指定了显存比例，不论是否量化都会预分配那么多，但是如果测试就可以体会到，量化后可以输入更长的文本</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>不量化</th>
+<th>INT4量化</th>
+<th>INT8量化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="/2025/04/11/llm-application-11/image-20250410224400992.png" alt="image-20250410224400992"></td>
+<td><img src="/2025/04/11/llm-application-11/image-20250410224249327.png" alt="image-20250410224249327"></td>
+<td><img src="/2025/04/11/llm-application-11/image-20250410224345938.png" alt="image-20250410224345938"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h6 id="3-3-3-W4A16模型量化部署"><a href="#3-3-3-W4A16模型量化部署" class="headerlink" title="3.3.3 W4A16模型量化部署"></a>3.3.3 W4A16模型量化部署</h6><p>模型量化旨在减少模型大小并提高推理速度，同时留出更多显存给kv-cache，能支持更长的prompt。量化通过将模型参数的权重和激活从高精度(比如FP16)量化为低精度(INT4,INT8)，LMDeploy模型量化使用的是W4A16:</p>
+<ul>
+<li>W4: 表示权重量化为4位整数(int4)。这意味着模型中的权重参数将从它们原始的浮点表示(例如FP32、BF16或FP16)转换为4位的整数表示。这样做可以显著减少模型的大小。  </li>
+<li>A16: 这表示激活(或输入/输出)仍然保持在16位浮点数（例如FP16或BF16）。激活是在神经网络中传播的数据，通常在每层运算之后产生。  </li>
+</ul>
+<p>因此W4A16意味着权重(Weight)被量化为INT4，激活(Activation)保持FP16。</p>
+<p>使用如下命令进行W4A16量化</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy lite auto_awq /root/autodl-tmp/Qwen2.5-7B-Instruct --calib-dataset &#x27;ptb&#x27; --calib-samples 128 --calib-seqlen 2048 --w-bits 4 --w-group-size 128 --batch-size 1 --work-dir /root/autodl-tmp/Qwen2.5-7B-Instruct-W4A16</span><br></pre></td></tr></table></figure>
+<p>命令参数解释如下：也可以通过<code>lmdeploy lite auto_awq -h</code>命令查看</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy lite auto_awq: lite这是LMDeploy的命令，用于启动量化过程，而auto_awq代表自动权重</span><br><span class="line">量化（auto-weight-quantization）。</span><br><span class="line">/root/autodl-tmp/Qwen2.5-7B-Instruct: 模型文件的路径。</span><br><span class="line">--calib-dataset &#x27;ptb&#x27;: 这个参数指定了一个校准数据集，这里使用的是’ptb’（Penn Treebank，一</span><br><span class="line">个常用的语言模型数据集）。</span><br><span class="line">--calib-samples 128: 这指定了用于校准的样本数量—128个样本</span><br><span class="line">--calib-seqlen 2048: 这指定了校准过程中使用的序列长度—1024</span><br><span class="line">--w-bits 4: 这表示权重（weights）的位数将被量化为4位。</span><br><span class="line">--work-dir /root/autodl-tmp/Qwen2.5-7B-Instruct-W4A16: 这是工作目录的路径，用于存储量</span><br><span class="line">化后的模型和中间结果。</span><br></pre></td></tr></table></figure>
+<p>量化过程中要下载校准数据集，校准数据集在huggface上，如果访问不了外网会报错，需要在服务器上安装梯子，如果没有，可以用一种麻烦的方法，见<strong>4.1</strong></p>
+<p>解决了以上问题，就可以开始量化，量化过程会花一些时间，要等一等。</p>
+<p><img src="/2025/04/11/llm-application-11/image-20250411000254839.png" alt="image-20250411000254839"></p>
+<p>结束后进入目录<code>/root/autodl-tmp</code>使用如下命令查看文件及其大小:</p>
+<p><code>du -sh *</code> 显示如下:</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250411000421175.png" alt="image-20250411000421175"></p>
+<p>可以看到量化后的模型比原模型大小小了很多。量化后的模型可以和原模型一样使用</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy chat /root/autodl-tmp/Qwen2.5-7B-Instruct-W4A16 --model-format awq</span><br></pre></td></tr></table></figure>
+<p> <img src="/2025/04/11/llm-application-11/image-20250411000806041.png" alt="image-20250411000806041"></p>
+<h6 id="3-3-4-离线转换TurboMind格式"><a href="#3-3-4-离线转换TurboMind格式" class="headerlink" title="3.3.4 离线转换TurboMind格式"></a>3.3.4 离线转换TurboMind格式</h6><p>离线转换需要在启动服务之前，将模型转为 lmdeploy TurboMind 的格式，如下所示。  </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy convert Qwen2.5-7B-Instruct /root/autodl-tmp/Qwen2.5-7B-Instruct</span><br></pre></td></tr></table></figure>
+<p>第一个参数是模型名称，用于选择对话模板。第二个参数是模型路径。</p>
+<p>执行完成后将会在当前目录生成一个 workspace 的文件夹。这里面包含的就是 TurboMind 和 Triton “模型推理”需要到的文件。  里面的参数文件如下:</p>
+<p><img src="/2025/04/11/llm-application-11/image-20250411002033159.png" alt="image-20250411002033159"></p>
+<p>每一份参数第一个 0 表示“层”的索引，后面的那个0表示 Tensor 并行的索引，因为我们只有一张卡，所以被拆分成 1 份。如果有两张卡可以用来推理，则会生成0和1两份，也就是说，会把同一个参数拆成两份。比如 <code>layers.0.attention.w_qkv.0.weight</code> 会变成 <code>layers.0.attention.w_qkv.0.weight</code>和 <code>layers.0.attention.w_qkv.1.weight</code>。执行 <code>lmdeploy convert</code> 命令时，可以通过 <code>--tp</code>指定（tp 表示 tensor parallel，该参数默认值为1也就是一张卡）  。</p>
+<p>转化为TurboMind格式后，就可以正常启动命令行本地对话了。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy chat /root/autodl-tmp/workspace</span><br></pre></td></tr></table></figure>
+<p>启动后就可以和它进行对话了。  </p>
+<h5 id="3-4-网页Demo演示"><a href="#3-4-网页Demo演示" class="headerlink" title="3.4 网页Demo演示"></a>3.4 网页Demo演示</h5><p>这里用<code>Gradio</code>作为前端Demo</p>
+<p>先启动服务器，可以用上面的任一方式。这里用kv-cache量化部署方式，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lmdeploy serve api_server /root/autodl-tmp/workspace --model-format hf --quant-policy 0 --server-name 0.0.0.0 --server-port 23333 --tp 1 --cache-max-entry-count 0.4</span><br></pre></td></tr></table></figure>
+<p>接着在另一个终端启动Gradio, 如果报错缺少包，就pip缺啥装啥。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Gradio+ApiServer。必须先开启 Server，此时 Gradio 为 Client</span></span><br><span class="line">lmdeploy serve gradio http://0.0.0.0:23333</span><br></pre></td></tr></table></figure>
+<p>效果如下：</p>
+<p> <img src="/2025/04/11/llm-application-11/image-20250411004334933.png" alt="image-20250411004334933"></p>
+<h4 id="四-补充"><a href="#四-补充" class="headerlink" title="四. 补充"></a>四. 补充</h4><h5 id="4-1-LMDeploy-模型量化时报错"><a href="#4-1-LMDeploy-模型量化时报错" class="headerlink" title="4.1 LMDeploy 模型量化时报错"></a>4.1 LMDeploy 模型量化时报错</h5><p>在 <strong>3.3.3</strong> 中可能会报错，<code>TypeError: &#39;NoneType&#39; object is not callable</code> , 原因是<code>datasets 3.0</code> 无法下载数据集``</p>
+<p><img src="/2025/04/11/llm-application-11/image-20250410231740355.png" alt="image-20250410231740355"></p>
+<p>将下载datasets的其他版本即可。运行下列指令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install datasets==2.19.2</span><br></pre></td></tr></table></figure>
+<p>如果服务器上没有梯子，下载数据集时还会报错<code>ConnectionError: Couldn&#39;t reach https://raw.githubusercontent.com/wojzaremba/lstm/master/data/ptb.train.txt (error 429)</code><img src="/2025/04/11/llm-application-11/image-20250410234058182.png" alt="image-20250410234058182"></p>
+<p>可以先在本地翻墙把文件下载下来，使用如下代码</p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> datasets <span class="keyword">import</span> load_dataset</span><br><span class="line"></span><br><span class="line">traindata = load_dataset(<span class="string">&#x27;ptb_text_only&#x27;</span>, <span class="string">&#x27;penn_treebank&#x27;</span>, split=<span class="string">&#x27;train&#x27;</span>, trust_remote_code=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+<p>下载的文件缓存在<code>C:\Users\用户名\.cache\huggingface\datasets</code>中，把里面的<code>ptb_text_only</code> 上传到服务器的<code>~/.cache/huggingface/datasets</code> 目录下即可，其他huggingface下载的数据集都可以通过这种方式解决。服务器上查询隐藏文件可以用<code>ls --all</code>。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/04/08/llm-application-10/" rel="prev" title="大模型应用系列(十) 分布式训练与微调">
+      <i class="fa fa-chevron-left"></i> 大模型应用系列(十) 分布式训练与微调
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">一. 概述</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-1-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 大模型推理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 模型部署</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-3-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2%E6%8C%91%E6%88%98"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 大模型部署挑战</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2%E6%96%B9%E6%A1%88"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 大模型部署方案</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-LMDeploy%E7%AE%80%E4%BB%8B"><span class="nav-number">2.</span> <span class="nav-text">二. LMDeploy简介</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 核心功能</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-%E6%80%A7%E8%83%BD"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 性能</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-%E9%87%8F%E5%8C%96"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 量化</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-4-%E5%A6%82%E4%BD%95%E5%81%9AWeight-Only%E7%9A%84%E9%87%8F%E5%8C%96"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 如何做Weight Only的量化</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-5-%E6%8E%A8%E7%90%86%E5%BC%95%E6%93%8ETurboMind"><span class="nav-number">2.5.</span> <span class="nav-text">2.5 推理引擎TurboMind</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-LMDeploy%E9%87%8F%E5%8C%96%E9%83%A8%E7%BD%B2"><span class="nav-number">3.</span> <span class="nav-text">三.LMDeploy量化部署</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-%E5%AF%B9%E9%87%8F%E5%8C%96%E5%89%8D%E7%9A%84%E6%A8%A1%E5%9E%8B%E5%81%9A%E9%83%A8%E7%BD%B2%E9%AA%8C%E8%AF%81"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 对量化前的模型做部署验证</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-%E5%88%9B%E5%BB%BA%E7%8E%AF%E5%A2%83"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 创建环境</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-LMDeploy%E9%87%8F%E5%8C%96%E9%83%A8%E7%BD%B2"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 LMDeploy量化部署</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#3-3-1-lmdeploy-%E9%83%A8%E7%BD%B2"><span class="nav-number">3.3.1.</span> <span class="nav-text">3.3.1 lmdeploy 部署</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-3-2-LMDeploy-Lite"><span class="nav-number">3.3.2.</span> <span class="nav-text">3.3.2 LMDeploy Lite</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-3-3-W4A16%E6%A8%A1%E5%9E%8B%E9%87%8F%E5%8C%96%E9%83%A8%E7%BD%B2"><span class="nav-number">3.3.3.</span> <span class="nav-text">3.3.3 W4A16模型量化部署</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-3-4-%E7%A6%BB%E7%BA%BF%E8%BD%AC%E6%8D%A2TurboMind%E6%A0%BC%E5%BC%8F"><span class="nav-number">3.3.4.</span> <span class="nav-text">3.3.4 离线转换TurboMind格式</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-4-%E7%BD%91%E9%A1%B5Demo%E6%BC%94%E7%A4%BA"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 网页Demo演示</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B-%E8%A1%A5%E5%85%85"><span class="nav-number">4.</span> <span class="nav-text">四. 补充</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-1-LMDeploy-%E6%A8%A1%E5%9E%8B%E9%87%8F%E5%8C%96%E6%97%B6%E6%8A%A5%E9%94%99"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 LMDeploy 模型量化时报错</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">38</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
