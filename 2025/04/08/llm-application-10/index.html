@@ -46,7 +46,7 @@
 <meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250330235148764.png">
 <meta property="og:image" content="http://example.com/2025/04/08/llm-application-10/image-20250331235306029.png">
 <meta property="article:published_time" content="2025-04-07T16:46:19.000Z">
-<meta property="article:modified_time" content="2025-04-07T16:52:09.921Z">
+<meta property="article:modified_time" content="2025-04-12T13:00:28.621Z">
 <meta property="article:author" content="zheng rq">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://example.com/2025/04/08/llm-application-10/image-20250330234340891.png">
@@ -234,10 +234,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-04-08 00:46:19 / 修改时间：00:52:09" itemprop="dateCreated datePublished" datetime="2025-04-08T00:46:19+08:00">2025-04-08</time>
+              <time title="创建时间：2025-04-08 00:46:19" itemprop="dateCreated datePublished" datetime="2025-04-08T00:46:19+08:00">2025-04-08</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-04-12 21:00:28" itemprop="dateModified" datetime="2025-04-12T21:00:28+08:00">2025-04-12</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -326,8 +332,7 @@
 <p>RTX 4090(24GB) * 2</p>
 <p><strong>CPU</strong>32 vCPU Intel(R) Xeon(R) Gold 6430</p>
 <h5 id="3-2-选择配置"><a href="#3-2-选择配置" class="headerlink" title="3.2 选择配置"></a>3.2 选择配置</h5><p>其他配置和之前一样，主要是配置DeepSpeed参数，</p>
-<h6 id="3-2-1-Zero-1"><a href="#3-2-1-Zero-1" class="headerlink" title="3.2.1 Zero-1"></a>3.2.1 Zero-1</h6><p>如果选择none，那么两张卡上都会放置完整模型。none的时候不会用deepspeed，只是常规的数据并行.（用<code>nvitop</code>监控）</p>
-<p><img src="/2025/04/08/llm-application-10/image-20250330234340891.png" alt="image-20250330234340891"></p>
+<h6 id="3-2-1-Zero-1"><a href="#3-2-1-Zero-1" class="headerlink" title="3.2.1 Zero-1"></a>3.2.1 Zero-1</h6><p>如果选择none，那么两张卡上都会放置完整模型。none的时候不会用deepspeed，只是常规的数据并行.（用<code>nvitop</code>监控）<img src="/2025/04/08/llm-application-10/image-20250330234340891.png" alt="image-20250330234340891"></p>
 <p>一般在分布式训练时，选择<code>Zero-2</code>比较好。即配置中<code>DeepSpeed stage</code>设置为2。</p>
 <h6 id="3-2-2-Zero-2"><a href="#3-2-2-Zero-2" class="headerlink" title="3.2.2 Zero-2"></a>3.2.2 Zero-2</h6><p><img src="/2025/04/08/llm-application-10/image-20250330235932416.png" alt="image-20250330235932416"></p>
 <p>从<code>nvitop</code>上不能明显看出显存减少，但可以从训练速度上体验到<code>Zero-2</code>比<code>zero-1</code>快，并且这种差距会随着GPU性能的提高而扩大。</p>
