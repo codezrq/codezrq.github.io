@@ -3716,7 +3716,7 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
       </categories>
   </entry>
   <entry>
-    <title>大模型评估，openCompass的安装和使用</title>
+    <title>大模型应用系列(十二) 大模型评估，openCompass的安装和使用</title>
     <url>/2025/04/14/llm-appliaction-12/</url>
     <content><![CDATA[<p>简单介绍大模型评估常用的指标和数据集，以及评估工具opencompass的安装和使用。</p>
 <span id="more"></span>
