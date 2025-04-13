@@ -824,7 +824,7 @@
 ]]></content>
       <categories>
         <category>大模型应用</category>
-        <category>推理与部署</category>
+        <category>评估与部署</category>
       </categories>
   </entry>
   <entry>
@@ -1174,7 +1174,7 @@
 ]]></content>
       <categories>
         <category>大模型应用</category>
-        <category>推理与部署</category>
+        <category>评估与部署</category>
       </categories>
   </entry>
   <entry>
@@ -3493,9 +3493,9 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 </thead>
 <tbody>
 <tr>
-<td><img src="/2025/04/11/llm-application-11/image-20250410224400992.png" alt="image-20250410224400992"></td>
-<td><img src="/2025/04/11/llm-application-11/image-20250410224249327.png" alt="image-20250410224249327"></td>
-<td><img src="/2025/04/11/llm-application-11/image-20250410224345938.png" alt="image-20250410224345938"></td>
+<td><img src="/2025/04/11/llm-application-11/image-20250412211025200.png" alt="image-20250412211025200"></td>
+<td><img src="/2025/04/11/llm-application-11/image-20250412211032549.png" alt="image-20250412211032549"></td>
+<td><img src="/2025/04/11/llm-application-11/image-20250412211041353.png" alt="image-20250412211041353"></td>
 </tr>
 </tbody>
 </table>
@@ -3546,7 +3546,7 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
 ]]></content>
       <categories>
         <category>大模型应用</category>
-        <category>推理与部署</category>
+        <category>评估与部署</category>
       </categories>
   </entry>
   <entry>
@@ -3713,6 +3713,101 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
       <categories>
         <category>大模型应用</category>
         <category>训练与微调</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>大模型评估，openCompass的安装和使用</title>
+    <url>/2025/04/14/llm-appliaction-12/</url>
+    <content><![CDATA[<p>简单介绍大模型评估常用的指标和数据集，以及评估工具opencompass的安装和使用。</p>
+<span id="more"></span>
+<h4 id="一-生成式大模型的评估指标及OpenCompass介绍"><a href="#一-生成式大模型的评估指标及OpenCompass介绍" class="headerlink" title="一. 生成式大模型的评估指标及OpenCompass介绍"></a>一. 生成式大模型的评估指标及OpenCompass介绍</h4><h5 id="1-1-核心评估指标"><a href="#1-1-核心评估指标" class="headerlink" title="1.1 核心评估指标"></a>1.1 核心评估指标</h5><p>OpenCompass支持以下主要评估指标，覆盖生成式大模型的多样化需求:</p>
+<p><strong>准确率(Accuracy)</strong>: 用于选择题或分类任务，通过比对生成结果与标准答案计算正确率。在OpenCompass中通过<code>metric=accurancy</code>配置。</p>
+<p><strong>困惑度(Perplexity, PPL)</strong>: 衡量模型对候选答案的预测能力，适用于选择题评估。需使用ppl类型的数据集配置(如ceval_ppl)。</p>
+<p><strong>生成质量(GEN)</strong>: 通过文本生成结果提取答案，需结合后处理脚本解析输出。使用gen类型的数据集(如ceval_gen)，配置<code>metric=gen</code>并指定后处理预测。</p>
+<p><strong>ROUGE/LCS</strong>: 用于文本生成任务的相似度评估，需安装rouge==1.0.1依赖，并在数据配置中设置metric=rouge</p>
+<p><strong>条件对数概率(CLP)</strong>: 结合上下文计算答案的条件概率，适用于复杂推理任务，需在模型配置中启用use_logprob=True </p>
+<h5 id="1-2-支持的开源评估数据集及使用差异"><a href="#1-2-支持的开源评估数据集及使用差异" class="headerlink" title="1.2 支持的开源评估数据集及使用差异"></a>1.2 支持的开源评估数据集及使用差异</h5><p>OpenCompass内置超过70个数据集，覆盖五大能力维度:</p>
+<p><strong>知识类</strong>: C-Eval(中文考试题)，CMMLU(多语言知识问答)，MMLU(英文多选题)。</p>
+<p><strong>推理类</strong>: GSM8K(数学推理)，BBH(复杂推理链)。</p>
+<p><strong>语言类</strong>: CLUE(中文理解)，AFQMC(语义相似度)。</p>
+<p><strong>代码类</strong>: HumanEval(代码生成)，MBPP(编程问题)。</p>
+<p><strong>多模态类</strong>: MMBench(图像理解)，SEED-Bench(多模态问答)。</p>
+<h5 id="1-3-OpenCompass介绍"><a href="#1-3-OpenCompass介绍" class="headerlink" title="1.3 OpenCompass介绍"></a>1.3 OpenCompass介绍</h5><p>OpenCompass是一个开源项目，旨在为机器学习和自然语言处理领域提供多功能，易于使用的工具和框架。其中包含的多个开源模型和开源数据集(BenchMarks), 方便进行模型的效果评测。</p>
+<h5 id="1-4-支持的开源评估数据集及使用差异"><a href="#1-4-支持的开源评估数据集及使用差异" class="headerlink" title="1.4 支持的开源评估数据集及使用差异"></a>1.4 支持的开源评估数据集及使用差异</h5><p>数据集区别与选择</p>
+<p>评估范式差异:</p>
+<p><code>_gen</code>后缀数据集: 生成式评估，需后处理提取答案(如ceval_gen)</p>
+<p><code>_ppl</code>后缀数据集: 困惑度评估，直接比对选项概率(如ceval_ppl)</p>
+<p>领域覆盖:</p>
+<p>C-Eval: 侧重中文STEM和社会科学知识，包含1.3万到选择题</p>
+<p>LawBench: 法律领域专项评估，需额外克隆仓库并配置路径。</p>
+<h5 id="1-5-在开源数据集上评估的必要性"><a href="#1-5-在开源数据集上评估的必要性" class="headerlink" title="1.5 在开源数据集上评估的必要性"></a>1.5 在开源数据集上评估的必要性</h5><p>在选型阶段，通过评估选择合适的模型。</p>
+<p>在评估阶段，在公开数据集上评估可以判断模型微调后是否保持原有基本能力，而不至于过拟合。但某些场景模型往往需要过拟合: 比如应用中指定模型能回答的某些问题，可以通过应用层筛选。对于法律，医疗相关的问题，一般要训练充分，不必关注它的其他能力。</p>
+<h4 id="二-OpenCompass的安装和使用"><a href="#二-OpenCompass的安装和使用" class="headerlink" title="二. OpenCompass的安装和使用"></a>二. OpenCompass的安装和使用</h4><h5 id="2-1-OpenCompass的安装"><a href="#2-1-OpenCompass的安装" class="headerlink" title="2.1 OpenCompass的安装"></a>2.1 OpenCompass的安装</h5><p>参考文档: <a href="https://opencompass.readthedocs.io/zh-cn/latest/">欢迎来到 OpenCompass 中文教程！ — OpenCompass 0.4.2 文档</a></p>
+<p><strong>注意</strong>: 安装的python必须是3.10版本。虽然官网没有特别说明，但我试过其他版本都不能用。</p>
+<p>官网提供了pip安装和源码安装两种方式，在评测时可能需要写配置文件，需要源码，所以建议从源码安装。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 创建并激活虚拟环境</span></span></span><br><span class="line">conda create --name opencompass python=3.10 -y</span><br><span class="line">conda activate opencompass</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 从源码安装opencompass</span></span></span><br><span class="line">git clone https://github.com/open-compass/opencompass opencompass</span><br><span class="line">cd opencompass</span><br><span class="line">pip install -e .</span><br></pre></td></tr></table></figure>
+<h5 id="2-2-数据集准备"><a href="#2-2-数据集准备" class="headerlink" title="2.2 数据集准备"></a>2.2 数据集准备</h5><p>OpenCompass准备了评估需要用到的常见数据集，如果要获取大多数数据集，可以：</p>
+<p>在OpenCompass项目根目录下运行下面命令，运行下面命令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wget https://github.com/open-compass/opencompass/releases/download/0.2.2.rc1/OpenCompassData-core-20240207.zip</span><br><span class="line">unzip OpenCompassData-core-20240207.zip</span><br></pre></td></tr></table></figure>
+<p>执行后在根目录会产生data文件夹，内容如下，包含了常见的数据集:</p>
+<p> <img src="/2025/04/14/llm-appliaction-12/image-20250412230705261.png" alt="image-20250412230705261"></p>
+<p>如果需要使用 OpenCompass 提供的更加完整的数据集 (~500M)，可以使用下述命令进行下载和解压：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wget https://github.com/open-compass/opencompass/releases/download/0.2.2.rc1/OpenCompassData-complete-20240207.zip</span><br><span class="line">unzip OpenCompassData-complete-20240207.zip</span><br><span class="line">cd ./data</span><br><span class="line">find . -name &quot;*.zip&quot; -exec unzip &quot;&#123;&#125;&quot; \;</span><br></pre></td></tr></table></figure>
+<p>我服务器磁盘有限，就没有下载完整数据集。</p>
+<h5 id="2-3-配置评估任务"><a href="#2-3-配置评估任务" class="headerlink" title="2.3 配置评估任务"></a>2.3 配置评估任务</h5><p>目前opencompass支持三种配置方式的评估任务，以下命令都在<code>opencompass</code>根目录下执行。</p>
+<h6 id="2-3-1-命令行-自定义HF模型"><a href="#2-3-1-命令行-自定义HF模型" class="headerlink" title="2.3.1 命令行(自定义HF模型)"></a>2.3.1 命令行(自定义HF模型)</h6><p>对于HuggingFace模型, 用户可以通过命令行直接设置模型参数，这种方式比较简单，无需额外的配置文件，但缺点是每次只能在一个或多个数据集上评估一个模型，并且模型必须是huggingface模型。比如评估<code>Qwen2.5-7B-Instruct</code>模型在<code>demo_gsm8k_chat_gen demo_math_chat_gen</code>上的效果，可以用如下命令:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">python run.py --datasets demo_gsm8k_chat_gen demo_math_chat_gen --hf-path /root/autodl-tmp/Qwen2.5-7B-Instruct --debug</span><br></pre></td></tr></table></figure>
+<p>我的安装版本中会报错AttributeError: module ‘torch’ has no attribute ‘device’，解决方式见 <strong>3.1</strong>, 解决后开始评估，如下图:</p>
+<p><img src="/2025/04/14/llm-appliaction-12/image-20250412231641622.png" alt="image-20250412231641622"></p>
+<p>评估结束后会输出以下结果:</p>
+<p> <img src="/2025/04/14/llm-appliaction-12/image-20250412232921629.png" alt="image-20250412232921629"></p>
+<p>同时会在opencompass根目录下生成文件夹outputs用于保存输出，结构如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">outputs/default/</span><br><span class="line">├── 20200220_120000</span><br><span class="line">├── 20230220_183030     # 每个实验一个文件夹</span><br><span class="line">│   ├── configs         # 用于记录的已转储的配置文件。如果在同一个实验文件夹中重新运行了不同的实验，可能会保留多个配置</span><br><span class="line">│   ├── logs            # 推理和评估阶段的日志文件</span><br><span class="line">│   │   ├── eval</span><br><span class="line">│   │   └── infer</span><br><span class="line">│   ├── predictions   # 每个任务的推理结果</span><br><span class="line">│   ├── results       # 每个任务的评估结果</span><br><span class="line">│   └── summary       # 单个实验的汇总评估结果</span><br><span class="line">├── ...</span><br></pre></td></tr></table></figure>
+<h6 id="2-3-2-命令行结合配置文件"><a href="#2-3-2-命令行结合配置文件" class="headerlink" title="2.3.2 命令行结合配置文件"></a>2.3.2 命令行结合配置文件</h6><p>首先查看</p>
+<p>首先查看opencompass支持的模型和数据集。模型和数据集的配置文件预存于 configs/models 和 configs/datasets 中。用户可以使用tools/list_configs.py 查看或过滤当前可用的模型和数据集配置  。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">列出所有配置, 内容过多，直接输出到根目录下的output.txt文件中</span></span><br><span class="line">python tools/list_configs.py &gt; output.txt</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">列出与llama和mmlu相关的所有配置</span></span><br><span class="line">python tools/list_configs.py llama mmlu</span><br></pre></td></tr></table></figure>
+<p>输出中包含opencompass支持的所有模型和数据集，以及他们对应的配置文件，这相当于一个字典比如我们要评估<code>Qwen2.5-7B-Instruct Qwen2.5-7B-Instruct</code>模型在<code>demo_gsm8k_chat_gen demo_math_chat_gen</code>上的效果，<code>output.txt</code>的对应内容如下:</p>
+<p><img src="/2025/04/14/llm-appliaction-12/image-20250412234834243.png" alt="image-20250412234834243"></p>
+<p>我们先去对应的配置文件下，改好配置文件，然后再<code>python run.py</code>命令中输入的是前面的模型名称，opencompass就会根据模型名称找到相对应的配置文件。</p>
+<p><code>opencompass/opencompass/configs/models</code>文件夹下找到对应的模型配置文件，这里要修改的是hf前缀的文件，将配置文件中的模型路径改为我们自己的模型路径, 比如<code>hf_qwen2_5_0_5b_instruct.py</code>修改如下:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> opencompass.models <span class="keyword">import</span> HuggingFacewithChatTemplate</span><br><span class="line"></span><br><span class="line">models = [</span><br><span class="line">    <span class="built_in">dict</span>(</span><br><span class="line">        <span class="built_in">type</span>=HuggingFacewithChatTemplate,</span><br><span class="line">        abbr=<span class="string">&#x27;qwen2.5-0.5b-instruct-hf&#x27;</span>,</span><br><span class="line">        <span class="comment"># path=&#x27;Qwen/Qwen2.5-0.5B-Instruct&#x27;,</span></span><br><span class="line">        path=<span class="string">&#x27;/root/autodl-tmp/Qwen2.5-0.5B-Instruct&#x27;</span>, <span class="comment"># 修改为自己的模型路径</span></span><br><span class="line">        max_out_len=<span class="number">4096</span>, </span><br><span class="line">        batch_size=<span class="number">8</span>,</span><br><span class="line">        run_cfg=<span class="built_in">dict</span>(num_gpus=<span class="number">1</span>), <span class="comment"># 使用的卡数目</span></span><br><span class="line">    )</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p><code>hf_qwen2_5_7b_instruct.py</code> 同样修改，注意，可能opencompass 支持qwen, qwen2.5, 但不支持qwen1.5,如果想评估，qwen1.5, 可以选择要给qwen的配置文件，但再命令行中要输入选择的那个qwen的模型名称。也就是说<code>--Model</code>是output.txt中的<code>Mode</code>一列的值，真正的模型路径是在<code>output.txt</code>中<code>path</code>一列的值。</p>
+<p>配置完成后使用如下命令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">python run.py --models hf_qwen2_5_0_5b_instruct hf_qwen2_5_7b_instruct --datasets demo_gsm8k_chat_gen demo_math_chat_gen  --debug</span><br></pre></td></tr></table></figure>
+<p>成功执行后开始评估：</p>
+<p><img src="/2025/04/14/llm-appliaction-12/image-20250413003649462.png" alt="image-20250413003649462"></p>
+<p>显存使用情况如下，可以根据显存使用情况指定修改batch_size：</p>
+<p><img src="/2025/04/14/llm-appliaction-12/image-20250413003920264.png" alt="image-20250413003920264"></p>
+<p>如果你有多张卡，并评估多个模型，则会同时评估多个模型，每个模型用1张卡。</p>
+<p> <img src="/2025/04/14/llm-appliaction-12/image-20250413233011648.png" alt="image-20250413233011648"></p>
+<p>最终结果如下，同时会在opencompass根目录下生成文件夹outputs用于保存输出。</p>
+<p><img src="/2025/04/14/llm-appliaction-12/image-20250413004518596.png" alt="image-20250413004518596"></p>
+<h6 id="2-3-3-python脚本-配置文件"><a href="#2-3-3-python脚本-配置文件" class="headerlink" title="2.3.3 python脚本+配置文件"></a>2.3.3 python脚本+配置文件</h6><p>除了通过命令行配置实验外，OpenCompass 还允许用户在配置文件中编写实验的完整配置，并通过run.py 直接运行它。配置文件是以 Python 格式组织的，并且必须包括 datasets 和 models 字段。  其实他就是写一个python脚本去加载修改好的配置文件，所以先跟<strong>2.3.2</strong>一样修改配置文件，然后使用如下代码:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> mmengine.config <span class="keyword">import</span> read_base</span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> read_base():</span><br><span class="line">	<span class="keyword">from</span> .datasets.demo.demo_gsm8k_base_gen <span class="keyword">import</span> gsm8k_datasets <span class="comment"># Instruct模型对应的是base模型</span></span><br><span class="line">	<span class="keyword">from</span> .datasets.demo.demo_math_base_gen <span class="keyword">import</span> math_datasets</span><br><span class="line">	<span class="keyword">from</span> .models.qwen.hf_qwen2_5_0_5b_instruct <span class="keyword">import</span> models <span class="keyword">as</span> hf_qwen2_5_0_5b_instruct_models</span><br><span class="line">	<span class="keyword">from</span> .models.hf_internlm.hf_qwen2_5_7b_instruct <span class="keyword">import</span> models <span class="keyword">as</span> hf_qwen2_5_7b_instruct</span><br><span class="line"></span><br><span class="line">datasets = gsm8k_datasets + math_datasets</span><br><span class="line">models = hf_qwen2_1_5b_instruct_models + hf_internlm2_chat_1_8b_models</span><br></pre></td></tr></table></figure>
+<p>将该文件保存到<code>opencompass/opencompass/configs目录下</code></p>
+<p>直接运行:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">python /root/autodl-tmp/opencompass/opencompass/configs/run.py --debug</span><br></pre></td></tr></table></figure>
+<h6 id="2-3-4-多卡评估"><a href="#2-3-4-多卡评估" class="headerlink" title="2.3.4 多卡评估"></a>2.3.4 多卡评估</h6><p>在评估配置文件中指定<code>run_cfg=dict(num_gpus=2)</code>参数即可，其他操作同上。这里只在两个数据集上评估一个模型。</p>
+<p>修改<code>hf_qwen2_5_0_5b_instruct.py</code>,如下:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> opencompass.models <span class="keyword">import</span> HuggingFacewithChatTemplate</span><br><span class="line"></span><br><span class="line">models = [</span><br><span class="line">    <span class="built_in">dict</span>(</span><br><span class="line">        <span class="built_in">type</span>=HuggingFacewithChatTemplate,</span><br><span class="line">        abbr=<span class="string">&#x27;qwen2.5-0.5b-instruct-hf&#x27;</span>,</span><br><span class="line">        <span class="comment"># path=&#x27;Qwen/Qwen2.5-0.5B-Instruct&#x27;,</span></span><br><span class="line">        path=<span class="string">&#x27;/root/autodl-tmp/Qwen2.5-0.5B-Instruct&#x27;</span>,</span><br><span class="line">        max_out_len=<span class="number">4096</span>,</span><br><span class="line">        batch_size=<span class="number">8</span>,</span><br><span class="line">        run_cfg=<span class="built_in">dict</span>(num_gpus=<span class="number">2</span>),</span><br><span class="line">    )</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p>指令如下:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">python run.py --models hf_qwen2_5_0_5b_instruct --datasets demo_gsm8k_chat_gen demo_math_chat_gen  --debug</span><br></pre></td></tr></table></figure>
+<p> 我一开始总是报错<code>FileNotFoundError: Prediction files not found: neither outputs/default/20250413_233935/predictions/qwen2.5-0.5b-instruct-hf/demo_gsm8k.json nor outputs/default/20250413_233935/predictions/qwen2.5-0.5b-instruct-hf/demo_gsm8k_0.json exists</code> ,后来我把其他日志目录下的对应文件复制到新的目录下，就正常运行了。</p>
+<p>GPU使用情况如下图: 两张GPU都用上了。</p>
+<p><img src="/2025/04/14/llm-appliaction-12/image-20250413233826431.png" alt="image-20250413233826431"></p>
+<h6 id="2-3-5-使用LMDeploy或vllm加速评估"><a href="#2-3-5-使用LMDeploy或vllm加速评估" class="headerlink" title="2.3.5 使用LMDeploy或vllm加速评估"></a>2.3.5 使用LMDeploy或vllm加速评估</h6><p>目前opencompass支持vllm和LMDeploy加速评估。这里受用LMDeploy。</p>
+<p>首先在当前环境安装LMDdeploy:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pip install LMDeploy</span><br></pre></td></tr></table></figure>
+<p>接着修改配置文件，要修改LMDeploy对应的配置文件，这里修改的是<code>/root/autodl-tmp/opencompass/opencompass/configs/models/qwen2_5/lmdeploy_qwen2_5_0_5b_instruct.py</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> opencompass.models <span class="keyword">import</span> TurboMindModelwithChatTemplate</span><br><span class="line"></span><br><span class="line">models = [</span><br><span class="line">    <span class="built_in">dict</span>(</span><br><span class="line">        <span class="built_in">type</span>=TurboMindModelwithChatTemplate,</span><br><span class="line">        abbr=<span class="string">&#x27;qwen2.5-0.5b-instruct-turbomind&#x27;</span>,</span><br><span class="line">        <span class="comment"># path=&#x27;Qwen/Qwen2.5-0.5B-Instruct&#x27;,</span></span><br><span class="line">        path=<span class="string">&#x27;/root/autodl-tmp/Qwen2.5-0.5B-Instruct&#x27;</span>,   <span class="comment"># 修改为模型路径</span></span><br><span class="line">        engine_config=<span class="built_in">dict</span>(session_len=<span class="number">16384</span>, max_batch_size=<span class="number">16</span>, tp=<span class="number">1</span>), <span class="comment"># 这些参数和微调后测试时的参数保持一致</span></span><br><span class="line">        gen_config=<span class="built_in">dict</span>(top_k=<span class="number">1</span>, temperature=<span class="number">1e-6</span>, top_p=<span class="number">0.9</span>, max_new_tokens=<span class="number">4096</span>),</span><br><span class="line">        max_seq_len=<span class="number">16384</span>,</span><br><span class="line">        max_out_len=<span class="number">4096</span>,</span><br><span class="line">        batch_size=<span class="number">16</span>,</span><br><span class="line">        run_cfg=<span class="built_in">dict</span>(num_gpus=<span class="number">1</span>),</span><br><span class="line">    )</span><br><span class="line">]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>命令行运行</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">python run.py --models lmdeploy_qwen2_5_0_5b_instruct --datasets demo_gsm8k_chat_gen demo_math_chat_gen  --debug</span><br></pre></td></tr></table></figure>
+<p>速度会肉眼可见地变快。</p>
+<h4 id="三-遇到的问题以及解决方法"><a href="#三-遇到的问题以及解决方法" class="headerlink" title="三. 遇到的问题以及解决方法"></a>三. 遇到的问题以及解决方法</h4><h5 id="3-1-torch-版本问题"><a href="#3-1-torch-版本问题" class="headerlink" title="3.1 torch 版本问题"></a>3.1 torch 版本问题</h5><p>报错 <code>[AttributeError: module &#39;torch&#39; has no attribute &#39;device&#39;])</code> ，原因是torch版本不对，我虚拟环境版本是2.6.0，一般用2.5比较好，在<code>opencompass/requierments/runtime.txt</code> 中需改<code>torch&gt;=1.13.1</code>为<code>torch==2.5.1</code>， 把原来环境删除，重新执行<strong>2.1</strong>安装步骤。</p>
+]]></content>
+      <categories>
+        <category>大模型应用</category>
+        <category>评估与部署</category>
       </categories>
   </entry>
 </search>
