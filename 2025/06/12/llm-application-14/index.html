@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="简要介绍Embedding Models以及如何根据数据集选择合适的嵌入模型。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大模型应用系列(十四) 大模型微调项目实战：Embedding model 模型介绍与选型">
+<meta property="og:url" content="http://example.com/2025/06/12/llm-application-14/index.html">
+<meta property="og:site_name" content="乌漆嘛黑">
+<meta property="og:description" content="简要介绍Embedding Models以及如何根据数据集选择合适的嵌入模型。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/06/12/llm-application-14/image-20250611234902082.png">
+<meta property="og:image" content="http://example.com/2025/06/12/llm-application-14/image-20250611235926574.png">
+<meta property="article:published_time" content="2025-06-11T16:12:06.000Z">
+<meta property="article:modified_time" content="2025-06-11T16:15:48.664Z">
+<meta property="article:author" content="zheng rq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/06/12/llm-application-14/image-20250611234902082.png">
+
+<link rel="canonical" href="http://example.com/2025/06/12/llm-application-14/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>大模型应用系列(十四) 大模型微调项目实战：Embedding model 模型介绍与选型 | 乌漆嘛黑</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">乌漆嘛黑</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/06/12/llm-application-14/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="乌漆嘛黑">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          大模型应用系列(十四) 大模型微调项目实战：Embedding model 模型介绍与选型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-06-12 00:12:06 / 修改时间：00:15:48" itemprop="dateCreated datePublished" datetime="2025-06-12T00:12:06+08:00">2025-06-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">项目实战</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>简要介绍Embedding Models以及如何根据数据集选择合适的嵌入模型。</p>
+<span id="more"></span>
+<h4 id="一-Embedding-Models-嵌入模型原理及选择"><a href="#一-Embedding-Models-嵌入模型原理及选择" class="headerlink" title="一. Embedding Models 嵌入模型原理及选择"></a>一. Embedding Models 嵌入模型原理及选择</h4><p>文档向量化后构成知识库，但如果文档不变化，并不需要每次都读文档并且进行向量化。真正上应该是将向量化后的文档存储到数据库，这样下次访问就不用重复读取和向量化。</p>
+<p>另外，文本本身也有差异性，不同类别的文本应该选择不同的Embedding model进行向量化，但这一步的效果影响不大，如果其他优化都用了之后效果还不好，再考虑嵌入模型的影响。</p>
+<h5 id="1-1-嵌入模型的本质"><a href="#1-1-嵌入模型的本质" class="headerlink" title="1.1 嵌入模型的本质"></a>1.1 嵌入模型的本质</h5><p>嵌入模型（Embedding Model）是一种将离散数据（如文本、图像）映射到连续向量空间的技术。通过高维向量表示（如 768 维或 3072 维），模型可捕捉数据的语义信息，使得语义相似的文本在向量空间中距离更近。例如，“忘记密码”和“账号锁定”会被编码为相近的向量，从而支持语义检索而非仅关键词匹配。</p>
+<p>度量向量的相似度一般用余弦相似度，欧氏距离，内积。但一般用余弦相似度，因为它是归一化的，值在[-1,1]之间，其他没有归一化，无法判断是否接近。</p>
+<h5 id="1-2-核心作用"><a href="#1-2-核心作用" class="headerlink" title="1.2 核心作用"></a>1.2 核心作用</h5><p>语义编码：将文本、图像等转换为向量，保留上下文信息（如 BERT 的 CLS Token 或均值池化。</p>
+<p>相似度计算：通过余弦相似度、欧氏距离等度量向量关联性，支撑检索增强生成（RAG）、推荐系统等应用。</p>
+<p>信息降维：压缩复杂数据为低维稠密向量，提升存储与计算效率。</p>
+<h5 id="1-3-关键技术原理"><a href="#1-3-关键技术原理" class="headerlink" title="1.3 关键技术原理"></a>1.3 关键技术原理</h5><p>上下文依赖：现代模型（如 BGE-M3）动态调整向量，捕捉多义词在不同语境中的含义。(一个词根据上下文可以有不同的词向量)</p>
+<p>训练方法：对比学习（如 Word2Vec 的 Skip-gram/CBOW）、预训练+微调（如 BERT）。  </p>
+<h4 id="二-主流模型分类与选型"><a href="#二-主流模型分类与选型" class="headerlink" title="二. 主流模型分类与选型"></a>二. 主流模型分类与选型</h4><h5 id="2-1-考虑因素"><a href="#2-1-考虑因素" class="headerlink" title="2.1 考虑因素"></a>2.1 考虑因素</h5><p>Embedding模型将文本转换为向量，捕捉语义信息，使计算机能够理解和比较内容的“意义”。大的方向上嵌入模型可以分为中文和应为，细分上选型时可以考虑的因素有：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>因素</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>任务性质</td>
+<td>匹配任务需求(问答，搜索，聚类等)</td>
+</tr>
+<tr>
+<td>领域特性</td>
+<td>通用vs专业领域(医学，法律等)</td>
+</tr>
+<tr>
+<td>多语言支持</td>
+<td>需处理多语言内容时考虑</td>
+</tr>
+<tr>
+<td>维度</td>
+<td>权衡信息丰富度与计算成本</td>
+</tr>
+<tr>
+<td>许可条款</td>
+<td>开源vs专有服务</td>
+</tr>
+<tr>
+<td>最大Token</td>
+<td>适合的上下文窗口</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>最重要的是考虑多语言支持和维度(和成本有关)。</p>
+<p>最佳实践：为特定应用测试多个Embedding模型，评估在实际数据上的性能而非仅依赖通用标准。</p>
+<h5 id="2-2-常见选型"><a href="#2-2-常见选型" class="headerlink" title="2.2 常见选型"></a>2.2 常见选型</h5><p>1.通用全能型</p>
+<ul>
+<li>BGE-M3：北京智源研究院开发，支持多语言、混合检索（稠密+稀疏向量），处理 8K 上下文，适合企业级知识库。</li>
+<li>NV-Embed-v2：基于 Mistral-7B，检索精度高（MTEB 得分 62.65），但需较高计算资源。  </li>
+</ul>
+<p>2.垂域特化型</p>
+<ul>
+<li>中文场景： BGE-large-zh-v1.5 （合同/政策文件）、 M3E-base （社交媒体分析）。  </li>
+<li>多模态场景： BGE-VL （图文跨模态检索），联合编码 OCR 文本与图像特征。  </li>
+</ul>
+<p>3.轻量化部署型</p>
+<ul>
+<li>nomic-embed-text：768 维向量，推理速度比 OpenAI 快 3 倍，适合边缘设备。  </li>
+<li>gte-qwen2-1.5b-instruct：1.5B 参数，16GB 显存即可运行，适合初创团队原型验。  </li>
+</ul>
+<p>总的来说：</p>
+<ul>
+<li>中文为主：BGE系列&gt;M3E</li>
+<li>多语言需求：BGE-M3&gt;multilingual-e5</li>
+<li>预算有限：开源模型，如Nomic Embed</li>
+</ul>
+<h5 id="2-3-Embedding-models-对比案例"><a href="#2-3-Embedding-models-对比案例" class="headerlink" title="2.3 Embedding models 对比案例"></a>2.3 Embedding models 对比案例</h5><p>比如要对比 <code>paraphrasemultilingual-MiniLM-L12-v2</code> 和 <code>text2vec-base-chinese-sentence</code> 在自己数据集上的性能，这里选择开源数据集<code>1</code> , 在实际开发时应该选择自己的数据集。使用如下代码：</p>
+<p>代码的逻辑为：加载数据集(需要根据自己的数据格式调整)，加载模型，分别用两个模型计算样本的嵌入向量，计算余弦相似度，根据匹配结果统计正确个数，即为准确率。</p>
+<p>这里数据集为 <a target="_blank" rel="noopener" href="https://rajpurkar.github.io/SQuAD-explorer/">The Stanford Question Answering Dataset</a> 我只使用了<code>dev-v2.0.json</code>。</p>
+<p>通过读取后数据集中每个样本格式如下:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;question&quot;</span><span class="punctuation">:</span> <span class="string">&quot;In what country is Normandy located?&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;answer&quot;</span><span class="punctuation">:</span> <span class="string">&quot;France&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;context&quot;</span><span class="punctuation">:</span> <span class="string">&quot;The Normans (Norman: Nourmands; French: Normands; Latin: Normanni) were the people who in the 10th and 11th centuries gave their name to Normandy, a region in France. They were descended from Norse (\&quot;Norman\&quot; comes from \&quot;Norseman\&quot;) raiders and pirates from Denmark, Iceland and Norway who, under their leader Rollo, agreed to swear fealty to King Charles III of West Francia. Through generations of assimilation and mixing with the native Frankish and Roman-Gaulish populations, their descendants would gradually merge with the Carolingian-based cultures of West Francia. The distinct cultural and ethnic identity of the Normans emerged initially in the first half of the 10th century, and it continued to evolve over the succeeding centuries.&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#embedding_model效果对比</span></span><br><span class="line"><span class="keyword">from</span> sentence_transformers <span class="keyword">import</span> SentenceTransformer, util</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载SQuAD数据（假设已处理成列表格式）</span></span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;dev-v2.0.json&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">    squad_data = json.load(f)[<span class="string">&quot;data&quot;</span>]</span><br><span class="line">    </span><br><span class="line"><span class="comment"># 提取问题和答案对</span></span><br><span class="line">qa_pairs = []</span><br><span class="line"><span class="keyword">for</span> article <span class="keyword">in</span> squad_data:</span><br><span class="line">    <span class="keyword">for</span> para <span class="keyword">in</span> article[<span class="string">&quot;paragraphs&quot;</span>]:</span><br><span class="line">        <span class="keyword">for</span> qa <span class="keyword">in</span> para[<span class="string">&quot;qas&quot;</span>]:</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> qa[<span class="string">&quot;is_impossible&quot;</span>]:</span><br><span class="line">                qa_pairs.append(&#123;</span><br><span class="line">                    <span class="string">&quot;question&quot;</span>: qa[<span class="string">&quot;question&quot;</span>],</span><br><span class="line">                    <span class="string">&quot;answer&quot;</span>: qa[<span class="string">&quot;answers&quot;</span>][<span class="number">0</span>][<span class="string">&quot;text&quot;</span>],</span><br><span class="line">                    <span class="string">&quot;context&quot;</span>: para[<span class="string">&quot;context&quot;</span>] </span><br><span class="line">                &#125;)</span><br><span class="line"><span class="built_in">print</span>(json.dumps(qa_pairs[<span class="number">0</span>], indent = <span class="number">4</span>))</span><br><span class="line"><span class="comment"># 初始化两个本地模型</span></span><br><span class="line">model1 = SentenceTransformer(<span class="string">&#x27;/root/autodl-tmp/paraphrase-multilingual-MiniLM-L12-v2&#x27;</span>)  <span class="comment"># 模型1</span></span><br><span class="line">model2 = SentenceTransformer(<span class="string">&#x27;/root/autodl-tmp/text2vec-base-chinese-sentence&#x27;</span>)   <span class="comment"># 模型2</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 编码所有上下文（作为向量库）</span></span><br><span class="line">contexts = [item[<span class="string">&quot;context&quot;</span>] <span class="keyword">for</span> item <span class="keyword">in</span> qa_pairs]</span><br><span class="line">context_embeddings1 = model1.encode(contexts)  <span class="comment"># 模型1的向量库</span></span><br><span class="line">context_embeddings2 = model2.encode(contexts)  <span class="comment"># 模型2的向量库</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 评估函数</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">evaluate</span>(<span class="params">model, query_embeddings, context_embeddings</span>):</span><br><span class="line">    correct = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> idx, qa <span class="keyword">in</span> <span class="built_in">enumerate</span>(qa_pairs[:<span class="number">100</span>]):  <span class="comment"># 测试前100条</span></span><br><span class="line">        <span class="comment"># 查找最相似上下文</span></span><br><span class="line">        sim_scores = util.cos_sim(query_embeddings[idx], context_embeddings)</span><br><span class="line">        best_match_idx = np.argmax(sim_scores)</span><br><span class="line">        <span class="comment"># 检查答案是否在匹配段落中</span></span><br><span class="line">        <span class="keyword">if</span> qa[<span class="string">&quot;answer&quot;</span>] <span class="keyword">in</span> contexts[best_match_idx]:</span><br><span class="line">            correct += <span class="number">1</span></span><br><span class="line">    <span class="keyword">return</span> correct / <span class="built_in">len</span>(qa_pairs[:<span class="number">100</span>])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编码所有问题</span></span><br><span class="line">query_embeddings1 = model1.encode([qa[<span class="string">&quot;question&quot;</span>] <span class="keyword">for</span> qa <span class="keyword">in</span> qa_pairs[:<span class="number">100</span>]])</span><br><span class="line">query_embeddings2 = model2.encode([qa[<span class="string">&quot;question&quot;</span>] <span class="keyword">for</span> qa <span class="keyword">in</span> qa_pairs[:<span class="number">100</span>]])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行评估</span></span><br><span class="line">acc1 = evaluate(model1, query_embeddings1, context_embeddings1)</span><br><span class="line">acc2 = evaluate(model2, query_embeddings2, context_embeddings2)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;paraphrase-multilingual-MiniLM-L12-v2准确率: <span class="subst">&#123;acc1:<span class="number">.2</span>%&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;text2vec-base-chinese-sentence准确率: <span class="subst">&#123;acc2:<span class="number">.2</span>%&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>通过这种方式可以对比两个模型在特定数据集上的匹配效果，text2vec-base-chinese-sentence更适合中文文本，所以它的效果差一些:</p>
+<p> <img src="/2025/06/12/llm-application-14/image-20250611234902082.png" alt="image-20250611234902082"></p>
+<p>但Embedding模型的不同带来的影响时很小的，因为不同模型计算的两个句子之间的余弦相似的差别是不大的，比如下面的例子中:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.embeddings.huggingface <span class="keyword">import</span> HuggingFaceEmbedding</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">fun</span>(<span class="params">model_name, documents, query</span>):</span><br><span class="line">    <span class="comment"># 加载Embedding模型</span></span><br><span class="line">    embed_model = HuggingFaceEmbedding(</span><br><span class="line">        model_name=model_name,</span><br><span class="line">        device=<span class="string">&quot;cuda&quot;</span>,  <span class="comment"># 使用 GPU，如果没有 GPU 改为 &quot;cpu&quot;</span></span><br><span class="line">        normalize=<span class="literal">True</span>,  <span class="comment"># 归一化向量，方便计算余弦相似度</span></span><br><span class="line">    )</span><br><span class="line">    <span class="comment"># 嵌入文档</span></span><br><span class="line">	doc_embeddings = [embed_model.get_text_embedding(doc) <span class="keyword">for</span> doc <span class="keyword">in</span> documents]</span><br><span class="line">    <span class="comment"># 嵌入查询</span></span><br><span class="line">	query_embedding = embed_model.get_text_embedding(query)</span><br><span class="line">	<span class="comment"># 计算余弦相似度（因为 normalize=True，点积就是余弦相似度）</span></span><br><span class="line">	similarity = np.dot(query_embedding, doc_embeddings[<span class="number">0</span>])</span><br><span class="line">	<span class="keyword">return</span> similarity	</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    <span class="comment"># 测试数据</span></span><br><span class="line">    documents = [<span class="string">&quot;忘记密码如何处理？&quot;</span>, <span class="string">&quot;用户账号被锁定&quot;</span>]</span><br><span class="line">    query = <span class="string">&quot;密码重置流程&quot;</span></span><br><span class="line">    <span class="comment"># 测试模型1</span></span><br><span class="line">    model_name = <span class="string">&quot;/home/cw/llms/embedding_model/sungw111/text2vec-base-chinese-sentence&quot;</span></span><br><span class="line">    similarity = fun(model_name, documents, query)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;text2vec-base-chinese-sentence 结果: 相似度：<span class="subst">&#123;similarity:<span class="number">.4</span>f&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="comment"># 测试模型2</span></span><br><span class="line">    model_name = <span class="string">&quot;/home/cw/llms/embedding_model/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2&quot;</span></span><br><span class="line">    similarity = fun(model_name, documents, query)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;paraphrase-multilingual-MiniLM-L12-v2 结果: 相似度：<span class="subst">&#123;similarity:<span class="number">.4</span>f&#125;</span>&quot;</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>输出如下:两个结果差别并不大</p>
+<p> <img src="/2025/06/12/llm-application-14/image-20250611235926574.png" alt="image-20250611235926574"></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/06/07/llm-application-13/" rel="prev" title="大模型应用系列(十三) 大模型微调项目实战：情绪对话模型">
+      <i class="fa fa-chevron-left"></i> 大模型应用系列(十三) 大模型微调项目实战：情绪对话模型
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/06/12/llm-application-15/" rel="next" title="大模型应用系列(十五) 大模型微调项目实战：Chroma 向量数据库介绍与使用">
+      大模型应用系列(十五) 大模型微调项目实战：Chroma 向量数据库介绍与使用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-Embedding-Models-%E5%B5%8C%E5%85%A5%E6%A8%A1%E5%9E%8B%E5%8E%9F%E7%90%86%E5%8F%8A%E9%80%89%E6%8B%A9"><span class="nav-number">1.</span> <span class="nav-text">一. Embedding Models 嵌入模型原理及选择</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-1-%E5%B5%8C%E5%85%A5%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%9C%AC%E8%B4%A8"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 嵌入模型的本质</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-%E6%A0%B8%E5%BF%83%E4%BD%9C%E7%94%A8"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 核心作用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-3-%E5%85%B3%E9%94%AE%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 关键技术原理</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-%E4%B8%BB%E6%B5%81%E6%A8%A1%E5%9E%8B%E5%88%86%E7%B1%BB%E4%B8%8E%E9%80%89%E5%9E%8B"><span class="nav-number">2.</span> <span class="nav-text">二. 主流模型分类与选型</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-%E8%80%83%E8%99%91%E5%9B%A0%E7%B4%A0"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 考虑因素</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-%E5%B8%B8%E8%A7%81%E9%80%89%E5%9E%8B"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 常见选型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-Embedding-models-%E5%AF%B9%E6%AF%94%E6%A1%88%E4%BE%8B"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 Embedding models 对比案例</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
