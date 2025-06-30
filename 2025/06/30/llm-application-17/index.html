@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="介绍RAG中常用的文档切分方式，如何提升召回率，以及简要介绍重排序。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大模型应用系列(十七) 大模型RAG项目实战：Llamaindex文档切分与重排序">
+<meta property="og:url" content="http://example.com/2025/06/30/llm-application-17/index.html">
+<meta property="og:site_name" content="乌漆嘛黑">
+<meta property="og:description" content="介绍RAG中常用的文档切分方式，如何提升召回率，以及简要介绍重排序。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-17/image-20250615233326960.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-17/image-20250615234343786.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-17/image-20250615234444062.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-17/image-20250615235115768.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-17/image-20250615235835463.png">
+<meta property="article:published_time" content="2025-06-30T14:49:20.000Z">
+<meta property="article:modified_time" content="2025-06-30T15:11:12.961Z">
+<meta property="article:author" content="zheng rq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/06/30/llm-application-17/image-20250615233326960.png">
+
+<link rel="canonical" href="http://example.com/2025/06/30/llm-application-17/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>大模型应用系列(十七) 大模型RAG项目实战：Llamaindex文档切分与重排序 | 乌漆嘛黑</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">乌漆嘛黑</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/06/30/llm-application-17/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="乌漆嘛黑">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          大模型应用系列(十七) 大模型RAG项目实战：Llamaindex文档切分与重排序
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-06-30 22:49:20 / 修改时间：23:11:12" itemprop="dateCreated datePublished" datetime="2025-06-30T22:49:20+08:00">2025-06-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">项目实战</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>介绍RAG中常用的文档切分方式，如何提升召回率，以及简要介绍重排序。</p>
+<span id="more"></span>
+<p>本文用到的文档可以在<a target="_blank" rel="noopener" href="https://download.csdn.net/download/weixin_46091520/91191213">【免费】RAG文档资料，用于用llamaindex构建RAG的测试程序资源-CSDN下载</a> 下载。</p>
+<h4 id="一-文档解析"><a href="#一-文档解析" class="headerlink" title="一. 文档解析"></a>一. 文档解析</h4><p>参考: <a target="_blank" rel="noopener" href="https://docs.llamaindex.org.cn/en/stable/examples/data_connectors/simple_directory_reader_parallel/">SimpleDirectoryReader 的并行处理 - LlamaIndex 框架</a></p>
+<h5 id="1-1-什么是文档解析"><a href="#1-1-什么是文档解析" class="headerlink" title="1.1 什么是文档解析?"></a>1.1 什么是文档解析?</h5><p>文档解析实际上就是读取文件，就像把不同包装的食品拆开处理:</p>
+<ul>
+<li><p>PDF文件：罐头食品（需要用专用工具打开）</p>
+</li>
+<li><p>Word文档：盒装饼干（容易拆但可能有碎屑）</p>
+</li>
+<li>扫描件/图片：真空包装（需要剪刀才能打开）</li>
+</ul>
+<h5 id="1-2-基础解析"><a href="#1-2-基础解析" class="headerlink" title="1.2 基础解析"></a>1.2 基础解析</h5><p>1.本地文档</p>
+<p>常见的有pdf, txt, md, word，都可以用llamaindex自带的<code>simple_direct_reader</code> 读取。示例代码如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SimpleDirectoryReader </span><br><span class="line"><span class="comment"># 加载的文本 </span></span><br><span class="line"><span class="comment"># 加载单个或多个文档</span></span><br><span class="line">reader = SimpleDirectoryReader(</span><br><span class="line">    input_files=[<span class="string">&quot;/root/autodl-tmp/day19/data/report_with_table.pdf&quot;</span>]</span><br><span class="line">)</span><br><span class="line"><span class="comment"># # 批量加载，加载文件夹下的所有文件</span></span><br><span class="line"><span class="comment"># reader = SimpleDirectoryReader(</span></span><br><span class="line"><span class="comment">#      &quot;/root/autodl-tmp/day19/data&quot;</span></span><br><span class="line"><span class="comment"># )</span></span><br><span class="line"><span class="comment"># 取出加载的文本</span></span><br><span class="line">docs = reader.load_data()</span><br><span class="line"><span class="comment"># 打印文本内容</span></span><br><span class="line"><span class="built_in">print</span>(docs)</span><br></pre></td></tr></table></figure>
+<p>每个文档读取完就是一个node, 但它的解析功能比较简单，比如对于表格信息，并不能保持它的格式，如下:</p>
+<p>读取后表格变成文本形式了，同时可以看到，llamaindex解析文档后默认情况下把整个文档作为一个node，同时会保存文件名，路径，类型，大小等元数据。</p>
+<p><img src="/2025/06/30/llm-application-17/image-20250615233326960.png" alt="image-20250615233326960"></p>
+<p>2.读取本地html文件</p>
+<p>llamaindex同样自带html的解析包，对于，网页，可以使用如下方式解析</p>
+<p>安装解析包:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pip install llama-index-readers-file</span><br><span class="line">pip install html2text</span><br></pre></td></tr></table></figure>
+<p>使用SimpleWebPageReader</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.readers.file <span class="keyword">import</span> HTMLTagReader</span><br><span class="line"></span><br><span class="line">reader = HTMLTagReader(tag=<span class="string">&quot;section&quot;</span>, ignore_no_id=<span class="literal">True</span>)</span><br><span class="line">docs = reader.load_data(</span><br><span class="line">    <span class="string">&quot;/root/autodl-tmp/day19/data/document.html&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> doc <span class="keyword">in</span> docs:</span><br><span class="line">    <span class="built_in">print</span>(doc.metadata)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(docs)</span><br></pre></td></tr></table></figure>
+<p>但它只能加载本地缓存的html文件。如果要很好地爬取数据，还是用传统的爬虫(beautiful soup)效果比较好。</p>
+<p>3.读取在线网页</p>
+<p>可以使用SimpleWebPageReader读取在线网页：安装</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install llama-index llama-index-readers-web</span><br></pre></td></tr></table></figure>
+<p>加载网页</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.readers.web <span class="keyword">import</span> SimpleWebPageReader</span><br><span class="line">documents = SimpleWebPageReader(html_to_text=<span class="literal">True</span>).load_data(</span><br><span class="line">    [<span class="string">&quot;http://paulgraham.com/worked.html&quot;</span>]</span><br><span class="line">)</span><br><span class="line"><span class="built_in">print</span>(documents[<span class="number">0</span>])</span><br></pre></td></tr></table></figure>
+<p>结果如下：但这个不会进入网页中的超链接爬取更多数据:</p>
+<p> <img src="/2025/06/30/llm-application-17/image-20250615234343786.png" alt="image-20250615234343786"></p>
+<p>也可以用Spider，Spider是最快的爬虫，可以将任何网站转换为html, markdown, 元数据或文本，同时支持使用AI进行自定义操作来爬取</p>
+<p>Spider 允许您使用高性能代理来防止检测，缓存 AI 操作，提供爬取状态的 webhook，支持计划爬取等。</p>
+<p><strong>先决条件：</strong>您需要有一个 Spider API 密钥才能使用此加载器。可以在 <a target="_blank" rel="noopener" href="https://spider.cloud/">spider.cloud</a> 获取。但这个收费，我没有尝试。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 抓取单个 URL from llama_index.readers.web </span></span><br><span class="line"><span class="keyword">import</span> SpiderWebReader </span><br><span class="line">spider_reader = SpiderWebReader( </span><br><span class="line">    api_key=<span class="string">&quot;YOUR_API_KEY&quot;</span>, <span class="comment"># 在 https://spider.cloud 获取 </span></span><br><span class="line">    mode=<span class="string">&quot;scrape&quot;</span>, </span><br><span class="line">    <span class="comment"># params=&#123;&#125; # 可选参数，更多信息请参阅 https://spider.cloud/docs/api </span></span><br><span class="line">) </span><br><span class="line">documents = spider_reader.load_data(url=<span class="string">&quot;https://spider.cloud&quot;</span>) <span class="built_in">print</span>(documents)</span><br></pre></td></tr></table></figure>
+<p>总的来说，llamaindex提供的解析工具不能很好地满足要求，所以一般用更好的第三方工具。对于网页，最好的还是网页爬虫。</p>
+<h5 id="1-3-高级解析"><a href="#1-3-高级解析" class="headerlink" title="1.3 高级解析"></a>1.3 高级解析</h5><p>初级解析的优点是方便使用，缺点是功能简单，像上面的表格数据就无法很好解析。很多第三方包提供了很好的解析工具，比如为了更好地解析表格，可以使用pdfplumber, 示例如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pdfplumber</span><br><span class="line"><span class="keyword">with</span> pdfplumber.<span class="built_in">open</span>(<span class="string">&quot;报告.pdf&quot;</span>) <span class="keyword">as</span> pdf:</span><br><span class="line">    <span class="comment"># 提取所有文本</span></span><br><span class="line">    text = <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="keyword">for</span> page <span class="keyword">in</span> pdf.pages:</span><br><span class="line">        text += page.extract_text()</span><br><span class="line">        <span class="built_in">print</span>(text[:<span class="number">200</span>]) <span class="comment"># 打印前200字符</span></span><br><span class="line">        <span class="comment"># 提取表格（自动检测）</span></span><br><span class="line">        <span class="keyword">for</span> page <span class="keyword">in</span> pdf.pages:</span><br><span class="line">            tables = page.extract_tables()</span><br><span class="line">            <span class="keyword">for</span> table <span class="keyword">in</span> tables:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;\n表格内容：&quot;</span>)</span><br><span class="line">                <span class="keyword">for</span> row <span class="keyword">in</span> table:</span><br><span class="line">                	<span class="built_in">print</span>(row)</span><br></pre></td></tr></table></figure>
+<p>如果文件中有图片，要提取图片中的文字，则可以用OCR。魔塔社区直接搜OCR就有开源的OCR模型。</p>
+<p>如下, 提取后数据保持表格形式。</p>
+<p> <img src="/2025/06/30/llm-application-17/image-20250615234444062.png" alt="image-20250615234444062"></p>
+<h5 id="1-4-总结"><a href="#1-4-总结" class="headerlink" title="1.4 总结"></a>1.4 总结</h5><p>如果文档简单(只有文字)，则可以用llamaindex自带的解析器，如果文档复杂(涉及表格，图片，html等)，则用第三方工具。</p>
+<h4 id="二-文本切分"><a href="#二-文本切分" class="headerlink" title="二. 文本切分"></a>二. 文本切分</h4><h5 id="2-1-为什么需要切分"><a href="#2-1-为什么需要切分" class="headerlink" title="2.1 为什么需要切分"></a>2.1 为什么需要切分</h5><p>使用dataconnector加载数据时，会默认一个文档就是一个document，也就是一个节点，在检索的时候就会检索到整个文档，这样不仅prompt太长，还可能很多噪音。</p>
+<h5 id="2-2-切分三要素"><a href="#2-2-切分三要素" class="headerlink" title="2.2 切分三要素"></a>2.2 切分三要素</h5><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>要素</th>
+<th>说明</th>
+<th>推荐值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>块大小</td>
+<td>每段文字的长度</td>
+<td>200-500字</td>
+</tr>
+<tr>
+<td>块重叠</td>
+<td>相邻块重复内容，用于表示上下文</td>
+<td>10%-20%</td>
+</tr>
+<tr>
+<td>切分依据</td>
+<td>按句子/段落/语义切分</td>
+<td>语义分割最优</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h5 id="2-3-分块策略对比"><a href="#2-3-分块策略对比" class="headerlink" title="2.3 分块策略对比"></a>2.3 分块策略对比</h5><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>策略类型</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>固定大小</td>
+<td>实现简单</td>
+<td>可能切断完整语义</td>
+<td>古诗，对联等句式整齐的</td>
+</tr>
+<tr>
+<td>按段落分割</td>
+<td>保持逻辑完整性</td>
+<td>段落长度差异大</td>
+<td>文学小说·</td>
+</tr>
+<tr>
+<td>语义分割</td>
+<td>确保内容完整性</td>
+<td>计算资源消耗大</td>
+<td>专业领域文档</td>
+</tr>
+<tr>
+<td>正则匹配</td>
+<td>效果好</td>
+<td>需要写正则表达式</td>
+<td>基本都可以</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h5 id="2-4-分块常见问题"><a href="#2-4-分块常见问题" class="headerlink" title="2.4 分块常见问题"></a>2.4 分块常见问题</h5><h6 id="2-4-1-如何确定最佳块大小"><a href="#2-4-1-如何确定最佳块大小" class="headerlink" title="2.4.1 如何确定最佳块大小"></a>2.4.1 如何确定最佳块大小</h6><p>测试不同尺寸查看检索效果</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 测试块大小对召回率的影响</span></span><br><span class="line">sizes = [<span class="number">128</span>, <span class="number">256</span>, <span class="number">512</span>]</span><br><span class="line"><span class="keyword">for</span> size <span class="keyword">in</span> sizes:</span><br><span class="line">    rest_call = evaluate_chunk_size(size)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;块大小<span class="subst">&#123;size&#125;</span>    召回率<span class="subst">&#123;rest_recall:<span class="number">.2</span>f%&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+<h6 id="2-4-2-分块是否重叠越多越好"><a href="#2-4-2-分块是否重叠越多越好" class="headerlink" title="2.4.2 分块是否重叠越多越好"></a>2.4.2 分块是否重叠越多越好</h6><p>适当重叠(10%-20%)可以防止信息断裂，但过多会造成冗余。</p>
+<h5 id="2-5-切分示例-固定分块vs语句切分vs语义切分"><a href="#2-5-切分示例-固定分块vs语句切分vs语义切分" class="headerlink" title="2.5 切分示例: 固定分块vs语句切分vs语义切分"></a>2.5 切分示例: 固定分块vs语句切分vs语义切分</h5><p>固定分块: 到达chunk_size马上切分</p>
+<p>语句切分:  尽量让句子保持完整，如果开始下个句子后会超出chunk_size，则从当前句子切分</p>
+<p>语义切分: 利用大模型的语义理解能力，将表达完整的语句作为一个分块。</p>
+<h6 id="2-5-1-固定分块"><a href="#2-5-1-固定分块" class="headerlink" title="2.5.1 固定分块"></a>2.5.1 固定分块</h6><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SimpleDirectoryReader</span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载所有文档</span></span><br><span class="line">documents = SimpleDirectoryReader(input_files=[<span class="string">&quot;/home/cw/projects/demo_20/data/ai.txt&quot;</span>]).load_data()</span><br><span class="line"></span><br><span class="line"><span class="comment">#使用固定分块大小进行切分</span></span><br><span class="line"><span class="keyword">from</span> llama_index.core.node_parser <span class="keyword">import</span> TokenTextSplitter</span><br><span class="line"></span><br><span class="line">fixed_splitter = TokenTextSplitter(chunk_size=<span class="number">256</span>, chunk_overlap=<span class="number">20</span>) <span class="comment"># chunk_size到了就切分, chunk_overlap重叠度</span></span><br><span class="line">fixed_nodes = fixed_splitter.get_nodes_from_documents(documents)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;固定分块示例：&quot;</span>, [<span class="built_in">len</span>(n.text) <span class="keyword">for</span> n <span class="keyword">in</span> fixed_nodes[:<span class="number">3</span>]])  <span class="comment"># 输出：[200, 200, 200]</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">print</span>(<span class="string">&quot;首个节点内容:\n&quot;</span>, fixed_nodes[<span class="number">0</span>].text))</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">print</span>(<span class="string">&quot;第二个节点内容:\n&quot;</span>, fixed_nodes[<span class="number">1</span>].text))</span><br></pre></td></tr></table></figure>
+<p>结果如下:</p>
+<p><img src="/2025/06/30/llm-application-17/image-20250615235115768.png" alt="image-20250615235115768"></p>
+<h6 id="2-5-2-语句切分"><a href="#2-5-2-语句切分" class="headerlink" title="2.5.2 语句切分"></a>2.5.2 语句切分</h6><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core.node_parser <span class="keyword">import</span> SentenceSplitter</span><br><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SimpleDirectoryReader</span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载所有文档</span></span><br><span class="line">documents = SimpleDirectoryReader(input_files=[<span class="string">&quot;/root/autodl-tmp/day19/data/ai.txt&quot;</span>]).load_data()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用句子分割器：按照句子进行切分</span></span><br><span class="line">splitter = SentenceSplitter(chunk_size=<span class="number">128</span>, chunk_overlap=<span class="number">50</span>) <span class="comment"># 如果接下面的句子会超过chunk_size，则提前终止</span></span><br><span class="line">nodes = splitter.get_nodes_from_documents(documents)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看结果</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;生成节点数: <span class="subst">&#123;<span class="built_in">len</span>(nodes)&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;首个节点内容:\n&quot;</span>, nodes[<span class="number">0</span>].text)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;第二个节点内容:\n&quot;</span>, nodes[<span class="number">1</span>].text)</span><br></pre></td></tr></table></figure>
+<p>结果如下: 根据语义第一个节点中”1. 起源阶段…”部分文字被划分到第二个节点,  因为加上这部分就会超了，句子说不完整。</p>
+<p><img src="/2025/06/30/llm-application-17/image-20250615235835463.png" alt="image-20250615235835463"></p>
+<h6 id="2-5-3-语义切分"><a href="#2-5-3-语义切分" class="headerlink" title="2.5.3 语义切分"></a>2.5.3 语义切分</h6><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SimpleDirectoryReader</span><br><span class="line"><span class="keyword">from</span> llama_index.embeddings.huggingface <span class="keyword">import</span> HuggingFaceEmbedding</span><br><span class="line"><span class="keyword">from</span> llama_index.core.node_parser <span class="keyword">import</span> SemanticSplitterNodeParser</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 加载文档</span></span><br><span class="line">documents = SimpleDirectoryReader(input_files=[<span class="string">&quot;/home/cw/projects/demo_20/data/test.txt&quot;</span>]).load_data()</span><br><span class="line"></span><br><span class="line"><span class="comment"># # 3. 筛选Markdown文档</span></span><br><span class="line"><span class="comment"># md_docs = [d for d in documents if d.metadata[&quot;file_path&quot;].endswith(&quot;.md&quot;)]</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 初始化模型和解析器</span></span><br><span class="line">embed_model = HuggingFaceEmbedding(</span><br><span class="line">    <span class="comment">#指定了一个预训练的sentence-transformer模型的路径</span></span><br><span class="line">    model_name=<span class="string">&quot;/home/cw/llms/embedding_model/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">semantic_parser = SemanticSplitterNodeParser(</span><br><span class="line">    buffer_size=<span class="number">1</span>,</span><br><span class="line">    breakpoint_percentile_threshold=<span class="number">90</span>, <span class="comment"># 给的越高语句越完整</span></span><br><span class="line">    embed_model=embed_model</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 5. 执行语义分割</span></span><br><span class="line">semantic_nodes = semantic_parser.get_nodes_from_documents(documents)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 6. 打印结果</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;语义分割节点数: <span class="subst">&#123;<span class="built_in">len</span>(semantic_nodes)&#125;</span>&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> i, node <span class="keyword">in</span> <span class="built_in">enumerate</span>(semantic_nodes[:<span class="number">2</span>]):  <span class="comment"># 只打印前两个节点</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;\n节点<span class="subst">&#123;i+<span class="number">1</span>&#125;</span>:\n<span class="subst">&#123;node.text&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;-&quot;</span>*<span class="number">50</span>)</span><br></pre></td></tr></table></figure>
+<p>对比三种分块方法，第三种最好，因为它借助了大模型的语义理解能力，不会造成句子语义不完整：</p>
+<p>但第三种同样存在问题，比如在分割法律条款时，它将所有的法律条款视为一个分块，而我们在实际中一般需要它按章节以及条目进行分块。</p>
+<p>实际上文档切分并没有固定的处理方式，需要根据知识文档的数据格式选择切分方式，所以还需要结合正则匹配，甚至人工划分。</p>
+<h4 id="三-召回率提升方案"><a href="#三-召回率提升方案" class="headerlink" title="三. 召回率提升方案"></a>三. 召回率提升方案</h4><h5 id="3-1-什么是召回率"><a href="#3-1-什么是召回率" class="headerlink" title="3.1 什么是召回率"></a>3.1 什么是召回率</h5><p>召回率涉及的是检索阶段。检索逻辑太粗会导致一些信息没有被召回，召回率低。检索逻辑太细会导致一些冗余信息被召回，导致准确率低。</p>
+<p>首先得把召回率提上来，后面再把准确率提高，比如有8个node个查询有关，如果一开始只准确召回4个(召回率低，准确率高)，那后面再怎么处理都没用了；如果一卡是召回12个，里面有8个正确4个错误(召回率高，准确率低)，那么召回后可以通过重排提高准确率。</p>
+<h5 id="3-2-提升召回率的三大策略"><a href="#3-2-提升召回率的三大策略" class="headerlink" title="3.2 提升召回率的三大策略:"></a>3.2 提升召回率的三大策略:</h5><h6 id="3-2-1-查询扩展-给问题加修饰词"><a href="#3-2-1-查询扩展-给问题加修饰词" class="headerlink" title="3.2.1 查询扩展: 给问题加修饰词"></a>3.2.1 查询扩展: 给问题加修饰词</h6><ul>
+<li>原始问题: 如何做番茄炒蛋</li>
+<li>扩展后: 家常番茄炒蛋做法步骤，厨房新手教程，简单易学。</li>
+</ul>
+<h6 id="3-2-2-混合检索-结合两种搜索方式"><a href="#3-2-2-混合检索-结合两种搜索方式" class="headerlink" title="3.2.2 混合检索: 结合两种搜索方式"></a>3.2.2 混合检索: 结合两种搜索方式</h6><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">graph LR</span><br><span class="line">	A[用户问题]--&gt;B[关键词搜索]--&gt;C[初步结果]--&gt;D[合并去重]</span><br><span class="line">	A--&gt;E[语义搜索]--&gt;C</span><br></pre></td></tr></table></figure>
+<p>用户问题关键词搜索语义搜索初步结果合并去重。</p>
+<p>但是混合检索也有弊端: 响应慢。关键词搜索的前提是用户规范提问，能问到点子上(关键词)</p>
+<h6 id="3-2-3-向量优化"><a href="#3-2-3-向量优化" class="headerlink" title="3.2.3 向量优化"></a>3.2.3 向量优化</h6><p>微调大模型型，如果数据集中含有专有名词，大模型不能理解，则需要微调。再RAG中成为“向量优化”。</p>
+<p>微调前: Transformer 理解为 “变形金刚”</p>
+<p>微调后: Transformer 理解为”深度学习模型”。</p>
+<p>3.2.4 基础检索vs混合检索</p>
+<p>下面用一个完整的RAG代码展示向量检索和关键词检索的效果对比：代码流程未: 加载本地Embedding模型和LLM模型—&gt;加载并解析数据—&gt;检索—&gt;查询，代码如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.embeddings.huggingface <span class="keyword">import</span> HuggingFaceEmbedding</span><br><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> Settings, VectorStoreIndex</span><br><span class="line"><span class="keyword">from</span> llama_index.llms.huggingface <span class="keyword">import</span> HuggingFaceLLM</span><br><span class="line"><span class="keyword">from</span> llama_index.core.schema <span class="keyword">import</span> TextNode</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 1. 初始化本地模型</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">setup_local_models</span>():</span><br><span class="line">    <span class="comment"># 设置本地embedding模型</span></span><br><span class="line">    embed_model = HuggingFaceEmbedding(</span><br><span class="line">        model_name=<span class="string">&quot;/home/cw/llms/embedding_model/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2&quot;</span>,</span><br><span class="line">        device=<span class="string">&quot;cuda&quot;</span> <span class="keyword">if</span> torch.cuda.is_available() <span class="keyword">else</span> <span class="string">&quot;cpu&quot;</span></span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 设置本地LLM模型</span></span><br><span class="line">    llm = HuggingFaceLLM(</span><br><span class="line">        model_name=<span class="string">&quot;/home/cw/llms/Qwen/Qwen1.5-1.8B-Chat&quot;</span>,</span><br><span class="line">        tokenizer_name=<span class="string">&quot;/home/cw/llms/Qwen/Qwen1.5-1.8B-Chat&quot;</span>,</span><br><span class="line">        model_kwargs=&#123;<span class="string">&quot;trust_remote_code&quot;</span>: <span class="literal">True</span>&#125;,</span><br><span class="line">        tokenizer_kwargs=&#123;<span class="string">&quot;trust_remote_code&quot;</span>: <span class="literal">True</span>&#125;,</span><br><span class="line">        device_map=<span class="string">&quot;auto&quot;</span>,</span><br><span class="line">        generate_kwargs=&#123;<span class="string">&quot;temperature&quot;</span>: <span class="number">0.3</span>, <span class="string">&quot;do_sample&quot;</span>: <span class="literal">True</span>&#125;  <span class="comment"># 修改为do_sample=True避免警告</span></span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 全局设置</span></span><br><span class="line">    Settings.embed_model = embed_model</span><br><span class="line">    Settings.llm = llm</span><br><span class="line">    Settings.chunk_size = <span class="number">512</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 加载数据并处理格式</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">load_data</span>(<span class="params">file_path</span>):</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(file_path, <span class="string">&#x27;r&#x27;</span>, encoding=<span class="string">&#x27;utf-8&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">        data = json.load(f)</span><br><span class="line">    </span><br><span class="line">    nodes = []</span><br><span class="line">    <span class="keyword">for</span> item <span class="keyword">in</span> data:</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">isinstance</span>(item, <span class="built_in">dict</span>):</span><br><span class="line">            <span class="comment"># 处理DPR格式数据</span></span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;query&#x27;</span> <span class="keyword">in</span> item <span class="keyword">and</span> <span class="string">&#x27;positive_passages&#x27;</span> <span class="keyword">in</span> item:</span><br><span class="line">                text = <span class="string">f&quot;查询: <span class="subst">&#123;item[<span class="string">&#x27;query&#x27;</span>]&#125;</span>\n相关文档: <span class="subst">&#123;item[<span class="string">&#x27;positive_passages&#x27;</span>][<span class="number">0</span>][<span class="string">&#x27;text&#x27;</span>]&#125;</span>&quot;</span></span><br><span class="line">            <span class="comment"># 处理QA对格式</span></span><br><span class="line">            <span class="keyword">elif</span> <span class="string">&#x27;question&#x27;</span> <span class="keyword">in</span> item <span class="keyword">and</span> <span class="string">&#x27;answer&#x27;</span> <span class="keyword">in</span> item:</span><br><span class="line">                text = <span class="string">f&quot;问题: <span class="subst">&#123;item[<span class="string">&#x27;question&#x27;</span>]&#125;</span>\n答案: <span class="subst">&#123;item[<span class="string">&#x27;answer&#x27;</span>]&#125;</span>&quot;</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">        <span class="keyword">elif</span> <span class="built_in">isinstance</span>(item, <span class="built_in">str</span>):</span><br><span class="line">            text = item</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">            </span><br><span class="line">        node = TextNode(text=text)</span><br><span class="line">        nodes.append(node)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> nodes</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 初始化本地模型</span></span><br><span class="line">setup_local_models()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 加载数据</span></span><br><span class="line">data_path = <span class="string">&quot;/home/cw/projects/demo_19/data/qa_pairs.json&quot;</span></span><br><span class="line">nodes = load_data(data_path)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 5. 示例查询</span></span><br><span class="line">query = <span class="string">&quot;如何预防机器学习模型过拟合？&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 案例1：向量检索（使用本地embedding模型）</span></span><br><span class="line">vector_index = VectorStoreIndex(nodes)</span><br><span class="line">vector_retriever = vector_index.as_retriever(similarity_top_k=<span class="number">3</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;向量检索结果：&quot;</span>, [node.text[:<span class="number">50</span>] + <span class="string">&quot;...&quot;</span> <span class="keyword">for</span> node <span class="keyword">in</span> vector_retriever.retrieve(query)])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 案例2：关键词检索（不使用bm25模式）</span></span><br><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> KeywordTableIndex</span><br><span class="line">keyword_index = KeywordTableIndex(nodes)</span><br><span class="line">keyword_retriever = keyword_index.as_retriever(similarity_top_k=<span class="number">3</span>)  <span class="comment"># 使用默认模式</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;关键词检索结果：&quot;</span>, [node.text[:<span class="number">50</span>] + <span class="string">&quot;...&quot;</span> <span class="keyword">for</span> node <span class="keyword">in</span> keyword_retriever.retrieve(query)])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 案例3：查询引擎（使用本地LLM生成回答）</span></span><br><span class="line">query_engine = keyword_index.as_query_engine()</span><br><span class="line">response = query_engine.query(query)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;LLM生成回答：&quot;</span>, response)</span><br></pre></td></tr></table></figure>
+<p>使用的数据如下:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;query&quot;</span><span class="punctuation">:</span> <span class="string">&quot;如何预防机器学习模型过拟合？&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;positive_passages&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="string">&quot;正则化方法通过添加L1/L2惩罚项控制模型复杂度...&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;交叉验证将数据划分为训练集和验证集...&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;早停法（Early Stopping）监控验证集损失...&quot;</span> </span><br><span class="line">    <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;negative_passages&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="string">&quot;GPU加速训练的技术方案...&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;数据标注的质量控制方法...&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;卷积神经网络结构解析...&quot;</span></span><br><span class="line">    <span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<h5 id="3-3-效果验证方法"><a href="#3-3-效果验证方法" class="headerlink" title="3.3 效果验证方法"></a>3.3 效果验证方法</h5><ol>
+<li>准备测试问题集(至少50个典型问题)。</li>
+<li>记录基础方案召回率。</li>
+<li>应用优化策略后再次测试。</li>
+<li>对比提升幅度。</li>
+</ol>
+<h4 id="四-检索结果重排序"><a href="#四-检索结果重排序" class="headerlink" title="四. 检索结果重排序"></a>四. 检索结果重排序</h4><h5 id="4-1-为什么要重排序"><a href="#4-1-为什么要重排序" class="headerlink" title="4.1 为什么要重排序"></a>4.1 为什么要重排序</h5><p>在召回期间，我们是尽量提升召回率，所以和问题沾边的都召回了，导致召回的数据中很多冗余的，要经过重排序把这些冗余的排除。重排序的目的是提高模型响应的精度。排序需要用到重排序模型。</p>
+<h5 id="4-2-常见排序模型对比"><a href="#4-2-常见排序模型对比" class="headerlink" title="4.2 常见排序模型对比"></a>4.2 常见排序模型对比</h5><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>模型名称</th>
+<th>速度</th>
+<th>精度</th>
+<th>硬件要求</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BM25</td>
+<td>块</td>
+<td>中</td>
+<td>低</td>
+<td>关键词匹配</td>
+</tr>
+<tr>
+<td>Cross-Encoder</td>
+<td>慢</td>
+<td>高</td>
+<td>高</td>
+<td>小规模精准排序</td>
+</tr>
+<tr>
+<td>ColBERT</td>
+<td>中</td>
+<td>高</td>
+<td>中</td>
+<td>平衡速度与精度</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>重排序的效果要在实际项目中展示，在后面项目中再详细说明。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/06/30/llm-application-16/" rel="prev" title="大模型应用系列(十六) 大模型RAG项目实战：Embedding model 模型介绍与选型">
+      <i class="fa fa-chevron-left"></i> 大模型应用系列(十六) 大模型RAG项目实战：Embedding model 模型介绍与选型
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/06/30/llm-application-18/" rel="next" title="大模型应用系列(十八) 大模型RAG项目实战：本地部署Dify实现RAG">
+      大模型应用系列(十八) 大模型RAG项目实战：本地部署Dify实现RAG <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E6%96%87%E6%A1%A3%E8%A7%A3%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">一. 文档解析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-1-%E4%BB%80%E4%B9%88%E6%98%AF%E6%96%87%E6%A1%A3%E8%A7%A3%E6%9E%90"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 什么是文档解析?</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-%E5%9F%BA%E7%A1%80%E8%A7%A3%E6%9E%90"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 基础解析</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-3-%E9%AB%98%E7%BA%A7%E8%A7%A3%E6%9E%90"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 高级解析</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-%E6%80%BB%E7%BB%93"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 总结</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-%E6%96%87%E6%9C%AC%E5%88%87%E5%88%86"><span class="nav-number">2.</span> <span class="nav-text">二. 文本切分</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%88%87%E5%88%86"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 为什么需要切分</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-%E5%88%87%E5%88%86%E4%B8%89%E8%A6%81%E7%B4%A0"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 切分三要素</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-%E5%88%86%E5%9D%97%E7%AD%96%E7%95%A5%E5%AF%B9%E6%AF%94"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 分块策略对比</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-4-%E5%88%86%E5%9D%97%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 分块常见问题</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#2-4-1-%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E6%9C%80%E4%BD%B3%E5%9D%97%E5%A4%A7%E5%B0%8F"><span class="nav-number">2.4.1.</span> <span class="nav-text">2.4.1 如何确定最佳块大小</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-4-2-%E5%88%86%E5%9D%97%E6%98%AF%E5%90%A6%E9%87%8D%E5%8F%A0%E8%B6%8A%E5%A4%9A%E8%B6%8A%E5%A5%BD"><span class="nav-number">2.4.2.</span> <span class="nav-text">2.4.2 分块是否重叠越多越好</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-5-%E5%88%87%E5%88%86%E7%A4%BA%E4%BE%8B-%E5%9B%BA%E5%AE%9A%E5%88%86%E5%9D%97vs%E8%AF%AD%E5%8F%A5%E5%88%87%E5%88%86vs%E8%AF%AD%E4%B9%89%E5%88%87%E5%88%86"><span class="nav-number">2.5.</span> <span class="nav-text">2.5 切分示例: 固定分块vs语句切分vs语义切分</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#2-5-1-%E5%9B%BA%E5%AE%9A%E5%88%86%E5%9D%97"><span class="nav-number">2.5.1.</span> <span class="nav-text">2.5.1 固定分块</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-5-2-%E8%AF%AD%E5%8F%A5%E5%88%87%E5%88%86"><span class="nav-number">2.5.2.</span> <span class="nav-text">2.5.2 语句切分</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-5-3-%E8%AF%AD%E4%B9%89%E5%88%87%E5%88%86"><span class="nav-number">2.5.3.</span> <span class="nav-text">2.5.3 语义切分</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-%E5%8F%AC%E5%9B%9E%E7%8E%87%E6%8F%90%E5%8D%87%E6%96%B9%E6%A1%88"><span class="nav-number">3.</span> <span class="nav-text">三. 召回率提升方案</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-%E4%BB%80%E4%B9%88%E6%98%AF%E5%8F%AC%E5%9B%9E%E7%8E%87"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 什么是召回率</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-%E6%8F%90%E5%8D%87%E5%8F%AC%E5%9B%9E%E7%8E%87%E7%9A%84%E4%B8%89%E5%A4%A7%E7%AD%96%E7%95%A5"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 提升召回率的三大策略:</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#3-2-1-%E6%9F%A5%E8%AF%A2%E6%89%A9%E5%B1%95-%E7%BB%99%E9%97%AE%E9%A2%98%E5%8A%A0%E4%BF%AE%E9%A5%B0%E8%AF%8D"><span class="nav-number">3.2.1.</span> <span class="nav-text">3.2.1 查询扩展: 给问题加修饰词</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-2-2-%E6%B7%B7%E5%90%88%E6%A3%80%E7%B4%A2-%E7%BB%93%E5%90%88%E4%B8%A4%E7%A7%8D%E6%90%9C%E7%B4%A2%E6%96%B9%E5%BC%8F"><span class="nav-number">3.2.2.</span> <span class="nav-text">3.2.2 混合检索: 结合两种搜索方式</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-2-3-%E5%90%91%E9%87%8F%E4%BC%98%E5%8C%96"><span class="nav-number">3.2.3.</span> <span class="nav-text">3.2.3 向量优化</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-%E6%95%88%E6%9E%9C%E9%AA%8C%E8%AF%81%E6%96%B9%E6%B3%95"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 效果验证方法</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B-%E6%A3%80%E7%B4%A2%E7%BB%93%E6%9E%9C%E9%87%8D%E6%8E%92%E5%BA%8F"><span class="nav-number">4.</span> <span class="nav-text">四. 检索结果重排序</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E9%87%8D%E6%8E%92%E5%BA%8F"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 为什么要重排序</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-2-%E5%B8%B8%E8%A7%81%E6%8E%92%E5%BA%8F%E6%A8%A1%E5%9E%8B%E5%AF%B9%E6%AF%94"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 常见排序模型对比</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">46</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

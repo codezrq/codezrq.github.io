@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="介绍如何在Ubuntu22.04服务器上部署Dify并集成本地部署大模型，也介绍了较为简单的Windows部署方式，同时提供示例在Dify平台上快速搭建RAG。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大模型应用系列(十八) 大模型RAG项目实战：本地部署Dify实现RAG">
+<meta property="og:url" content="http://example.com/2025/06/30/llm-application-18/index.html">
+<meta property="og:site_name" content="乌漆嘛黑">
+<meta property="og:description" content="介绍如何在Ubuntu22.04服务器上部署Dify并集成本地部署大模型，也介绍了较为简单的Windows部署方式，同时提供示例在Dify平台上快速搭建RAG。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250617223934394.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250617224136819.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250619232446475.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250622224132875.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250622224213071.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250622224618263.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250622225529328.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250622231349891.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250622231515324.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250622231903611.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250622233151715.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250623004347877.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250623004627502.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250622234819920.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250623003324781.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250623005321174.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250623013250100.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250623013912531.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250626215244316.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250626223013599.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250626223232194.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250626223554294.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250626223840589.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250626224113839.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250627220935102.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250627234656002.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250627234815805.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250627235414845.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250627235901627.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250628225934097.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250630215458981.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250630220509317.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250630220706199.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250630220845572.png">
+<meta property="og:image" content="http://example.com/2025/06/30/llm-application-18/image-20250630222614405.png">
+<meta property="article:published_time" content="2025-06-30T15:10:39.000Z">
+<meta property="article:modified_time" content="2025-06-30T15:14:35.971Z">
+<meta property="article:author" content="zheng rq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/06/30/llm-application-18/image-20250617223934394.png">
+
+<link rel="canonical" href="http://example.com/2025/06/30/llm-application-18/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>大模型应用系列(十八) 大模型RAG项目实战：本地部署Dify实现RAG | 乌漆嘛黑</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">乌漆嘛黑</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/06/30/llm-application-18/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="乌漆嘛黑">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          大模型应用系列(十八) 大模型RAG项目实战：本地部署Dify实现RAG
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-06-30 23:10:39 / 修改时间：23:14:35" itemprop="dateCreated datePublished" datetime="2025-06-30T23:10:39+08:00">2025-06-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">项目实战</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>介绍如何在Ubuntu22.04服务器上部署Dify并集成本地部署大模型，也介绍了较为简单的Windows部署方式，同时提供示例在Dify平台上快速搭建RAG。</p>
+<span id="more"></span>
+<h4 id="一-安装Dify"><a href="#一-安装Dify" class="headerlink" title="一. 安装Dify"></a>一. 安装Dify</h4><h5 id="1-1-Dify介绍"><a href="#1-1-Dify介绍" class="headerlink" title="1.1 Dify介绍"></a>1.1 Dify介绍</h5><p>Dify是一个基于GPT的AI应用开发平台，支持多种大语言模型(LLM)，旨在帮助用户快速创建和运营生成式AI原生应用，它具备以下特点：</p>
+<p>多模型支持：兼容OpenAI, Cloude, Hugging Face 等主流模型，并支持私有化部署。</p>
+<p>可视化编排：提供prompt模板，工具链等可视化工具，简化应用开发流程。</p>
+<p>丰富功能：支持文本生成，对话，知识库问答等，满足多样化需求。</p>
+<p>灵活部署：支持云服务器和本地部署，适应不同场景。</p>
+<p>持续更新：团队持续优化，确保平台功能与时俱进。</p>
+<h5 id="1-2-Docker-安装"><a href="#1-2-Docker-安装" class="headerlink" title="1.2 Docker 安装"></a>1.2 Docker 安装</h5><p>Dify要用到Docker，所以先安装Docker, 系统版本可能导致Dify环境配置过程中出现问题, 我这里使用的是:</p>
+<p>Ubuntu22.04</p>
+<p>Docker version 26.1.3, build 26.1.3-0ubuntu1~22.04.1  </p>
+<p>docker-compose version 1.29.2, build unknown  </p>
+<p><strong>准备条件</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">先更新apt工具</span></span><br><span class="line">sudo apt-get update</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">先卸载操作系统默认安装的Docker</span></span><br><span class="line">sudo apt-get remove docker docker-engine docker.io containerd runc</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装必要支持</span></span><br><span class="line">sudo apt install apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release</span><br></pre></td></tr></table></figure>
+<p><strong>准备安装</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">添加Docker官方key和官方源(国内网络可能存在问题)</span></span><br><span class="line">curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -</span><br><span class="line"></span><br><span class="line">sudo add-apt-repository \</span><br><span class="line">   &quot;deb [arch=amd64] https://download.docker.com/linux/ubuntu \</span><br><span class="line"><span class="meta prompt_">   $</span><span class="language-bash">(lsb_release -cs) \</span></span><br><span class="line"><span class="language-bash">   stable<span class="string">&quot;</span></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="string">添加阿里key和源(这里比较推荐)</span></span></span><br><span class="line">curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo apt-key add -</span><br><span class="line"></span><br><span class="line">sudo add-apt-repository \</span><br><span class="line">     &quot;deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu \</span><br><span class="line">     $(lsb_release -cs) \</span><br><span class="line">     stable&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="string">更新源</span></span></span><br><span class="line">sudo apt update</span><br><span class="line">sudo apt-get update</span><br></pre></td></tr></table></figure>
+<p><strong>安装docker</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查找Docker可用版本, 找到26.1.3版本</span></span><br><span class="line">sudo apt-cache madison docker-ce</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查找docker-cli可用版本, 找到2.6.13 版本</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装对应版本</span></span><br><span class="line">sudo apt-get install docker-ce=5:26.1.3-1~ubuntu.22.04~jammy docker-ce-cli=5:26.1.3-1~ubuntu.22.04~jammy containerd.io</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>检验安装</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo docker --version</span><br></pre></td></tr></table></figure>
+<p> 输出如下:<img src="/2025/06/30/llm-application-18/image-20250617223934394.png" alt="image-20250617223934394"></p>
+<p><strong>安装docker-compose</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo pip install docker-compose==1.29.2 -i https://pypi.tuna.tsinghua.edu.cn/simple</span><br></pre></td></tr></table></figure>
+<p>验证安装</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo docker-compose --version</span><br></pre></td></tr></table></figure>
+<p>输出如下:</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250617224136819.png" alt="image-20250617224136819"></p>
+<h5 id="1-3-Dify安装"><a href="#1-3-Dify安装" class="headerlink" title="1.3 Dify安装"></a>1.3 Dify安装</h5><p>Dify代码仓: <a target="_blank" rel="noopener" href="https://gitee.com/dify_ai/dify">dify: Dify 是一个易用的 LLMOps 平台，旨在让更多人可以创建可持续运营的原生 AI 应用</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/langgenius/dify.git</span><br><span class="line">cd dify/docker</span><br><span class="line">cp .env.example .env # 复制环境变量模板</span><br><span class="line">sudo docker compose up -d # 后台启动docker，会自动拉取镜像 如果装的是1.几的docker-compose 则要用docker-compose</span><br></pre></td></tr></table></figure>
+<p>就会开始拉取:</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250619232446475.png" alt="image-20250619232446475"></p>
+<h4 id="二-本地部署Dify"><a href="#二-本地部署Dify" class="headerlink" title="二. 本地部署Dify"></a>二. 本地部署Dify</h4><p>上述Dify安装后就会启动docker， 默认启动在80端口, 由于我用的是云服务器，所以需要端口转发: 将云服务器的80端口转发到localhost:80</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622224132875.png" alt="image-20250622224132875"></p>
+<p>接着在浏览去输入localhost:80</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622224213071.png" alt="image-20250622224213071"></p>
+<p>设置好管理员账号后登录。</p>
+<p>  <img src="/2025/06/30/llm-application-18/image-20250622224618263.png" alt="image-20250622224618263"></p>
+<p>可以看到Dify可以用于创建RAG, 也可以创建Agent，这里我们用于创建RAG, 主要是设置聊天模型和知识库。</p>
+<h5 id="2-1-设置模型"><a href="#2-1-设置模型" class="headerlink" title="2.1 设置模型"></a>2.1 设置模型</h5><p>Dify只是一个框架, 我们需要集成大模型, 点击右上角头像-&gt;设置-&gt;模型供应商, 可以看到Dify支持很多模型供应商,<img src="/2025/06/30/llm-application-18/image-20250622225529328.png" alt="image-20250622225529328"></p>
+<p> 我们只需要选择对应模型供应商，其实它就是在后台有对应的API请求接口, 我们只需要设置好对应参数(比如API-key)，Dify就帮我们发起请求。</p>
+<p>选择想要的供应商, 然后安装, Dify可能存在bug，我点击供应商后无法点击安装，但先创建聊天助手后从聊天助手进入却可以安装, 这里要多试试。</p>
+<p>这里安装DeepSeek，安装后到DS官网生成API-key，然后填入:</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622231349891.png" alt="image-20250622231349891"></p>
+<p>保存后选择系统模型设置, 选择想接入DS哪个类型的模型，这里先设置普通的对话模型。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622231515324.png" alt="image-20250622231515324"></p>
+<h5 id="2-2-创建聊天助手"><a href="#2-2-创建聊天助手" class="headerlink" title="2.2 创建聊天助手"></a>2.2 创建聊天助手</h5><p>点击创建空白应用-&gt;新手适用-&gt;聊天助手，选择之前接入的模型</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622231903611.png" alt="image-20250622231903611"></p>
+<p>然后就可以进行对话, 但感觉它还是有BUG，我一开始输入后没有反应, 后来重启了服务器的docker, 又可以了, 有几点要注意:浏览器用谷歌；vscode要保持端口转发；服务器连接要保持；</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622233151715.png" alt="image-20250622233151715"></p>
+<p>如果老是没有输出，尝试vscode重新连接服务器。</p>
+<h4 id="三-云服务器部署Dify-ollama"><a href="#三-云服务器部署Dify-ollama" class="headerlink" title="三. 云服务器部署Dify+ollama"></a>三. 云服务器部署Dify+ollama</h4><p>这部分还没有成功，建议先根据四在本地电脑部署，云服务器比较麻烦。</p>
+<p>Dify同样支持本地部署的大模型, 比如ollama, 或者 vllm/lmdeploy，后两个是类似的，因为它们都是通过Open-AI兼容的API格式调用的。</p>
+<h5 id="3-1-本地部署大模型"><a href="#3-1-本地部署大模型" class="headerlink" title="3.1 本地部署大模型"></a>3.1 本地部署大模型</h5><p>参考 <a target="_blank" rel="noopener" href="https://codezrq.github.io/2025/03/21/llm-application-6/">大模型应用系列(六) ollama,vllm,LMDeploy 部署大模型 | 乌漆嘛黑</a></p>
+<p>在GPU不多的情况下，我们一般选择ollama，因为ollama可以在一张GPU上部署多个模型(RAG需要chat模型，embedding模型，甚至rerank模型)，如果有多张卡，也可以用vllm。</p>
+<h5 id="3-2-Dify-ollama"><a href="#3-2-Dify-ollama" class="headerlink" title="3.2 Dify+ollama"></a>3.2 Dify+ollama</h5><p>首先安装ollama插件，接着配置ollama，这里安装后页面改变可能有点慢，要等一下，多刷新页面。配置界面中主要配置url和模型名称</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250623004347877.png" alt="image-20250623004347877"></p>
+<p>如果配置我们云服务器的公网IP和端口，会报错找不到。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250623004627502.png" alt="image-20250623004627502"></p>
+<p>需要进行额外配置。</p>
+<p>接入本地部署的大模型需要更多的配置, 先停止docker。注意:一定要在dify/docker目录下执行:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo docker compose down</span><br></pre></td></tr></table></figure>
+<p><img src="/2025/06/30/llm-application-18/image-20250622234819920.png" alt="image-20250622234819920"></p>
+<p>这里部署deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B。</p>
+<p>安装好ollama环境后，按照上面的教程拉取模型</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250623003324781.png" alt="image-20250623003324781"></p>
+<p>并测试OpenAI风格的API调用正常:</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250623005321174.png" alt="image-20250623005321174"></p>
+<p>接下来要将本地模型接入到Dify, 修改刚才的dify/docker/.env文件，首先在文本最后新增如下内容:</p>
+<p>它的意思是使用自定义的模型, 并设置ollama的IP和端口, 另一个是vllm的ip和端口，这里设置为默认端口, 如果在部署的时候指定了端口，对应改变，另外IP也要改为云服务器的公网IP。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">启用自定义模型</span></span><br><span class="line">CUSTOM_MODEL_ENABLED=true</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将 OLLAMA_API_BASE_URL 改为宿主机的物理 IP</span></span><br><span class="line">OLLAMA_API_BASE_URL=http://117.50.174.219:11434</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">vLLM 的 OpenAI 兼容 API 地址</span></span><br><span class="line">CUSTOM_OPENAI_API_BASE_URL=http://117.50.174.219:8000</span><br></pre></td></tr></table></figure>
+<p>接着修改dify/docker/docker-compose.yaml， 定位到<code>services</code>的位置，要更改这部分代码：（大概在400行左右）</p>
+<p>注意：下面代码主要新增了两部分，一个是新增一个函数(在后面定义)，networks最后加上<code>- dify-net</code>， 并新增<code>extra_hosts</code>字段，目的是把docker的IP映射为本地IP。这里IP要改为自己的公网IP:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">networks:</span><br><span class="line">  - ssrf_proxy_network</span><br><span class="line">  - default</span><br><span class="line">  - dify-net</span><br><span class="line">extra_hosts:</span><br><span class="line">  - &quot;host.docker.internal:117.50.174.219&quot; # 直接映射宿主机 IP</span><br></pre></td></tr></table></figure>
+<p>再定位到<code>networks</code>字段, 定位到如下字段:（大概在1200行左右）</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">networks:</span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">create a network between sandbox, api and ssrf_proxy, and can not access outside.</span></span><br><span class="line">  ssrf_proxy_network:</span><br><span class="line">    driver: bridge</span><br><span class="line">    internal: true</span><br><span class="line">  milvus:</span><br><span class="line">    driver: bridge</span><br><span class="line">  opensearch-net:</span><br><span class="line">    driver: bridge</span><br><span class="line">    internal: true</span><br></pre></td></tr></table></figure>
+<p>在后面新增一个字段<code>dify-net</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">networks:</span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">create a network between sandbox, api and ssrf_proxy, and can not access outside.</span></span><br><span class="line">  ssrf_proxy_network:</span><br><span class="line">    driver: bridge</span><br><span class="line">    internal: true</span><br><span class="line">  milvus:</span><br><span class="line">    driver: bridge</span><br><span class="line">  opensearch-net:</span><br><span class="line">    driver: bridge</span><br><span class="line">    internal: true</span><br><span class="line">  dify-net:</span><br><span class="line">    driver: bridge</span><br><span class="line">    attachable: true</span><br></pre></td></tr></table></figure>
+<p>然后重新启动docker, 在dify/docker目录下:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo docker compose up -d</span><br></pre></td></tr></table></figure>
+<p>然后重新打开网页, 可能有点慢，多等会，多刷新。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250623013250100.png" alt="image-20250623013250100"></p>
+<p>配置好url和名称，一般就能成功了，但由于用的云服务器，网络很容易出问题，我这里就出问题了。</p>
+<p>首先排查本地能否访问到云服务器上的ollama, 打开本地cmd，url访问</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">验证跨网络访问</span></span><br><span class="line">curl http://117.50.174.219:11434/api/chat -H &quot;Content-Type: application/json&quot; -d &#x27;&#123;&quot;model&quot;: &quot;deepseek-r1:1.5b&quot;&#125;&#x27;</span><br><span class="line"></span><br><span class="line">curl http://localhost:11434/api/chat -H &quot;Content-Type: application/json&quot; -d &#x27;&#123;&quot;model&quot;: &quot;bge-large:latest&quot;&#125;&#x27;</span><br></pre></td></tr></table></figure>
+<p>我这里就是访问不上:</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250623013912531.png" alt="image-20250623013912531"></p>
+<p>ollama启动是ip要是0.0.0.0, 如果不是, 要修改。</p>
+<p>这里的部署老是不成功，主要是云服务器IP比较难配置，后买你再更新，为了方便，我选择在本地电脑的windows系统搭建Dify+Ollama</p>
+<h4 id="四-windows部署Dify-Ollama"><a href="#四-windows部署Dify-Ollama" class="headerlink" title="四. windows部署Dify+Ollama"></a>四. windows部署Dify+Ollama</h4><h5 id="4-1-安装wsl"><a href="#4-1-安装wsl" class="headerlink" title="4.1 安装wsl"></a>4.1 安装wsl</h5><p>windows要安装wsl，并安装ubuntu22.04。<a target="_blank" rel="noopener" href="https://learn.microsoft.com/zh-cn/windows/wsl/install">安装 WSL | Microsoft Learn</a></p>
+<p>在<a target="_blank" rel="noopener" href="https://www.docker.com/products/docker-desktop/">Docker Desktop: The #1 Containerization Tool for Developers | Docker</a></p>
+<h5 id="4-2-安装Docker-Desktop"><a href="#4-2-安装Docker-Desktop" class="headerlink" title="4.2 安装Docker Desktop"></a>4.2 安装Docker Desktop</h5><p>按装Dokcer Desktop, 安装dify需要用到docker。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626215244316.png" alt="image-20250626215244316"></p>
+<p>如果显示<code>WSL integration with distro &#39;Ubuntu-22.04&#39; unexpectedly stopped. Do you want to restart it?</code>, 是因为wsl ubuntu 版本和docker不一致，打开cmd，输入</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl --list --verbose</span><br></pre></td></tr></table></figure>
+<p>如果版本不一致，输入：其中系统名要和上面查出来的Name一致，等待几分钟。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wsl --set-version Ubuntu-22.04 2</span><br></pre></td></tr></table></figure>
+<p>重新查询，版本一致</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626223013599.png" alt="image-20250626223013599"></p>
+<p>配置镜像源</p>
+<p>点击docker desktop右上角设置, Docker Engine，在json中加入字段:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;registry-mirrors&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;https://hub-mirror.c.163.com&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;https://mirror.ccs.tencentyun.com&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;https://mirrors.aliyun.com&quot;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+<p>然后点击Apply&amp;restart</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626223232194.png" alt="image-20250626223232194"></p>
+<p>验证换源成功, 输入以下命令，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker info</span><br></pre></td></tr></table></figure>
+<p>显示如下, 说明换源成功:</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626223554294.png" alt="image-20250626223554294"></p>
+<h5 id="4-3-结合WSL与Docker-Desktop"><a href="#4-3-结合WSL与Docker-Desktop" class="headerlink" title="4.3 结合WSL与Docker Desktop"></a>4.3 结合WSL与Docker Desktop</h5><p>进入设置-&gt;Resources-&gt;WSL integration,勾选Ubuntu，点击Apply &amp; restart。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626223840589.png" alt="image-20250626223840589"></p>
+<p>检验docker是否正常工作，打开cmd，输入</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">wsl</span><br><span class="line">docker --version</span><br></pre></td></tr></table></figure>
+<p> 显示如下，说明docker正常工作</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626224113839.png" alt="image-20250626224113839"></p>
+<p>安装dify, 在想要放置dify源码的文件夹中输入</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">wsl</span><br><span class="line">git clone https://github.com/langgenius/dify.git</span><br></pre></td></tr></table></figure>
+<h5 id="4-4-安装ollama"><a href="#4-4-安装ollama" class="headerlink" title="4.4 安装ollama"></a>4.4 安装ollama</h5><p>直接到官网下载<a target="_blank" rel="noopener" href="https://ollama.com/">Ollama</a> ，安装，可能有点慢。</p>
+<p>安装后cmd输入</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ollama --version</span><br></pre></td></tr></table></figure>
+<p>显示如下，说明安装正确</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250627220935102.png" alt="image-20250627220935102"></p>
+<p><strong>下载模型</strong></p>
+<p>在官网搜索想要的模型，复制命令后在本地执行即可。</p>
+<h4 id="五-Dify集成Ollama"><a href="#五-Dify集成Ollama" class="headerlink" title="五. Dify集成Ollama"></a>五. Dify集成Ollama</h4><p>在Dify/docker目录下输入:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cp .env.example .env # 复制环境变量模板</span><br><span class="line">sudo docker compose up -d # 后台启动docker，会自动拉取镜像 如果装的是1.几的docker-compose 则要用docker-compose</span><br></pre></td></tr></table></figure>
+<p>启动dify，打开浏览器(最好谷歌), 输入 <code>http://localhost:80</code>启动Dify</p>
+<p>Dify集成Ollama主要填写以下信息</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250627234656002.png" alt="image-20250627234656002"></p>
+<p>所以要先设置ollama的地址，在环境变量中添加如下变量</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250627234815805.png" alt="image-20250627234815805"></p>
+<p>ip地址可以cmd输入<code>ipconfig</code>查找，设置后如果IP变了要更改，不然会出错。</p>
+<p>设置后重启电脑，重新启动dify和ollama，在dify中设置其中url填写<code>http://(IP地址):11434</code>，模型名称要写<code>ollama list</code> 中对应模型名, 由于搭建知识库需要chat模型和Embedding模型，所以我加载了两个模型:</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250627235414845.png" alt="image-20250627235414845"></p>
+<p>测试</p>
+<p>Dify集成了模型输出对比功能, 这里对比Ollama部署的qwen3-0.6b和在线API调用的glm-4-0520,输出如下:</p>
+<p>可以看出，glm-4-0520给出了正确答案，而qwen3-0.6b证了个寂寞。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250627235901627.png" alt="image-20250627235901627"></p>
+<h4 id="六-创建知识库"><a href="#六-创建知识库" class="headerlink" title="六.创建知识库"></a>六.创建知识库</h4><p>根据五的步骤完成Dify集成chat模型和Embedding后，就可以在Dify中创建知识库了。</p>
+<h5 id="6-1-新建知识库"><a href="#6-1-新建知识库" class="headerlink" title="6.1 新建知识库"></a>6.1 新建知识库</h5><p>准备好自己的知识库，我这里使用如下文本: 可从下载</p>
+<p>部分数据示例如下:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">	<span class="attr">&quot;中国电信5G套餐&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;套餐名称&quot;</span><span class="punctuation">:</span> <span class="string">&quot;5G畅享套餐&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;月费&quot;</span><span class="punctuation">:</span> <span class="string">&quot;158元起&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;流量&quot;</span><span class="punctuation">:</span> <span class="string">&quot;60GB起，最高可达1TB&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;通话&quot;</span><span class="punctuation">:</span> <span class="string">&quot;2000分钟通话&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;适用人群&quot;</span><span class="punctuation">:</span> <span class="string">&quot;适合对流量和通话有极高需求的用户&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;优惠信息&quot;</span><span class="punctuation">:</span> <span class="string">&quot;赠送一年视频会员，每月赠送10GB流量&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">	<span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">    ...</span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>找到: 知识库-&gt;创建知识库</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250628225934097.png" alt="image-20250628225934097"></p>
+<p>接着设置参数，Dify虽然搭建RAG简单，但文档切分只支持分块处理，这里所有参数都用预置参数，点击开始后开始处理文档</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250630215458981.png" alt="image-20250630215458981"></p>
+<p>这里如果rerank如果配本地模型还会有问题，在线API可以，这里就不适用rerank。接着在聊天助手中接入知识库，点击创建好的聊天助手，点击添加知识库，添加刚才创建好的知识库，</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250630220509317.png" alt="image-20250630220509317"></p>
+<h5 id="6-2-RAG测试"><a href="#6-2-RAG测试" class="headerlink" title="6.2 RAG测试"></a>6.2 RAG测试</h5><p>创建好RAG后，在聊天框输入问题，聊天模型会根据知识库内容进行回答。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250630220706199.png" alt="image-20250630220706199"></p>
+<p>对比下面没有知识库时的模型输出，可以看出添加知识库后模型的输出更有意义，即RAG可以减少大模型幻觉。</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250630220845572.png" alt="image-20250630220845572"></p>
+<p>但这里我们知识库只分为一个段，其实RAG精度不高。</p>
+<h5 id="6-3-总结"><a href="#6-3-总结" class="headerlink" title="6.3 总结"></a>6.3 总结</h5><p>总的来说,Dify支持快速构建RAG，但只支持文档的固定分块大小，RAG效果其实不好，在实际应用中，我们更多地是要做定制化处理，比如其他的文档分块方式，这时候Dify效果并不好。</p>
+<h5 id="6-4-问题"><a href="#6-4-问题" class="headerlink" title="6.4 问题"></a>6.4 问题</h5><p>1.GPT模型本身就会对文本进行嵌入，那能不能直接用GPT模型作为Embedding模型？</p>
+<p>可以，但是相比起来，GPT除了嵌入层，还多了后续的模型层，所以更大，不如直接使用嵌入模型快，如果我们在添加GPT模型时把它作为嵌入模型，也是可以的。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250630222614405.png" alt="image-20250630222614405"></p>
+<p>2.更改Embedding是否需要重新处理文档?</p>
+<p>需要，更改Embedding需要对文档重新嵌入处理。</p>
+<p>3.Dify的缺点</p>
+<p>在Windows上比较简单，但在Linux上很麻烦，主要是Dify运行在Docker中，需要做端口映射。</p>
+<p>构建知识库时，文档分块方式比较固定。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/06/30/llm-application-17/" rel="prev" title="大模型应用系列(十七) 大模型RAG项目实战：Llamaindex文档切分与重排序">
+      <i class="fa fa-chevron-left"></i> 大模型应用系列(十七) 大模型RAG项目实战：Llamaindex文档切分与重排序
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/06/30/autoregressive-decode/" rel="next" title="Transformer注意力机制计算公式解析，自回归解码，KV-cache">
+      Transformer注意力机制计算公式解析，自回归解码，KV-cache <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E5%AE%89%E8%A3%85Dify"><span class="nav-number">1.</span> <span class="nav-text">一. 安装Dify</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-1-Dify%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 Dify介绍</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-Docker-%E5%AE%89%E8%A3%85"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 Docker 安装</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-3-Dify%E5%AE%89%E8%A3%85"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 Dify安装</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2Dify"><span class="nav-number">2.</span> <span class="nav-text">二. 本地部署Dify</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-%E8%AE%BE%E7%BD%AE%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 设置模型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-%E5%88%9B%E5%BB%BA%E8%81%8A%E5%A4%A9%E5%8A%A9%E6%89%8B"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 创建聊天助手</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2Dify-ollama"><span class="nav-number">3.</span> <span class="nav-text">三. 云服务器部署Dify+ollama</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2%E5%A4%A7%E6%A8%A1%E5%9E%8B"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 本地部署大模型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-Dify-ollama"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 Dify+ollama</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B-windows%E9%83%A8%E7%BD%B2Dify-Ollama"><span class="nav-number">4.</span> <span class="nav-text">四. windows部署Dify+Ollama</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-1-%E5%AE%89%E8%A3%85wsl"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 安装wsl</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-2-%E5%AE%89%E8%A3%85Docker-Desktop"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 安装Docker Desktop</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-3-%E7%BB%93%E5%90%88WSL%E4%B8%8EDocker-Desktop"><span class="nav-number">4.3.</span> <span class="nav-text">4.3 结合WSL与Docker Desktop</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-4-%E5%AE%89%E8%A3%85ollama"><span class="nav-number">4.4.</span> <span class="nav-text">4.4 安装ollama</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%94-Dify%E9%9B%86%E6%88%90Ollama"><span class="nav-number">5.</span> <span class="nav-text">五. Dify集成Ollama</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%AD-%E5%88%9B%E5%BB%BA%E7%9F%A5%E8%AF%86%E5%BA%93"><span class="nav-number">6.</span> <span class="nav-text">六.创建知识库</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#6-1-%E6%96%B0%E5%BB%BA%E7%9F%A5%E8%AF%86%E5%BA%93"><span class="nav-number">6.1.</span> <span class="nav-text">6.1 新建知识库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#6-2-RAG%E6%B5%8B%E8%AF%95"><span class="nav-number">6.2.</span> <span class="nav-text">6.2 RAG测试</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#6-3-%E6%80%BB%E7%BB%93"><span class="nav-number">6.3.</span> <span class="nav-text">6.3 总结</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#6-4-%E9%97%AE%E9%A2%98"><span class="nav-number">6.4.</span> <span class="nav-text">6.4 问题</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">46</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

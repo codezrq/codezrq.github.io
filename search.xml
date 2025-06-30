@@ -1076,91 +1076,65 @@
       </categories>
   </entry>
   <entry>
-    <title>大模型应用系列(十四) 大模型微调项目实战：Embedding model 模型介绍与选型</title>
-    <url>/2025/06/12/llm-application-14/</url>
-    <content><![CDATA[<p>简要介绍Embedding Models以及如何根据数据集选择合适的嵌入模型。</p>
+    <title>大模型应用系列(十四) 大模型RAG项目实战：Llamainindex 快速构建RAG</title>
+    <url>/2025/06/28/llm-application-14/</url>
+    <content><![CDATA[<p>介绍LlamaIndex的安装以及如何使用LlamaIndex快速搭建RAG应用。</p>
 <span id="more"></span>
-<h4 id="一-Embedding-Models-嵌入模型原理及选择"><a href="#一-Embedding-Models-嵌入模型原理及选择" class="headerlink" title="一. Embedding Models 嵌入模型原理及选择"></a>一. Embedding Models 嵌入模型原理及选择</h4><p>文档向量化后构成知识库，但如果文档不变化，并不需要每次都读文档并且进行向量化。真正上应该是将向量化后的文档存储到数据库，这样下次访问就不用重复读取和向量化。</p>
-<p>另外，文本本身也有差异性，不同类别的文本应该选择不同的Embedding model进行向量化，但这一步的效果影响不大，如果其他优化都用了之后效果还不好，再考虑嵌入模型的影响。</p>
-<h5 id="1-1-嵌入模型的本质"><a href="#1-1-嵌入模型的本质" class="headerlink" title="1.1 嵌入模型的本质"></a>1.1 嵌入模型的本质</h5><p>嵌入模型（Embedding Model）是一种将离散数据（如文本、图像）映射到连续向量空间的技术。通过高维向量表示（如 768 维或 3072 维），模型可捕捉数据的语义信息，使得语义相似的文本在向量空间中距离更近。例如，“忘记密码”和“账号锁定”会被编码为相近的向量，从而支持语义检索而非仅关键词匹配。</p>
-<p>度量向量的相似度一般用余弦相似度，欧氏距离，内积。但一般用余弦相似度，因为它是归一化的，值在[-1,1]之间，其他没有归一化，无法判断是否接近。</p>
-<h5 id="1-2-核心作用"><a href="#1-2-核心作用" class="headerlink" title="1.2 核心作用"></a>1.2 核心作用</h5><p>语义编码：将文本、图像等转换为向量，保留上下文信息（如 BERT 的 CLS Token 或均值池化。</p>
-<p>相似度计算：通过余弦相似度、欧氏距离等度量向量关联性，支撑检索增强生成（RAG）、推荐系统等应用。</p>
-<p>信息降维：压缩复杂数据为低维稠密向量，提升存储与计算效率。</p>
-<h5 id="1-3-关键技术原理"><a href="#1-3-关键技术原理" class="headerlink" title="1.3 关键技术原理"></a>1.3 关键技术原理</h5><p>上下文依赖：现代模型（如 BGE-M3）动态调整向量，捕捉多义词在不同语境中的含义。(一个词根据上下文可以有不同的词向量)</p>
-<p>训练方法：对比学习（如 Word2Vec 的 Skip-gram/CBOW）、预训练+微调（如 BERT）。  </p>
-<h4 id="二-主流模型分类与选型"><a href="#二-主流模型分类与选型" class="headerlink" title="二. 主流模型分类与选型"></a>二. 主流模型分类与选型</h4><h5 id="2-1-考虑因素"><a href="#2-1-考虑因素" class="headerlink" title="2.1 考虑因素"></a>2.1 考虑因素</h5><p>Embedding模型将文本转换为向量，捕捉语义信息，使计算机能够理解和比较内容的“意义”。大的方向上嵌入模型可以分为中文和应为，细分上选型时可以考虑的因素有：</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th>因素</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>任务性质</td>
-<td>匹配任务需求(问答，搜索，聚类等)</td>
-</tr>
-<tr>
-<td>领域特性</td>
-<td>通用vs专业领域(医学，法律等)</td>
-</tr>
-<tr>
-<td>多语言支持</td>
-<td>需处理多语言内容时考虑</td>
-</tr>
-<tr>
-<td>维度</td>
-<td>权衡信息丰富度与计算成本</td>
-</tr>
-<tr>
-<td>许可条款</td>
-<td>开源vs专有服务</td>
-</tr>
-<tr>
-<td>最大Token</td>
-<td>适合的上下文窗口</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>最重要的是考虑多语言支持和维度(和成本有关)。</p>
-<p>最佳实践：为特定应用测试多个Embedding模型，评估在实际数据上的性能而非仅依赖通用标准。</p>
-<h5 id="2-2-常见选型"><a href="#2-2-常见选型" class="headerlink" title="2.2 常见选型"></a>2.2 常见选型</h5><p>1.通用全能型</p>
+<h4 id="一-什么是LlamaIndex"><a href="#一-什么是LlamaIndex" class="headerlink" title="一. 什么是LlamaIndex"></a>一. 什么是LlamaIndex</h4><p>LlamaIndex是用于LLM应用程序的数据框架，用于注入，结构化，并访问私有或特定领域数据。也就是解决LLM和Data之间的衔接问题。</p>
+<p><strong>上下文增强。</strong> LLM 提供了人类和数据之间的自然语言接口。LLM 在大量公开可用的数据上进行了预训练，但它们并未在<strong>您</strong>的数据上进行训练。您的数据可能是私有的，或特定于您正在尝试解决的问题。它可能隐藏在 API 之后、SQL 数据库中，或者困在 PDF 和幻灯片中。上下文增强最流行的例子是<a href="https://docs.llamaindex.org.cn/en/stable/getting_started/concepts/">检索增强生成（Retrieval-Augmented Generation，简称 RAG）</a>，它在推理时将上下文与 LLM 结合。</p>
+<p>LlamaIndex 提供了构建任何上下文增强用例的工具，从原型到生产。在 RAG 中，数据首先被加载并准备好用于查询或“索引”。用户查询作用于索引，索引将数据过滤到最相关的上下文。然后，此上下文和您的查询会与提示一起发送给 LLM，LLM 会提供响应。</p>
+<h4 id="二-RAG核心概念"><a href="#二-RAG核心概念" class="headerlink" title="二. RAG核心概念"></a>二. RAG核心概念</h4><p>RAG可用下图表示:</p>
+<p> <img src="/2025/06/28/llm-application-14/image-20250608203811410.png" alt="image-20250608203811410"></p>
+<h5 id="2-1-RAG的5个阶段"><a href="#2-1-RAG的5个阶段" class="headerlink" title="2.1 RAG的5个阶段"></a>2.1 RAG的5个阶段</h5><p><strong>1. 加载</strong>。 将数据从其所在地(如文本文件，PDF，数据库，API等)加载到本RAG工作流中，LlamaIndex提供了data connector用于加载各种格式的数据。</p>
+<p><strong>2. 索引。</strong> 创建一个允许查询数据的数据结构。对于LLM，指的是创建向量嵌入(即将文本转化为向量)，并生成对应的索引。以便轻松准确地查找与上下文相关的数据。</p>
+<p><strong>3. 存储。</strong> 存储文本向量以及索引，以免重复索引。</p>
+<p><strong>4. 查询。</strong> 对于任何给定的索引策略，您都可以通过多种方式利用 LLM 和 LlamaIndex 数据结构进行查询，包括子查询、多步查询和混合策略。</p>
+<p><strong>5. 评估。</strong> 任何流程中的关键一步是检查它相对于其他策略或在您进行更改时的有效性。评估提供了关于您的查询响应有多准确、忠实和快速的客观衡量标准。</p>
+<p>5个阶段是依次进行的。</p>
+<p> <img src="/2025/06/28/llm-application-14/image-20250608204624686.png" alt="image-20250608204624686"></p>
+<h5 id="2-2-RAG的核心阶段"><a href="#2-2-RAG的核心阶段" class="headerlink" title="2.2 RAG的核心阶段"></a>2.2 RAG的核心阶段</h5><p>RAG中最重要的两个阶段为索引和查询阶段。</p>
+<p><strong>1. 索引阶段。</strong> LlamaIndex通过提供 Data connectors(数据连接器)和 Indexes(索引)帮助开发者构建知识库。该阶段会用到如下工具或组件:</p>
 <ul>
-<li>BGE-M3：北京智源研究院开发，支持多语言、混合检索（稠密+稀疏向量），处理 8K 上下文，适合企业级知识库。</li>
-<li>NV-Embed-v2：基于 Mistral-7B，检索精度高（MTEB 得分 62.65），但需较高计算资源。  </li>
+<li><p>Data connectors(数据连接器)。它负责将来自不同数据源的不同格式的数据注入，并转换为LlamaIndex支持的文档(document)形式，其中包含了文本和元数据。</p>
+<p>  <strong>注:概念Documents/Nodes</strong> Documents是LlamaIndex中容器的概念，它可以包含任何数据源，包括PDF， API， 数据库，Node是LlamaIndex中数据的最小单元，代表了一个Document的分块，它还包含了元数据，以及与其他Node的关系信息。这使得更精确的检索操作成为可能。</p>
+</li>
+<li><p>Data Index(数据索引)。LlamaIndex提供的工具，帮助开发者为注入的数据建立索引，使得未来的检索简单而且高效，最常用的索引是向量存储索引VectorStoreIndex。</p>
+</li>
 </ul>
-<p>2.垂域特化型</p>
+<p><strong>2. 查询阶段。</strong> 在查询阶段，RAG管道根据用户查询，检索最相关的上下文，并将其与查询一起，传递给LLM，以合成响应。这是LLM能够获得不在器原始训练数据中的最新知识，同时也减少了虚构内容(大模型幻觉)。该阶段关键在于检索，编排和基于知识库的推理。</p>
+<p>LlamaIndex提供可组合的模块，帮助开发者构建和集成RAG管道，用于问答，聊天机器人或作为代理的一部分。这些构建块可以根据排名偏好进行定制，并组合起来，以结构化的方式基于多个知识库机型推理。</p>
+<p>该阶段的构建块包括：</p>
 <ul>
-<li>中文场景： BGE-large-zh-v1.5 （合同/政策文件）、 M3E-base （社交媒体分析）。  </li>
-<li>多模态场景： BGE-VL （图文跨模态检索），联合编码 OCR 文本与图像特征。  </li>
+<li>Retrivers 检索器。它定义如何高效地从知识库，基于查询，检索相关上下文信息。</li>
+<li>Node Postprocessors Node后处理器。它对一系列文档节点(Node)实施转换，过滤或排名。</li>
+<li>Resopnse Synthesizers 响应合成器。 它基于用户的查询，和一组检索到的文本块(形成上下文)，利用LLM生成响应。</li>
 </ul>
-<p>3.轻量化部署型</p>
+<p>RAG管道包括:</p>
 <ul>
-<li>nomic-embed-text：768 维向量，推理速度比 OpenAI 快 3 倍，适合边缘设备。  </li>
-<li>gte-qwen2-1.5b-instruct：1.5B 参数，16GB 显存即可运行，适合初创团队原型验。  </li>
+<li>Query Engines 查询引擎(端到端管道)。允许用于基于知识库，以自然语言提问，并获得回答，以及相关的上下文。</li>
+<li>Chat Engines 聊天引擎(端到端管道)。允许用于基于知识库进行对话(多轮对话)。</li>
+<li>Agent 代理。它是一种由LLM驱动的自动化决策器。代理可以像查询引擎或聊天引擎一样使用。主要区别在于，代理动态地决定最佳的动作序列，而不是遵循预定的逻辑。这位其提供了处理更复杂任务的额外灵活性。</li>
 </ul>
-<p>总的来说：</p>
-<ul>
-<li>中文为主：BGE系列&gt;M3E</li>
-<li>多语言需求：BGE-M3&gt;multilingual-e5</li>
-<li>预算有限：开源模型，如Nomic Embed</li>
-</ul>
-<h5 id="2-3-Embedding-models-对比案例"><a href="#2-3-Embedding-models-对比案例" class="headerlink" title="2.3 Embedding models 对比案例"></a>2.3 Embedding models 对比案例</h5><p>比如要对比 <code>paraphrasemultilingual-MiniLM-L12-v2</code> 和 <code>text2vec-base-chinese-sentence</code> 在自己数据集上的性能，这里选择开源数据集<code>1</code> , 在实际开发时应该选择自己的数据集。使用如下代码：</p>
-<p>代码的逻辑为：加载数据集(需要根据自己的数据格式调整)，加载模型，分别用两个模型计算样本的嵌入向量，计算余弦相似度，根据匹配结果统计正确个数，即为准确率。</p>
-<p>这里数据集为 <a href="https://rajpurkar.github.io/SQuAD-explorer/">The Stanford Question Answering Dataset</a> 我只使用了<code>dev-v2.0.json</code>。</p>
-<p>通过读取后数据集中每个样本格式如下:</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;question&quot;</span><span class="punctuation">:</span> <span class="string">&quot;In what country is Normandy located?&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;answer&quot;</span><span class="punctuation">:</span> <span class="string">&quot;France&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;context&quot;</span><span class="punctuation">:</span> <span class="string">&quot;The Normans (Norman: Nourmands; French: Normands; Latin: Normanni) were the people who in the 10th and 11th centuries gave their name to Normandy, a region in France. They were descended from Norse (\&quot;Norman\&quot; comes from \&quot;Norseman\&quot;) raiders and pirates from Denmark, Iceland and Norway who, under their leader Rollo, agreed to swear fealty to King Charles III of West Francia. Through generations of assimilation and mixing with the native Frankish and Roman-Gaulish populations, their descendants would gradually merge with the Carolingian-based cultures of West Francia. The distinct cultural and ethnic identity of the Normans emerged initially in the first half of the 10th century, and it continued to evolve over the succeeding centuries.&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#embedding_model效果对比</span></span><br><span class="line"><span class="keyword">from</span> sentence_transformers <span class="keyword">import</span> SentenceTransformer, util</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载SQuAD数据（假设已处理成列表格式）</span></span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;dev-v2.0.json&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">    squad_data = json.load(f)[<span class="string">&quot;data&quot;</span>]</span><br><span class="line">    </span><br><span class="line"><span class="comment"># 提取问题和答案对</span></span><br><span class="line">qa_pairs = []</span><br><span class="line"><span class="keyword">for</span> article <span class="keyword">in</span> squad_data:</span><br><span class="line">    <span class="keyword">for</span> para <span class="keyword">in</span> article[<span class="string">&quot;paragraphs&quot;</span>]:</span><br><span class="line">        <span class="keyword">for</span> qa <span class="keyword">in</span> para[<span class="string">&quot;qas&quot;</span>]:</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> qa[<span class="string">&quot;is_impossible&quot;</span>]:</span><br><span class="line">                qa_pairs.append(&#123;</span><br><span class="line">                    <span class="string">&quot;question&quot;</span>: qa[<span class="string">&quot;question&quot;</span>],</span><br><span class="line">                    <span class="string">&quot;answer&quot;</span>: qa[<span class="string">&quot;answers&quot;</span>][<span class="number">0</span>][<span class="string">&quot;text&quot;</span>],</span><br><span class="line">                    <span class="string">&quot;context&quot;</span>: para[<span class="string">&quot;context&quot;</span>] </span><br><span class="line">                &#125;)</span><br><span class="line"><span class="built_in">print</span>(json.dumps(qa_pairs[<span class="number">0</span>], indent = <span class="number">4</span>))</span><br><span class="line"><span class="comment"># 初始化两个本地模型</span></span><br><span class="line">model1 = SentenceTransformer(<span class="string">&#x27;/root/autodl-tmp/paraphrase-multilingual-MiniLM-L12-v2&#x27;</span>)  <span class="comment"># 模型1</span></span><br><span class="line">model2 = SentenceTransformer(<span class="string">&#x27;/root/autodl-tmp/text2vec-base-chinese-sentence&#x27;</span>)   <span class="comment"># 模型2</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 编码所有上下文（作为向量库）</span></span><br><span class="line">contexts = [item[<span class="string">&quot;context&quot;</span>] <span class="keyword">for</span> item <span class="keyword">in</span> qa_pairs]</span><br><span class="line">context_embeddings1 = model1.encode(contexts)  <span class="comment"># 模型1的向量库</span></span><br><span class="line">context_embeddings2 = model2.encode(contexts)  <span class="comment"># 模型2的向量库</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 评估函数</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">evaluate</span>(<span class="params">model, query_embeddings, context_embeddings</span>):</span><br><span class="line">    correct = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> idx, qa <span class="keyword">in</span> <span class="built_in">enumerate</span>(qa_pairs[:<span class="number">100</span>]):  <span class="comment"># 测试前100条</span></span><br><span class="line">        <span class="comment"># 查找最相似上下文</span></span><br><span class="line">        sim_scores = util.cos_sim(query_embeddings[idx], context_embeddings)</span><br><span class="line">        best_match_idx = np.argmax(sim_scores)</span><br><span class="line">        <span class="comment"># 检查答案是否在匹配段落中</span></span><br><span class="line">        <span class="keyword">if</span> qa[<span class="string">&quot;answer&quot;</span>] <span class="keyword">in</span> contexts[best_match_idx]:</span><br><span class="line">            correct += <span class="number">1</span></span><br><span class="line">    <span class="keyword">return</span> correct / <span class="built_in">len</span>(qa_pairs[:<span class="number">100</span>])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编码所有问题</span></span><br><span class="line">query_embeddings1 = model1.encode([qa[<span class="string">&quot;question&quot;</span>] <span class="keyword">for</span> qa <span class="keyword">in</span> qa_pairs[:<span class="number">100</span>]])</span><br><span class="line">query_embeddings2 = model2.encode([qa[<span class="string">&quot;question&quot;</span>] <span class="keyword">for</span> qa <span class="keyword">in</span> qa_pairs[:<span class="number">100</span>]])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行评估</span></span><br><span class="line">acc1 = evaluate(model1, query_embeddings1, context_embeddings1)</span><br><span class="line">acc2 = evaluate(model2, query_embeddings2, context_embeddings2)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;paraphrase-multilingual-MiniLM-L12-v2准确率: <span class="subst">&#123;acc1:<span class="number">.2</span>%&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;text2vec-base-chinese-sentence准确率: <span class="subst">&#123;acc2:<span class="number">.2</span>%&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
-<p>通过这种方式可以对比两个模型在特定数据集上的匹配效果，text2vec-base-chinese-sentence更适合中文文本，所以它的效果差一些:</p>
-<p> <img src="/2025/06/12/llm-application-14/image-20250611234902082.png" alt="image-20250611234902082"></p>
-<p>但Embedding模型的不同带来的影响时很小的，因为不同模型计算的两个句子之间的余弦相似的差别是不大的，比如下面的例子中:</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.embeddings.huggingface <span class="keyword">import</span> HuggingFaceEmbedding</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">fun</span>(<span class="params">model_name, documents, query</span>):</span><br><span class="line">    <span class="comment"># 加载Embedding模型</span></span><br><span class="line">    embed_model = HuggingFaceEmbedding(</span><br><span class="line">        model_name=model_name,</span><br><span class="line">        device=<span class="string">&quot;cuda&quot;</span>,  <span class="comment"># 使用 GPU，如果没有 GPU 改为 &quot;cpu&quot;</span></span><br><span class="line">        normalize=<span class="literal">True</span>,  <span class="comment"># 归一化向量，方便计算余弦相似度</span></span><br><span class="line">    )</span><br><span class="line">    <span class="comment"># 嵌入文档</span></span><br><span class="line">	doc_embeddings = [embed_model.get_text_embedding(doc) <span class="keyword">for</span> doc <span class="keyword">in</span> documents]</span><br><span class="line">    <span class="comment"># 嵌入查询</span></span><br><span class="line">	query_embedding = embed_model.get_text_embedding(query)</span><br><span class="line">	<span class="comment"># 计算余弦相似度（因为 normalize=True，点积就是余弦相似度）</span></span><br><span class="line">	similarity = np.dot(query_embedding, doc_embeddings[<span class="number">0</span>])</span><br><span class="line">	<span class="keyword">return</span> similarity	</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    <span class="comment"># 测试数据</span></span><br><span class="line">    documents = [<span class="string">&quot;忘记密码如何处理？&quot;</span>, <span class="string">&quot;用户账号被锁定&quot;</span>]</span><br><span class="line">    query = <span class="string">&quot;密码重置流程&quot;</span></span><br><span class="line">    <span class="comment"># 测试模型1</span></span><br><span class="line">    model_name = <span class="string">&quot;/home/cw/llms/embedding_model/sungw111/text2vec-base-chinese-sentence&quot;</span></span><br><span class="line">    similarity = fun(model_name, documents, query)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;text2vec-base-chinese-sentence 结果: 相似度：<span class="subst">&#123;similarity:<span class="number">.4</span>f&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="comment"># 测试模型2</span></span><br><span class="line">    model_name = <span class="string">&quot;/home/cw/llms/embedding_model/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2&quot;</span></span><br><span class="line">    similarity = fun(model_name, documents, query)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;paraphrase-multilingual-MiniLM-L12-v2 结果: 相似度：<span class="subst">&#123;similarity:<span class="number">.4</span>f&#125;</span>&quot;</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>输出如下:两个结果差别并不大</p>
-<p> <img src="/2025/06/12/llm-application-14/image-20250611235926574.png" alt="image-20250611235926574"></p>
+<h4 id="三-LlamaIndex-快速构建RAG"><a href="#三-LlamaIndex-快速构建RAG" class="headerlink" title="三. LlamaIndex 快速构建RAG"></a>三. LlamaIndex 快速构建RAG</h4><p>参考官网: <a href="https://docs.llamaindex.ai/en/stable/getting_started/starter_example/">Starter Tutorial (Using OpenAI) - LlamaIndex</a></p>
+<p>中文文档: <a href="https://docs.llamaindex.org.cn/en/stable/">LlamaIndex - LlamaIndex 框架</a></p>
+<h5 id="3-1-LlamaIndex-的安装"><a href="#3-1-LlamaIndex-的安装" class="headerlink" title="3.1 LlamaIndex 的安装"></a>3.1 LlamaIndex 的安装</h5><p>注意一定要用py3.12,笔者试过了，它最不会出问题, 并且安装最新的LlamaIndex, 不要加版本号。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">conda create -n llamaindex python==3.12 -y # 创建环境</span><br><span class="line">conda activate llamaindex # 激活环境</span><br><span class="line">pip install llama-index # 下载LlamaIndex核心组件, 后续遇到其他组件再补充</span><br></pre></td></tr></table></figure>
+<h5 id="3-2-快速开始"><a href="#3-2-快速开始" class="headerlink" title="3.2 快速开始"></a>3.2 快速开始</h5><p>首先下载千问大模型<code>Qwen1.5-1.8B-Chat</code></p>
+<p>使用如下代码快开始一个LlamaIndex样例，需要安装额外的包</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pip install llama_index.llms.huggingface</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core.llms <span class="keyword">import</span> ChatMessage</span><br><span class="line"><span class="keyword">from</span> llama_index.llms.huggingface <span class="keyword">import</span> HuggingFaceLLM</span><br><span class="line"></span><br><span class="line"><span class="comment">#使用HuggingFaceLLM加载本地大模型</span></span><br><span class="line">llm = HuggingFaceLLM(model_name=<span class="string">&quot;/root/autodl-tmp/Qwen1.5-1.8B-Chat&quot;</span>,</span><br><span class="line">               tokenizer_name=<span class="string">&quot;/root/autodl-tmp/Qwen1.5-1.8B-Chat&quot;</span>,</span><br><span class="line">               model_kwargs=&#123;<span class="string">&quot;trust_remote_code&quot;</span>:<span class="literal">True</span>&#125;,</span><br><span class="line">               tokenizer_kwargs=&#123;<span class="string">&quot;trust_remote_code&quot;</span>:<span class="literal">True</span>&#125;)</span><br><span class="line"><span class="comment">#调用模型chat引擎得到回复</span></span><br><span class="line">rsp = llm.chat(messages=[ChatMessage(content=<span class="string">&quot;xtuner是什么？&quot;</span>)])</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(rsp)</span><br></pre></td></tr></table></figure>
+<p>运行后结果如下图:</p>
+<p> <img src="/2025/06/28/llm-application-14/image-20250610225000633.png" alt="image-20250610225000633"></p>
+<p>但此时是没有知识库的,所以出现了大模型你幻觉。</p>
+<h5 id="3-3-快速构建RAG"><a href="#3-3-快速构建RAG" class="headerlink" title="3.3 快速构建RAG"></a>3.3 快速构建RAG</h5><p>先下载嵌入模型<code>sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2</code></p>
+<p>这里用huggingface加载模型，所以一定要下载sentence-transformer模型，不能下成huggingface模型。</p>
+<p>还要补充安装包:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pip insatll llama_index.embeddings.huggingface</span><br></pre></td></tr></table></figure>
+<p>接下来使用LlamaIndex构建RAG，这里使用的是xtuner项目中的readme.md 代码如下:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.embeddings.huggingface <span class="keyword">import</span> HuggingFaceEmbedding</span><br><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> Settings,SimpleDirectoryReader,VectorStoreIndex</span><br><span class="line"><span class="keyword">from</span> llama_index.llms.huggingface <span class="keyword">import</span> HuggingFaceLLM</span><br><span class="line"></span><br><span class="line"><span class="comment">#初始化一个HuggingFaceEmbedding对象，用于将文本转换为向量表示</span></span><br><span class="line">embed_model = HuggingFaceEmbedding(</span><br><span class="line">    <span class="comment">#指定了一个预训练的sentence-transformer模型的路径</span></span><br><span class="line">    model_name=<span class="string">&quot;/root/autodl-tmp/paraphrase-multilingual-MiniLM-L12-v2&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">#将创建的嵌入模型赋值给全局设置的embed_model属性，这样在后续的索引构建过程中，就会使用这个模型</span></span><br><span class="line">Settings.embed_model = embed_model</span><br><span class="line"></span><br><span class="line"><span class="comment">#使用HuggingFaceLLM加载本地大模型</span></span><br><span class="line">llm = HuggingFaceLLM(model_name=<span class="string">&quot;/root/autodl-tmp/Qwen1.5-1.8B-Chat&quot;</span>,</span><br><span class="line">               tokenizer_name=<span class="string">&quot;/root/autodl-tmp/Qwen1.5-1.8B-Chat&quot;</span>,</span><br><span class="line">               model_kwargs=&#123;<span class="string">&quot;trust_remote_code&quot;</span>:<span class="literal">True</span>&#125;,</span><br><span class="line">               tokenizer_kwargs=&#123;<span class="string">&quot;trust_remote_code&quot;</span>:<span class="literal">True</span>&#125;)</span><br><span class="line"><span class="comment">#设置全局的llm属性，这样在索引查询时会使用这个模型。</span></span><br><span class="line">Settings.llm = llm</span><br><span class="line"></span><br><span class="line"><span class="comment">#从指定目录读取文档，将数据加载到内存</span></span><br><span class="line">documents = SimpleDirectoryReader(<span class="string">&quot;/root/autodl-tmp/day17/data&quot;</span>).load_data()</span><br><span class="line"><span class="comment"># print(documents)</span></span><br><span class="line"><span class="comment">#创建一个VectorStoreIndex,并使用之前加载的文档来构建向量索引</span></span><br><span class="line"><span class="comment">#此索引将文档转换为向量，并存储这些向量（内存）以便于快速检索</span></span><br><span class="line">index = VectorStoreIndex.from_documents(documents)</span><br><span class="line"><span class="comment">#创建一个查询引擎，这个引擎可以接收查询并返回相关文档的响应。</span></span><br><span class="line">query_engine = index.as_query_engine()</span><br><span class="line">rsp = query_engine.query(<span class="string">&quot;xtuner是什么？&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(rsp)</span><br></pre></td></tr></table></figure>
+<p>运行后输出如下</p>
+<p> <img src="/2025/06/28/llm-application-14/image-20250610225402101.png" alt="image-20250610225402101"></p>
+<p>可以看到，大模型根据输入的知识给出正确的输出。</p>
 ]]></content>
       <categories>
         <category>大模型应用</category>
@@ -1204,8 +1178,8 @@
       </categories>
   </entry>
   <entry>
-    <title>大模型应用系列(十五) 大模型微调项目实战：Chroma 向量数据库介绍与使用</title>
-    <url>/2025/06/12/llm-application-15/</url>
+    <title>大模型应用系列(十五) 大模型RAG项目实战：Chroma 向量数据库介绍与使用</title>
+    <url>/2025/06/29/llm-application-15/</url>
     <content><![CDATA[<p>介绍Chroma的原理以及使用方式，说明使用过程中需要注意的问题。</p>
 <span id="more"></span>
 <h4 id="一-Chroma-核心概念与优势"><a href="#一-Chroma-核心概念与优势" class="headerlink" title="一. Chroma 核心概念与优势"></a>一. Chroma 核心概念与优势</h4><p>参考文档: <a href="https://docs.trychroma.com/docs/overview/introduction">Introduction - Chroma Docs</a></p>
@@ -1241,10 +1215,10 @@
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line">collection.count() <span class="comment"># 获取条目数</span></span><br></pre></td></tr></table></figure>
 <h5 id="3-5-示例代码：增删改查"><a href="#3-5-示例代码：增删改查" class="headerlink" title="3.5 示例代码：增删改查"></a>3.5 示例代码：增删改查</h5><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> chromadb</span><br><span class="line"><span class="keyword">from</span> sentence_transformers <span class="keyword">import</span> SentenceTransformer</span><br><span class="line"></span><br><span class="line"><span class="comment"># 新版Chromadb不支持直接加载Embedding模型，需要设计一个类先加载模型。但如果是集成到llamaindex就不用(llamaindex转好了)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SentenceTransformerEmbeddingFunction</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, model_path: <span class="built_in">str</span>, device: <span class="built_in">str</span> = <span class="string">&quot;cuda&quot;</span></span>):</span><br><span class="line">        <span class="variable language_">self</span>.model = SentenceTransformer(model_path, device=device)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__call__</span>(<span class="params">self, <span class="built_in">input</span>: <span class="built_in">list</span>[<span class="built_in">str</span>]</span>) -&gt; <span class="built_in">list</span>[<span class="built_in">list</span>[<span class="built_in">float</span>]]:</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">isinstance</span>(<span class="built_in">input</span>, <span class="built_in">str</span>):</span><br><span class="line">            <span class="built_in">input</span> = [<span class="built_in">input</span>]</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.model.encode(<span class="built_in">input</span>, convert_to_numpy=<span class="literal">True</span>).tolist()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建/加载集合（含自定义嵌入函数）</span></span><br><span class="line">embed_model = SentenceTransformerEmbeddingFunction(</span><br><span class="line">    model_path=<span class="string">&quot;/root/autodl-tmp/text2vec-base-chinese-sentence&quot;</span>,</span><br><span class="line">    device=<span class="string">&quot;cuda&quot;</span>  <span class="comment"># 无 GPU 改为 &quot;cpu&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建客户端和集合</span></span><br><span class="line">client = chromadb.Client()</span><br><span class="line">collection = client.create_collection(<span class="string">&quot;my_knowledge_base&quot;</span>,metadata=&#123;<span class="string">&quot;hnsw:space&quot;</span>: <span class="string">&quot;cosine&quot;</span>&#125;,embedding_function=embed_model)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加文档</span></span><br><span class="line">collection.add(</span><br><span class="line">    documents=[<span class="string">&quot;RAG是一种检索增强生成技术&quot;</span>, <span class="string">&quot;向量数据库存储文档的嵌入表示&quot;</span>,<span class="string">&quot;三英战吕布&quot;</span>], <span class="comment"># 文档</span></span><br><span class="line">    metadatas=[&#123;<span class="string">&quot;source&quot;</span>: <span class="string">&quot;tech_doc&quot;</span>&#125;, &#123;<span class="string">&quot;source&quot;</span>: <span class="string">&quot;tutorial&quot;</span>&#125;, &#123;<span class="string">&quot;source&quot;</span>: <span class="string">&quot;tutorial1&quot;</span>&#125;], <span class="comment"># 元数据，不重复</span></span><br><span class="line">    ids=[<span class="string">&quot;doc1&quot;</span>, <span class="string">&quot;doc2&quot;</span>,<span class="string">&quot;doc3&quot;</span>] <span class="comment"># 索引，不重复</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查询相似文档</span></span><br><span class="line">results = collection.query(</span><br><span class="line">    query_texts=[<span class="string">&quot;什么是RAG技术？&quot;</span>],</span><br><span class="line">    n_results=<span class="number">3</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(results)</span><br><span class="line"></span><br><span class="line"><span class="comment"># collection.update(</span></span><br><span class="line"><span class="comment">#     ids=[&quot;doc1&quot;],  # 使用已存在的ID</span></span><br><span class="line"><span class="comment">#     documents=[&quot;更新后的RAG技术内容&quot;]</span></span><br><span class="line"><span class="comment"># )</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># # 查看更新后的内容 - 方法1：使用get()获取特定ID的内容</span></span><br><span class="line"><span class="comment"># updated_docs = collection.get(ids=[&quot;doc1&quot;])</span></span><br><span class="line"><span class="comment"># print(&quot;更新后的文档内容：&quot;, updated_docs[&quot;documents&quot;])</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># # 查看更新后的内容 - 方法2：查询所有文档</span></span><br><span class="line"><span class="comment"># all_docs = collection.get()</span></span><br><span class="line"><span class="comment"># print(&quot;集合中所有文档：&quot;, all_docs[&quot;documents&quot;])</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># #删除内容</span></span><br><span class="line"><span class="comment"># collection.delete(ids=[&quot;doc1&quot;])</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># # 查看更新后的内容 - 方法2：查询所有文档</span></span><br><span class="line"><span class="comment"># all_docs = collection.get()</span></span><br><span class="line"><span class="comment"># print(&quot;集合中所有文档：&quot;, all_docs[&quot;documents&quot;])</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># #统计条目</span></span><br><span class="line"><span class="comment"># print(collection.count())</span></span><br></pre></td></tr></table></figure>
 <p>输出如下:</p>
-<p><img src="/2025/06/12/llm-application-15/image-20250612000620955.png" alt="image-20250612000620955"></p>
+<p><img src="/2025/06/29/llm-application-15/image-20250612000620955.png" alt="image-20250612000620955"></p>
 <p>如果我们选择不同的Embedding模型（结果如下），其实对结果影响不大，虽然距离绝对值变了，但他们的相对大小并没有变化。选型时一般根据语言类别选型就行。</p>
 <p>使用不同嵌入模型，匹配结果是一样的。</p>
-<p><img src="/2025/06/12/llm-application-15/image-20250612000939457.png" alt="image-20250612000939457"></p>
+<p><img src="/2025/06/29/llm-application-15/image-20250612000939457.png" alt="image-20250612000939457"></p>
 <h4 id="四-补充"><a href="#四-补充" class="headerlink" title="四. 补充"></a>四. 补充</h4><h5 id="4-1-Chroma的输出"><a href="#4-1-Chroma的输出" class="headerlink" title="4.1 Chroma的输出"></a>4.1 Chroma的输出</h5><p>输出的不是余弦相似度(越大越相似)，而是距离(越小越相似)。distance是指两个向量之间的夹角 $\theta$ , 夹角越小，说明两个向量越接。而余弦相似度是值两个向量之间夹角的余弦值 $cos\theta$ , 而 $cos$ 函数是一个单调递减的函数，夹角越小, $cos$ 越大。</p>
 <h5 id="4-2-Chroma的优化"><a href="#4-2-Chroma的优化" class="headerlink" title="4.2 Chroma的优化"></a>4.2 Chroma的优化</h5><p>Chromadb 在添加数据时，就会把文本转化为向量，同时越接近的数据越放在一起(相当于做了聚类)，这样就能加快检索速度。</p>
 <h5 id="4-3-RAG中Embedding模型的使用"><a href="#4-3-RAG中Embedding模型的使用" class="headerlink" title="4.3 RAG中Embedding模型的使用"></a>4.3 RAG中Embedding模型的使用</h5><p>真正的RAG中，问题可能是很复杂的，Embedding可能无法完全理解问题的语义，所以需要先大模型理解问题，生成需求，再去检索。</p>
@@ -1718,7 +1692,7 @@
 <p><code>ollama list</code> 查看模型，可以看到已经下载的模型</p>
 <p><img src="/2025/03/21/llm-application-6/image-20250320010502719.png" alt="image-20250320010502719"></p>
 <h6 id="3-2-2-使用OpenAI的API风格调用"><a href="#3-2-2-使用OpenAI的API风格调用" class="headerlink" title="3.2.2 使用OpenAI的API风格调用"></a>3.2.2 使用OpenAI的API风格调用</h6><p>单论对话代码如下:</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> openai <span class="keyword">import</span> OpenAI</span><br><span class="line">client = OpenAI(</span><br><span class="line">    base_url=<span class="string">&quot;http://localhost:8000/v1&quot;</span>,</span><br><span class="line">    api_key=<span class="string">&quot;token-abc123&quot;</span>,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">completion = client.chat.completions.create(</span><br><span class="line">  model=<span class="string">&quot;/root/autodl-tmp/Qwen2.5-0.5B-Instruct&quot;</span>,</span><br><span class="line">  messages=[</span><br><span class="line">    &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="string">&quot;讲一个猫和老鼠的故事&quot;</span>&#125;</span><br><span class="line">  ]</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(completion.choices[<span class="number">0</span>].message.content)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> openai <span class="keyword">import</span> OpenAI</span><br><span class="line">client = OpenAI(</span><br><span class="line">    base_url=<span class="string">&quot;http://localhost:11434/v1/&quot;</span>,</span><br><span class="line">    api_key=<span class="string">&quot;suibianxie&quot;</span>,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">completion = client.chat.completions.create(</span><br><span class="line">  model=<span class="string">&quot;qwen2.5:0.5b&quot;</span>,</span><br><span class="line">  messages=[</span><br><span class="line">    &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="string">&quot;讲一个猫和老鼠的故事&quot;</span>&#125;</span><br><span class="line">  ]</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(completion.choices[<span class="number">0</span>].message.content)</span><br></pre></td></tr></table></figure>
 <p>多轮对话代码如下, 单轮可以照着改。要注意model_name和<code>ollama list</code> 查到的模型名字一样，端口是上面ollama服务的端口和地址，这里是<code>127.0.0.1:11434</code>, api_key 随便写</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#多轮对话</span></span><br><span class="line"><span class="keyword">from</span> openai <span class="keyword">import</span> OpenAI</span><br><span class="line"></span><br><span class="line">base_url = <span class="string">&quot;http://localhost:11434/v1/&quot;</span></span><br><span class="line">api_key = <span class="string">&quot;suibianxie&quot;</span></span><br><span class="line">model_name = <span class="string">&quot;qwen2.5:0.5b&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#定义多轮对话方法</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">run_chat_session</span>():</span><br><span class="line">    <span class="comment">#初始化客户端</span></span><br><span class="line">    client = OpenAI(base_url=base_url,api_key=api_key)</span><br><span class="line">    <span class="comment">#初始化对话历史</span></span><br><span class="line">    chat_history = []</span><br><span class="line">    <span class="comment">#启动对话循环</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        <span class="comment">#获取用户输入</span></span><br><span class="line">        user_input = <span class="built_in">input</span>(<span class="string">&quot;用户：&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> user_input.lower() == <span class="string">&quot;exit&quot;</span>:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;退出对话。&quot;</span>)</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="comment">#更新对话历史(添加用户输入)</span></span><br><span class="line">        chat_history.append(&#123;<span class="string">&quot;role&quot;</span>:<span class="string">&quot;user&quot;</span>,<span class="string">&quot;content&quot;</span>:user_input&#125;)</span><br><span class="line">        <span class="comment">#调用模型回答</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            chat_complition = client.chat.completions.create(messages=chat_history,model=model_name)</span><br><span class="line">            <span class="comment">#获取最新回答</span></span><br><span class="line">            model_response = chat_complition.choices[<span class="number">0</span>]</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;AI:&quot;</span>,model_response.message.content)</span><br><span class="line">            <span class="comment">#更新对话历史（添加AI模型的回复）</span></span><br><span class="line">            chat_history.append(&#123;<span class="string">&quot;role&quot;</span>:<span class="string">&quot;assistant&quot;</span>,<span class="string">&quot;content&quot;</span>:model_response.message.content&#125;)</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;发生错误：&quot;</span>,e)</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    run_chat_session()</span><br></pre></td></tr></table></figure>
 <p>运行该文件后即可和大模型进行多轮对话</p>
@@ -4034,6 +4008,740 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
       <categories>
         <category>大模型应用</category>
         <category>概念和原理</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Transformer注意力机制计算公式解析，自回归解码，KV-cache</title>
+    <url>/2025/06/30/autoregressive-decode/</url>
+    <content><![CDATA[<p>推导Transformer注意力机制的计算过程，解释训练和推理过程注意力计算的不同，解释为什么有kv-cache而没有q-cache</p>
+<span id="more"></span>
+<p>在LLM推理中最关键的就是下图中的Multi-Head Attention, 其主要的计算集中在左图中灰色的Linar(矩阵乘)和Scaled Dot-Product Attention 中的MatMul矩阵乘法:<br><img src="/2025/06/30/autoregressive-decode/640.webp" alt="alt text"><img src="/2025/06/30/autoregressive-decode/640-17512966407353.png" alt="alt text"><br>说明:<br>Multi-Head Attention: 输入$X$经过$W_Q, W_K, W_V$矩阵的线性变换, 对结果进行拆分后为每个注意力头生成一组输入$Q,K,K$, 经过计算每个注意力头输出一个注意力矩阵,拼接后生成总的注意力矩阵, 最后经过一个全连接层得到输出矩阵。<br>Scaled Dot-Product Attention 流程为 $Q,K$进行矩阵乘得到$QK^T$,接着除以$\sqrt{d_k}$使方差变小, 然后和因果掩码矩阵$Mask(opt.)$相乘, 最后经过$SoftMax(\cdot)$归一化后和$V$相乘。<br>注意力的计算公式如下:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    Attention(K, Q,V)=softmax(\frac{QK^T}{\sqrt{d_k}})V   
+\end{equation}</script><ol>
+<li>Attention不直接使用$X$，而是使用经过矩阵乘法生成的这三个矩阵，因为使用三个可训练的参数矩阵，可增强模型的拟合能力。</li>
+<li>$softmax(\cdot )$是归一化函数, 使结果更平滑。</li>
+<li>$d_k$是头维度,这个除法称为Scale, 当$d_k$很大时, $QK^T$的乘法结果方差变大, 进行Scale可以使方差变小, 训练时梯度更新更稳定。</li>
+<li>因果掩码矩阵:因果掩码矩阵是一个上三角, 在解码器训练的过程中，不能让模型知道未来时间步的信息，否则就相当于告诉了模型的最终答案是什么。例如我们给解码器输入”I like eating pears”，当我们在计算’like’这个词与与其他词的注意力权重时，因为解码器是一个单词一个单词预测的，在预测’like’这个词时是不应该知道后面的单词，所以与’like’后面的单词不应该产生关联性。</li>
+</ol>
+<h4 id="一-训练阶段"><a href="#一-训练阶段" class="headerlink" title="一. 训练阶段"></a>一. 训练阶段</h4><p>涉及的变量<br>参数 含义<br>B batch size<br>t 序列长度<br>$d_{model}$ 模型维度<br>h 注意力头数<br>$d_k$ $d_k = \frac{d_{model}}{h}$ 每个头的维度<br>假设$Batch_size=1$, 一次多头注意力的计算如下:</p>
+<h5 id="step1-输入Embedding"><a href="#step1-输入Embedding" class="headerlink" title="step1 输入Embedding"></a>step1 输入Embedding</h5><p>输入矩阵为<br>$X\in \mathbb{R}^{t\times d_{model}}$</p>
+<h5 id="step2-线性变换生成QKV"><a href="#step2-线性变换生成QKV" class="headerlink" title="step2 线性变换生成QKV"></a>step2 线性变换生成QKV</h5><p>$Q,K,V$都是从同样的输入矩阵$X$线性变换而来:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    Q=XW^Q , K=XW^K , V=XW^V
+\end{equation}</script><p>其中$X \in \mathbb{R}^{t\times d_{model}}, W^Q,W^K,W^V \in \mathbb{R}^{d_{model} \times d_{model}}, Q,K,V\in \mathbb{R}^{t\times d_{model}}$</p>
+<h5 id="step3-多头拆分"><a href="#step3-多头拆分" class="headerlink" title="step3 多头拆分"></a>step3 多头拆分</h5><p>$Q,K,V$先reshape成 $t \times h \times d_{k}$, 其中$h=\frac{d_{model}}{d_k}$, 接着转置为$h\times t \times d_k$</p>
+<h5 id="step4-缩放点积注意力"><a href="#step4-缩放点积注意力" class="headerlink" title="step4 缩放点积注意力"></a>step4 缩放点积注意力</h5><p>在训练时, 通常处理的是完整的序列, $Q,K,V$都是序列长度$\times$头维度($t\times d_k$)的矩阵,此时$K,Q,V\in \mathbb{R}^{t \times d_{k}}$。<br>把$Q,K,V$写成列向量形式:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    Q=
+    \begin{bmatrix}
+        q_1 \\
+        q_2 \\
+        \vdots \\
+        q_t
+    \end{bmatrix},
+    K=
+    \begin{bmatrix}
+        k_1 \\
+        k_2 \\
+        \vdots \\
+        k_t
+    \end{bmatrix},
+    V=
+    \begin{bmatrix}
+        v_1 \\
+        v_2 \\
+        \vdots \\
+        v_t
+    \end{bmatrix}
+\end{equation}</script><p>其中$k_i,q_i,v_i \in \mathbb{R}^{1\times d_k},i=1,2,…,t$, 所以$Q,K,V\in \mathbb{R}^{t,d_{model}}$<br>$Q$和$K$装置的矩阵乘就变成了:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    QK^T=
+    \begin{bmatrix}
+        q_1 \\
+        q_2 \\
+        \vdots \\
+        q_t    
+    \end{bmatrix}
+    \begin{bmatrix}
+        k_1^T & k_2^T & \dots & k_t^T 
+    \end{bmatrix}=
+    \begin{bmatrix}
+        q_1\cdot k_1^T & q_1\cdot k_2^T & \cdots & q_1 \cdot k_t^T \\
+        q_2\cdot k_1^T & q_2^T\cdot k_2^T & \cdots & q_2^T \cdot k_t^T \\
+        \vdots & \vdots & \ddots & \vdots  \\
+        q_t\cdot k_1^T & q_t^T\cdot k_2^T & \cdots & q_t^T \cdot k_t^T \\
+    \end{bmatrix}
+\end{equation}</script><p>忽略除以$\sqrt{d_k}$(这只是一个常数, 不改变矩阵大小), 接着乘以因果掩码矩阵, 并进行归一化后结果为, 这里第$i$行的$SoftMax$简写成$S_i$, 结果为:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+\begin{aligned}
+    M_i = SoftMax(Mask(QK^T))V &= SoftMax\left(
+    \begin{bmatrix}
+        1 & 0 & \cdots & 0 \\
+        1 & 1 & \cdots & 0 \\
+        \vdots & \vdots & \ddots & \vdots \\
+        1 & 1 & \cdots & 1
+    \end{bmatrix}\cdot 
+    \begin{bmatrix}
+        q_1\cdot k_1^T & q_1\cdot k_2^T & \cdots & q_1 \cdot k_t^T \\
+        q_2\cdot k_1^T & q_2\cdot k_2^T & \cdots & q_2 \cdot k_t^T \\
+        \vdots & \vdots & \ddots & \vdots  \\
+        q_t\cdot k_1^T & q_t\cdot k_2^T & \cdots & q_t \cdot k_t^T \\
+    \end{bmatrix}
+    \right) 
+    \begin{bmatrix}
+        v_1 \\
+        v_2 \\ 
+        \vdots \\
+        v_t    
+    \end{bmatrix} \\
+    &= 
+    \begin{bmatrix}
+        S_1(q_1\cdot k_1^T)v_1 \\
+        S_2(q_2\cdot k_1^T)v1 + S_1(q_2\cdot k_2^T)v_2 \\
+        \vdots  \\
+        S_t(q_t\cdot k_1^T)v_1+S_t(q_t\cdot k_2^T)v_2 + \cdots + S_t(q_t\cdot k_t^T)v_t 
+    \end{bmatrix}
+\end{aligned}
+\end{equation}</script><p>其中$m_i$表是第$i,\ i = 1,2,…,h$个注意力头的输出, 大小为$t\times d_{k}$</p>
+<h5 id="step5-拼接所有输出"><a href="#step5-拼接所有输出" class="headerlink" title="step5 拼接所有输出"></a>step5 拼接所有输出</h5><p>拼接所有注意力头的输出:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    M_{concat}=Concat(M_1,...,M_h)   
+\end{equation}</script><p>经过拼接, 最终输出$M_{concat}$形状又变回$t \times d_{model}$</p>
+<h5 id="step6-全连接层-Projection"><a href="#step6-全连接层-Projection" class="headerlink" title="step6 全连接层(Projection)"></a>step6 全连接层(Projection)</h5><script type="math/tex; mode=display">
+\begin{equation}
+    M_{output}=M_{concat}\cdot W^O
+\end{equation}</script><p>其中$W^O\in \mathbb{R}^{d_{model} \times d_{model}}, M_{output}\in \mathbb{R}^{t\times d_{model}}$<br>以上的推导为了方便表示, 没有考虑batch_size, 如果加上batch_size, 各阶段计算如下:</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>参数</th>
+<th>输入</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>step1</td>
+<td>$Embed(\cdot)$</td>
+<td>$B$个字符串</td>
+<td>$X\in \mathbb{R}^{B\times d_{model}}$</td>
+</tr>
+<tr>
+<td>step2</td>
+<td>$W^Q,W^K,W^V \in \mathbb{R}^{d_{model} \times d_{model}}$</td>
+<td>$X\in \mathbb{R}^{B\times t\times d_{model}}$</td>
+<td>$Q,K,V\in \mathbb{R}^{B\times t\times d_{model}}$</td>
+</tr>
+<tr>
+<td>step3</td>
+<td>$Reshape(\cdot)$</td>
+<td>$Q,K,V\in \mathbb{R}^{B\times t\times d_{model}}$</td>
+<td>$Q,K,V\in \mathbb{R}^{ B\times h\times t\times d_k}$</td>
+</tr>
+<tr>
+<td>step4</td>
+<td>$SoftMax(Mask(\frac{QK^T}{\sqrt{d_k}}))V$</td>
+<td>$Q,K,V\in \mathbb{R}^{ B\times h\times t\times d_k}$</td>
+<td>$M_i \in \mathbb{R}^{B\times t\times d_k}, i = 1,2,…,h$</td>
+</tr>
+<tr>
+<td>step5</td>
+<td>$Concat(\cdot)$</td>
+<td>$M_i \in \mathbb{R}^{B\times t\times d_k}, i = 1,2,…,h$</td>
+<td>$M_{concat}\in \mathbb{R}^{B \times t\times d_{model}}$</td>
+</tr>
+<tr>
+<td>step6</td>
+<td>$W^O$</td>
+<td>$M_{concat}\in \mathbb{R}^{B \times t\times d_{model}}$</td>
+<td>$M_{output} \in \mathbb{R}^{B\times t \times d_{model}}$</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="二-推理阶段"><a href="#二-推理阶段" class="headerlink" title="二. 推理阶段"></a>二. 推理阶段</h4><p>训练阶段是整个序列一起计算, 并不需要$kv-cache$<br>推理阶段, 我们实际是要预测第$L$个token, 即输入只有$q_L$, 公式$(5)$只需要算出矩阵的最后一行, 所以只需要当前的$q_L$, 不需要缓存之前的$Query$, 所以没有Q-Cache, 从公式也可以看出, 在预测第$t$个token时, K,V的维度为$L\times d_k$, Q的维度为$1\times d_k$ 所以需要$KV-Cache$而不需要$Q-Cache$<br>在batch_size=1时, 推理过程如下:</p>
+<h5 id="step1-输入"><a href="#step1-输入" class="headerlink" title="step1 输入"></a>step1 输入</h5><p>假设当前要预测第$t$个token$x_t$, 则输入是上一步(第$t-1$步)的输出$x_{t-1}$的Embedding</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    x_{t} \in \mathbb{R}^{1\times d_{model}}
+\end{equation}</script><h5 id="step2-计算-q-t-k-t-v-t"><a href="#step2-计算-q-t-k-t-v-t" class="headerlink" title="step2 计算$q_t,k_t,v_t$"></a>step2 计算$q_t,k_t,v_t$</h5><p>从输入$x_t$线性变换得到$q_t,k_t,v_t$:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    q_t=x_tW^Q,k_t=x_tW^K,v_t=x_tW^V  
+\end{equation}</script><p>其中$x_t\in \mathbb{R}^{1\times d_{model}}, W^Q,W^K,W^V \in \mathbb{R}^{d_{model} \times d_{model}}, q_t,k_t,v_t \in \mathbb{R}^{1\times d_{model}}$</p>
+<h5 id="step3-多头拆分-1"><a href="#step3-多头拆分-1" class="headerlink" title="step3 多头拆分"></a>step3 多头拆分</h5><p>$q_t,k_t,v_t$先reshape成 $1 \times h \times d_{k}$, 其中$h=\frac{d_{model}}{d_k}$, 接着转置为$h\times 1 \times d_k$, 分发到不同的注意力头, 每个头拿到一个输入$q_t,k_t,v_t \in \mathbb{R}^{1\times d_k}$</p>
+<h5 id="step4-缩放点积注意力-1"><a href="#step4-缩放点积注意力-1" class="headerlink" title="step4 缩放点积注意力"></a>step4 缩放点积注意力</h5><p>自回归推理中我们只需要预测当前第$t$个token, 所以只需要计算公式$(5)$的最后一行, 前$t-1$个token的$k,v$我们都缓存了, 读取后和新计算的$k_t,v_t$拼接可以得到:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    Q=q_t,
+    K=
+    \begin{bmatrix}
+        k_1 \\
+        k_2 \\
+        \vdots \\
+        k_t
+    \end{bmatrix},
+    V=
+    \begin{bmatrix}
+        v_1 \\
+        v_2 \\
+        \vdots \\
+        v_t
+    \end{bmatrix}
+\end{equation}</script><p>其中$q_t,k_i,v_i \in \mathbb{R}^{1\times d_k},i=1,2,…,t$, 所以$K,V\in \mathbb{R}^{t,d_k}, Q\in \mathbb{R}^{1\times d_k}$<br>$Q$和$K$装置的矩阵乘就变成了:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    QK^T=q_t    
+    \begin{bmatrix}
+        k_1^T & k_2^T & \dots & k_t^T 
+    \end{bmatrix}=
+    \begin{bmatrix}
+        q_t\cdot k_1^T & q_t\cdot k_2^T & \cdots & q_t \cdot k_t^T \\
+    \end{bmatrix}
+\end{equation}</script><p>忽略除以$\sqrt{d_k}$(这只是一个常数, 不改变矩阵大小), 推理过程需要关注整个序列, 所以不需要乘以因果掩码矩阵, 结果进行归一化后为:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+\begin{aligned}
+    M_i = SoftMax(QK^T)V &= SoftMax\left( 
+    \begin{bmatrix}
+        q_t\cdot k_1^T & q_t\cdot k_2^T & \cdots & q_t \cdot k_t^T \\
+    \end{bmatrix}
+    \right) 
+    \begin{bmatrix}
+        v_1 \\
+        v_2 \\ 
+        \vdots \\
+        v_t    
+    \end{bmatrix} \\
+    &= 
+        S_t(q_t\cdot k_1^T)v_1+S_t(q_t\cdot k_2^T)v_2 + \cdots + S_t(q_t\cdot k_t^T)v_t 
+\end{aligned}
+\end{equation}</script><p>其中$M_i$表示第$i,\ i = 1,2,…,h$个注意力头的输出, 大小为$1\times d_{k}$</p>
+<h5 id="step5-拼接所有输出-1"><a href="#step5-拼接所有输出-1" class="headerlink" title="step5 拼接所有输出"></a>step5 拼接所有输出</h5><p>拼接所有注意力头的输出:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    M_{concat}=Concat(M_1,...,M_h)   
+\end{equation}</script><p>经过拼接, 最终输出$M_{concat}$ 形状又变回 $1 \times d_{model}$<br>以上的推导为了方便表示, 没有考虑batch_size, 如果加上batch_size, 各阶段计算如下:</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>参数</th>
+<th>输入</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>step1</td>
+<td>$Embed(\cdot)$</td>
+<td>$B$个字符串的第$t-1$个字符的嵌入向量</td>
+<td>$x_t\in \mathbb{R}^{B\times 1 \times d_{model}}$</td>
+</tr>
+<tr>
+<td>step2</td>
+<td>$W^Q,W^K,W^V \in \mathbb{R}^{d_{model} \times d_{model}}$</td>
+<td>$x_t \in \mathbb{R}^{B\times 1\times d_{model}}$</td>
+<td>$k_t, v_t, q_t\in \mathbb{R}^{B\times 1 \times d_{model}}$</td>
+</tr>
+<tr>
+<td>step3</td>
+<td>$Reshape(\cdot)$</td>
+<td>$k_t, v_t, q_t\in \mathbb{R}^{B\times 1 \times d_{model}}$</td>
+<td>$k_t, v_t, q_t\in \mathbb{R}^{ B\times h\times 1\times d_k}$</td>
+</tr>
+<tr>
+<td>step4</td>
+<td>$SoftMax(\frac{QK^T}{\sqrt{d_k}})V$</td>
+<td>$K,V\in \mathbb{R}^{ B\times h\times t\times d_k}, q_t\in \mathbb{R}^{B\times 1 \times d_{model}}$</td>
+<td>$M_i \in \mathbb{R}^{B\times 1\times d_k}, i = 1,2,…,h$</td>
+</tr>
+<tr>
+<td>step5</td>
+<td>$Concat(\cdot)$</td>
+<td>$M_i \in \mathbb{R}^{B\times 1\times d_k}, i = 1,2,…,h$</td>
+<td>$M_{concat}\in \mathbb{R}^{B \times 1\times d_{model}}$</td>
+</tr>
+<tr>
+<td>step6</td>
+<td>$W^O\in \mathbb{R}^{d_{model}\times d_{model}}$</td>
+<td>$M_{concat}\in \mathbb{R}^{B \times 1 \times d_{model}}$</td>
+<td>$M_{output} \in \mathbb{R}^{B\times 1 \times d_{model}}$</td>
+</tr>
+</tbody>
+</table>
+</div>
+]]></content>
+      <categories>
+        <category>大模型应用</category>
+        <category>概念和原理</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>大模型应用系列(十六) 大模型RAG项目实战：Embedding model 模型介绍与选型</title>
+    <url>/2025/06/30/llm-application-16/</url>
+    <content><![CDATA[<p>简要介绍Embedding Models以及如何根据数据集选择合适的嵌入模型。</p>
+<span id="more"></span>
+<h4 id="一-Embedding-Models-嵌入模型原理及选择"><a href="#一-Embedding-Models-嵌入模型原理及选择" class="headerlink" title="一. Embedding Models 嵌入模型原理及选择"></a>一. Embedding Models 嵌入模型原理及选择</h4><p>文档向量化后构成知识库，但如果文档不变化，并不需要每次都读文档并且进行向量化。真正上应该是将向量化后的文档存储到数据库，这样下次访问就不用重复读取和向量化。</p>
+<p>另外，文本本身也有差异性，不同类别的文本应该选择不同的Embedding model进行向量化，但这一步的效果影响不大，如果其他优化都用了之后效果还不好，再考虑嵌入模型的影响。</p>
+<h5 id="1-1-嵌入模型的本质"><a href="#1-1-嵌入模型的本质" class="headerlink" title="1.1 嵌入模型的本质"></a>1.1 嵌入模型的本质</h5><p>嵌入模型（Embedding Model）是一种将离散数据（如文本、图像）映射到连续向量空间的技术。通过高维向量表示（如 768 维或 3072 维），模型可捕捉数据的语义信息，使得语义相似的文本在向量空间中距离更近。例如，“忘记密码”和“账号锁定”会被编码为相近的向量，从而支持语义检索而非仅关键词匹配。</p>
+<p>度量向量的相似度一般用余弦相似度，欧氏距离，内积。但一般用余弦相似度，因为它是归一化的，值在[-1,1]之间，其他没有归一化，无法判断是否接近。</p>
+<h5 id="1-2-核心作用"><a href="#1-2-核心作用" class="headerlink" title="1.2 核心作用"></a>1.2 核心作用</h5><p>语义编码：将文本、图像等转换为向量，保留上下文信息（如 BERT 的 CLS Token 或均值池化。</p>
+<p>相似度计算：通过余弦相似度、欧氏距离等度量向量关联性，支撑检索增强生成（RAG）、推荐系统等应用。</p>
+<p>信息降维：压缩复杂数据为低维稠密向量，提升存储与计算效率。</p>
+<h5 id="1-3-关键技术原理"><a href="#1-3-关键技术原理" class="headerlink" title="1.3 关键技术原理"></a>1.3 关键技术原理</h5><p>上下文依赖：现代模型（如 BGE-M3）动态调整向量，捕捉多义词在不同语境中的含义。(一个词根据上下文可以有不同的词向量)</p>
+<p>训练方法：对比学习（如 Word2Vec 的 Skip-gram/CBOW）、预训练+微调（如 BERT）。  </p>
+<h4 id="二-主流模型分类与选型"><a href="#二-主流模型分类与选型" class="headerlink" title="二. 主流模型分类与选型"></a>二. 主流模型分类与选型</h4><h5 id="2-1-考虑因素"><a href="#2-1-考虑因素" class="headerlink" title="2.1 考虑因素"></a>2.1 考虑因素</h5><p>Embedding模型将文本转换为向量，捕捉语义信息，使计算机能够理解和比较内容的“意义”。大的方向上嵌入模型可以分为中文和应为，细分上选型时可以考虑的因素有：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>因素</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>任务性质</td>
+<td>匹配任务需求(问答，搜索，聚类等)</td>
+</tr>
+<tr>
+<td>领域特性</td>
+<td>通用vs专业领域(医学，法律等)</td>
+</tr>
+<tr>
+<td>多语言支持</td>
+<td>需处理多语言内容时考虑</td>
+</tr>
+<tr>
+<td>维度</td>
+<td>权衡信息丰富度与计算成本</td>
+</tr>
+<tr>
+<td>许可条款</td>
+<td>开源vs专有服务</td>
+</tr>
+<tr>
+<td>最大Token</td>
+<td>适合的上下文窗口</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>最重要的是考虑多语言支持和维度(和成本有关)。</p>
+<p>最佳实践：为特定应用测试多个Embedding模型，评估在实际数据上的性能而非仅依赖通用标准。</p>
+<h5 id="2-2-常见选型"><a href="#2-2-常见选型" class="headerlink" title="2.2 常见选型"></a>2.2 常见选型</h5><p>1.通用全能型</p>
+<ul>
+<li>BGE-M3：北京智源研究院开发，支持多语言、混合检索（稠密+稀疏向量），处理 8K 上下文，适合企业级知识库。</li>
+<li>NV-Embed-v2：基于 Mistral-7B，检索精度高（MTEB 得分 62.65），但需较高计算资源。  </li>
+</ul>
+<p>2.垂域特化型</p>
+<ul>
+<li>中文场景： BGE-large-zh-v1.5 （合同/政策文件）、 M3E-base （社交媒体分析）。  </li>
+<li>多模态场景： BGE-VL （图文跨模态检索），联合编码 OCR 文本与图像特征。  </li>
+</ul>
+<p>3.轻量化部署型</p>
+<ul>
+<li>nomic-embed-text：768 维向量，推理速度比 OpenAI 快 3 倍，适合边缘设备。  </li>
+<li>gte-qwen2-1.5b-instruct：1.5B 参数，16GB 显存即可运行，适合初创团队原型验。  </li>
+</ul>
+<p>总的来说：</p>
+<ul>
+<li>中文为主：BGE系列&gt;M3E</li>
+<li>多语言需求：BGE-M3&gt;multilingual-e5</li>
+<li>预算有限：开源模型，如Nomic Embed</li>
+</ul>
+<h5 id="2-3-Embedding-models-对比案例"><a href="#2-3-Embedding-models-对比案例" class="headerlink" title="2.3 Embedding models 对比案例"></a>2.3 Embedding models 对比案例</h5><p>比如要对比 <code>paraphrasemultilingual-MiniLM-L12-v2</code> 和 <code>text2vec-base-chinese-sentence</code> 在自己数据集上的性能，这里选择开源数据集<code>1</code> , 在实际开发时应该选择自己的数据集。使用如下代码：</p>
+<p>代码的逻辑为：加载数据集(需要根据自己的数据格式调整)，加载模型，分别用两个模型计算样本的嵌入向量，计算余弦相似度，根据匹配结果统计正确个数，即为准确率。</p>
+<p>这里数据集为 <a href="https://rajpurkar.github.io/SQuAD-explorer/">The Stanford Question Answering Dataset</a> 我只使用了<code>dev-v2.0.json</code>。</p>
+<p>通过读取后数据集中每个样本格式如下:</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;question&quot;</span><span class="punctuation">:</span> <span class="string">&quot;In what country is Normandy located?&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;answer&quot;</span><span class="punctuation">:</span> <span class="string">&quot;France&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;context&quot;</span><span class="punctuation">:</span> <span class="string">&quot;The Normans (Norman: Nourmands; French: Normands; Latin: Normanni) were the people who in the 10th and 11th centuries gave their name to Normandy, a region in France. They were descended from Norse (\&quot;Norman\&quot; comes from \&quot;Norseman\&quot;) raiders and pirates from Denmark, Iceland and Norway who, under their leader Rollo, agreed to swear fealty to King Charles III of West Francia. Through generations of assimilation and mixing with the native Frankish and Roman-Gaulish populations, their descendants would gradually merge with the Carolingian-based cultures of West Francia. The distinct cultural and ethnic identity of the Normans emerged initially in the first half of the 10th century, and it continued to evolve over the succeeding centuries.&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#embedding_model效果对比</span></span><br><span class="line"><span class="keyword">from</span> sentence_transformers <span class="keyword">import</span> SentenceTransformer, util</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载SQuAD数据（假设已处理成列表格式）</span></span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;dev-v2.0.json&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">    squad_data = json.load(f)[<span class="string">&quot;data&quot;</span>]</span><br><span class="line">    </span><br><span class="line"><span class="comment"># 提取问题和答案对</span></span><br><span class="line">qa_pairs = []</span><br><span class="line"><span class="keyword">for</span> article <span class="keyword">in</span> squad_data:</span><br><span class="line">    <span class="keyword">for</span> para <span class="keyword">in</span> article[<span class="string">&quot;paragraphs&quot;</span>]:</span><br><span class="line">        <span class="keyword">for</span> qa <span class="keyword">in</span> para[<span class="string">&quot;qas&quot;</span>]:</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> qa[<span class="string">&quot;is_impossible&quot;</span>]:</span><br><span class="line">                qa_pairs.append(&#123;</span><br><span class="line">                    <span class="string">&quot;question&quot;</span>: qa[<span class="string">&quot;question&quot;</span>],</span><br><span class="line">                    <span class="string">&quot;answer&quot;</span>: qa[<span class="string">&quot;answers&quot;</span>][<span class="number">0</span>][<span class="string">&quot;text&quot;</span>],</span><br><span class="line">                    <span class="string">&quot;context&quot;</span>: para[<span class="string">&quot;context&quot;</span>] </span><br><span class="line">                &#125;)</span><br><span class="line"><span class="built_in">print</span>(json.dumps(qa_pairs[<span class="number">0</span>], indent = <span class="number">4</span>))</span><br><span class="line"><span class="comment"># 初始化两个本地模型</span></span><br><span class="line">model1 = SentenceTransformer(<span class="string">&#x27;/root/autodl-tmp/paraphrase-multilingual-MiniLM-L12-v2&#x27;</span>)  <span class="comment"># 模型1</span></span><br><span class="line">model2 = SentenceTransformer(<span class="string">&#x27;/root/autodl-tmp/text2vec-base-chinese-sentence&#x27;</span>)   <span class="comment"># 模型2</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 编码所有上下文（作为向量库）</span></span><br><span class="line">contexts = [item[<span class="string">&quot;context&quot;</span>] <span class="keyword">for</span> item <span class="keyword">in</span> qa_pairs]</span><br><span class="line">context_embeddings1 = model1.encode(contexts)  <span class="comment"># 模型1的向量库</span></span><br><span class="line">context_embeddings2 = model2.encode(contexts)  <span class="comment"># 模型2的向量库</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 评估函数</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">evaluate</span>(<span class="params">model, query_embeddings, context_embeddings</span>):</span><br><span class="line">    correct = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> idx, qa <span class="keyword">in</span> <span class="built_in">enumerate</span>(qa_pairs[:<span class="number">100</span>]):  <span class="comment"># 测试前100条</span></span><br><span class="line">        <span class="comment"># 查找最相似上下文</span></span><br><span class="line">        sim_scores = util.cos_sim(query_embeddings[idx], context_embeddings)</span><br><span class="line">        best_match_idx = np.argmax(sim_scores)</span><br><span class="line">        <span class="comment"># 检查答案是否在匹配段落中</span></span><br><span class="line">        <span class="keyword">if</span> qa[<span class="string">&quot;answer&quot;</span>] <span class="keyword">in</span> contexts[best_match_idx]:</span><br><span class="line">            correct += <span class="number">1</span></span><br><span class="line">    <span class="keyword">return</span> correct / <span class="built_in">len</span>(qa_pairs[:<span class="number">100</span>])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编码所有问题</span></span><br><span class="line">query_embeddings1 = model1.encode([qa[<span class="string">&quot;question&quot;</span>] <span class="keyword">for</span> qa <span class="keyword">in</span> qa_pairs[:<span class="number">100</span>]])</span><br><span class="line">query_embeddings2 = model2.encode([qa[<span class="string">&quot;question&quot;</span>] <span class="keyword">for</span> qa <span class="keyword">in</span> qa_pairs[:<span class="number">100</span>]])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行评估</span></span><br><span class="line">acc1 = evaluate(model1, query_embeddings1, context_embeddings1)</span><br><span class="line">acc2 = evaluate(model2, query_embeddings2, context_embeddings2)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;paraphrase-multilingual-MiniLM-L12-v2准确率: <span class="subst">&#123;acc1:<span class="number">.2</span>%&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;text2vec-base-chinese-sentence准确率: <span class="subst">&#123;acc2:<span class="number">.2</span>%&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>通过这种方式可以对比两个模型在特定数据集上的匹配效果，text2vec-base-chinese-sentence更适合中文文本，所以它的效果差一些:</p>
+<p> <img src="/2025/06/30/llm-application-16/image-20250611234902082.png" alt="image-20250611234902082"></p>
+<p>但Embedding模型的不同带来的影响时很小的，因为不同模型计算的两个句子之间的余弦相似的差别是不大的，比如下面的例子中:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.embeddings.huggingface <span class="keyword">import</span> HuggingFaceEmbedding</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">fun</span>(<span class="params">model_name, documents, query</span>):</span><br><span class="line">    <span class="comment"># 加载Embedding模型</span></span><br><span class="line">    embed_model = HuggingFaceEmbedding(</span><br><span class="line">        model_name=model_name,</span><br><span class="line">        device=<span class="string">&quot;cuda&quot;</span>,  <span class="comment"># 使用 GPU，如果没有 GPU 改为 &quot;cpu&quot;</span></span><br><span class="line">        normalize=<span class="literal">True</span>,  <span class="comment"># 归一化向量，方便计算余弦相似度</span></span><br><span class="line">    )</span><br><span class="line">    <span class="comment"># 嵌入文档</span></span><br><span class="line">	doc_embeddings = [embed_model.get_text_embedding(doc) <span class="keyword">for</span> doc <span class="keyword">in</span> documents]</span><br><span class="line">    <span class="comment"># 嵌入查询</span></span><br><span class="line">	query_embedding = embed_model.get_text_embedding(query)</span><br><span class="line">	<span class="comment"># 计算余弦相似度（因为 normalize=True，点积就是余弦相似度）</span></span><br><span class="line">	similarity = np.dot(query_embedding, doc_embeddings[<span class="number">0</span>])</span><br><span class="line">	<span class="keyword">return</span> similarity	</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    <span class="comment"># 测试数据</span></span><br><span class="line">    documents = [<span class="string">&quot;忘记密码如何处理？&quot;</span>, <span class="string">&quot;用户账号被锁定&quot;</span>]</span><br><span class="line">    query = <span class="string">&quot;密码重置流程&quot;</span></span><br><span class="line">    <span class="comment"># 测试模型1</span></span><br><span class="line">    model_name = <span class="string">&quot;/home/cw/llms/embedding_model/sungw111/text2vec-base-chinese-sentence&quot;</span></span><br><span class="line">    similarity = fun(model_name, documents, query)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;text2vec-base-chinese-sentence 结果: 相似度：<span class="subst">&#123;similarity:<span class="number">.4</span>f&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="comment"># 测试模型2</span></span><br><span class="line">    model_name = <span class="string">&quot;/home/cw/llms/embedding_model/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2&quot;</span></span><br><span class="line">    similarity = fun(model_name, documents, query)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;paraphrase-multilingual-MiniLM-L12-v2 结果: 相似度：<span class="subst">&#123;similarity:<span class="number">.4</span>f&#125;</span>&quot;</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>输出如下:两个结果差别并不大</p>
+<p> <img src="/2025/06/30/llm-application-16/image-20250611235926574.png" alt="image-20250611235926574"></p>
+]]></content>
+      <categories>
+        <category>大模型应用</category>
+        <category>项目实战</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>大模型应用系列(十七) 大模型RAG项目实战：Llamaindex文档切分与重排序</title>
+    <url>/2025/06/30/llm-application-17/</url>
+    <content><![CDATA[<p>介绍RAG中常用的文档切分方式，如何提升召回率，以及简要介绍重排序。</p>
+<span id="more"></span>
+<p>本文用到的文档可以在<a href="https://download.csdn.net/download/weixin_46091520/91191213">【免费】RAG文档资料，用于用llamaindex构建RAG的测试程序资源-CSDN下载</a> 下载。</p>
+<h4 id="一-文档解析"><a href="#一-文档解析" class="headerlink" title="一. 文档解析"></a>一. 文档解析</h4><p>参考: <a href="https://docs.llamaindex.org.cn/en/stable/examples/data_connectors/simple_directory_reader_parallel/">SimpleDirectoryReader 的并行处理 - LlamaIndex 框架</a></p>
+<h5 id="1-1-什么是文档解析"><a href="#1-1-什么是文档解析" class="headerlink" title="1.1 什么是文档解析?"></a>1.1 什么是文档解析?</h5><p>文档解析实际上就是读取文件，就像把不同包装的食品拆开处理:</p>
+<ul>
+<li><p>PDF文件：罐头食品（需要用专用工具打开）</p>
+</li>
+<li><p>Word文档：盒装饼干（容易拆但可能有碎屑）</p>
+</li>
+<li>扫描件/图片：真空包装（需要剪刀才能打开）</li>
+</ul>
+<h5 id="1-2-基础解析"><a href="#1-2-基础解析" class="headerlink" title="1.2 基础解析"></a>1.2 基础解析</h5><p>1.本地文档</p>
+<p>常见的有pdf, txt, md, word，都可以用llamaindex自带的<code>simple_direct_reader</code> 读取。示例代码如下:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SimpleDirectoryReader </span><br><span class="line"><span class="comment"># 加载的文本 </span></span><br><span class="line"><span class="comment"># 加载单个或多个文档</span></span><br><span class="line">reader = SimpleDirectoryReader(</span><br><span class="line">    input_files=[<span class="string">&quot;/root/autodl-tmp/day19/data/report_with_table.pdf&quot;</span>]</span><br><span class="line">)</span><br><span class="line"><span class="comment"># # 批量加载，加载文件夹下的所有文件</span></span><br><span class="line"><span class="comment"># reader = SimpleDirectoryReader(</span></span><br><span class="line"><span class="comment">#      &quot;/root/autodl-tmp/day19/data&quot;</span></span><br><span class="line"><span class="comment"># )</span></span><br><span class="line"><span class="comment"># 取出加载的文本</span></span><br><span class="line">docs = reader.load_data()</span><br><span class="line"><span class="comment"># 打印文本内容</span></span><br><span class="line"><span class="built_in">print</span>(docs)</span><br></pre></td></tr></table></figure>
+<p>每个文档读取完就是一个node, 但它的解析功能比较简单，比如对于表格信息，并不能保持它的格式，如下:</p>
+<p>读取后表格变成文本形式了，同时可以看到，llamaindex解析文档后默认情况下把整个文档作为一个node，同时会保存文件名，路径，类型，大小等元数据。</p>
+<p><img src="/2025/06/30/llm-application-17/image-20250615233326960.png" alt="image-20250615233326960"></p>
+<p>2.读取本地html文件</p>
+<p>llamaindex同样自带html的解析包，对于，网页，可以使用如下方式解析</p>
+<p>安装解析包:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pip install llama-index-readers-file</span><br><span class="line">pip install html2text</span><br></pre></td></tr></table></figure>
+<p>使用SimpleWebPageReader</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.readers.file <span class="keyword">import</span> HTMLTagReader</span><br><span class="line"></span><br><span class="line">reader = HTMLTagReader(tag=<span class="string">&quot;section&quot;</span>, ignore_no_id=<span class="literal">True</span>)</span><br><span class="line">docs = reader.load_data(</span><br><span class="line">    <span class="string">&quot;/root/autodl-tmp/day19/data/document.html&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> doc <span class="keyword">in</span> docs:</span><br><span class="line">    <span class="built_in">print</span>(doc.metadata)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(docs)</span><br></pre></td></tr></table></figure>
+<p>但它只能加载本地缓存的html文件。如果要很好地爬取数据，还是用传统的爬虫(beautiful soup)效果比较好。</p>
+<p>3.读取在线网页</p>
+<p>可以使用SimpleWebPageReader读取在线网页：安装</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pip install llama-index llama-index-readers-web</span><br></pre></td></tr></table></figure>
+<p>加载网页</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.readers.web <span class="keyword">import</span> SimpleWebPageReader</span><br><span class="line">documents = SimpleWebPageReader(html_to_text=<span class="literal">True</span>).load_data(</span><br><span class="line">    [<span class="string">&quot;http://paulgraham.com/worked.html&quot;</span>]</span><br><span class="line">)</span><br><span class="line"><span class="built_in">print</span>(documents[<span class="number">0</span>])</span><br></pre></td></tr></table></figure>
+<p>结果如下：但这个不会进入网页中的超链接爬取更多数据:</p>
+<p> <img src="/2025/06/30/llm-application-17/image-20250615234343786.png" alt="image-20250615234343786"></p>
+<p>也可以用Spider，Spider是最快的爬虫，可以将任何网站转换为html, markdown, 元数据或文本，同时支持使用AI进行自定义操作来爬取</p>
+<p>Spider 允许您使用高性能代理来防止检测，缓存 AI 操作，提供爬取状态的 webhook，支持计划爬取等。</p>
+<p><strong>先决条件：</strong>您需要有一个 Spider API 密钥才能使用此加载器。可以在 <a href="https://spider.cloud/">spider.cloud</a> 获取。但这个收费，我没有尝试。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 抓取单个 URL from llama_index.readers.web </span></span><br><span class="line"><span class="keyword">import</span> SpiderWebReader </span><br><span class="line">spider_reader = SpiderWebReader( </span><br><span class="line">    api_key=<span class="string">&quot;YOUR_API_KEY&quot;</span>, <span class="comment"># 在 https://spider.cloud 获取 </span></span><br><span class="line">    mode=<span class="string">&quot;scrape&quot;</span>, </span><br><span class="line">    <span class="comment"># params=&#123;&#125; # 可选参数，更多信息请参阅 https://spider.cloud/docs/api </span></span><br><span class="line">) </span><br><span class="line">documents = spider_reader.load_data(url=<span class="string">&quot;https://spider.cloud&quot;</span>) <span class="built_in">print</span>(documents)</span><br></pre></td></tr></table></figure>
+<p>总的来说，llamaindex提供的解析工具不能很好地满足要求，所以一般用更好的第三方工具。对于网页，最好的还是网页爬虫。</p>
+<h5 id="1-3-高级解析"><a href="#1-3-高级解析" class="headerlink" title="1.3 高级解析"></a>1.3 高级解析</h5><p>初级解析的优点是方便使用，缺点是功能简单，像上面的表格数据就无法很好解析。很多第三方包提供了很好的解析工具，比如为了更好地解析表格，可以使用pdfplumber, 示例如下:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> pdfplumber</span><br><span class="line"><span class="keyword">with</span> pdfplumber.<span class="built_in">open</span>(<span class="string">&quot;报告.pdf&quot;</span>) <span class="keyword">as</span> pdf:</span><br><span class="line">    <span class="comment"># 提取所有文本</span></span><br><span class="line">    text = <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="keyword">for</span> page <span class="keyword">in</span> pdf.pages:</span><br><span class="line">        text += page.extract_text()</span><br><span class="line">        <span class="built_in">print</span>(text[:<span class="number">200</span>]) <span class="comment"># 打印前200字符</span></span><br><span class="line">        <span class="comment"># 提取表格（自动检测）</span></span><br><span class="line">        <span class="keyword">for</span> page <span class="keyword">in</span> pdf.pages:</span><br><span class="line">            tables = page.extract_tables()</span><br><span class="line">            <span class="keyword">for</span> table <span class="keyword">in</span> tables:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;\n表格内容：&quot;</span>)</span><br><span class="line">                <span class="keyword">for</span> row <span class="keyword">in</span> table:</span><br><span class="line">                	<span class="built_in">print</span>(row)</span><br></pre></td></tr></table></figure>
+<p>如果文件中有图片，要提取图片中的文字，则可以用OCR。魔塔社区直接搜OCR就有开源的OCR模型。</p>
+<p>如下, 提取后数据保持表格形式。</p>
+<p> <img src="/2025/06/30/llm-application-17/image-20250615234444062.png" alt="image-20250615234444062"></p>
+<h5 id="1-4-总结"><a href="#1-4-总结" class="headerlink" title="1.4 总结"></a>1.4 总结</h5><p>如果文档简单(只有文字)，则可以用llamaindex自带的解析器，如果文档复杂(涉及表格，图片，html等)，则用第三方工具。</p>
+<h4 id="二-文本切分"><a href="#二-文本切分" class="headerlink" title="二. 文本切分"></a>二. 文本切分</h4><h5 id="2-1-为什么需要切分"><a href="#2-1-为什么需要切分" class="headerlink" title="2.1 为什么需要切分"></a>2.1 为什么需要切分</h5><p>使用dataconnector加载数据时，会默认一个文档就是一个document，也就是一个节点，在检索的时候就会检索到整个文档，这样不仅prompt太长，还可能很多噪音。</p>
+<h5 id="2-2-切分三要素"><a href="#2-2-切分三要素" class="headerlink" title="2.2 切分三要素"></a>2.2 切分三要素</h5><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>要素</th>
+<th>说明</th>
+<th>推荐值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>块大小</td>
+<td>每段文字的长度</td>
+<td>200-500字</td>
+</tr>
+<tr>
+<td>块重叠</td>
+<td>相邻块重复内容，用于表示上下文</td>
+<td>10%-20%</td>
+</tr>
+<tr>
+<td>切分依据</td>
+<td>按句子/段落/语义切分</td>
+<td>语义分割最优</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h5 id="2-3-分块策略对比"><a href="#2-3-分块策略对比" class="headerlink" title="2.3 分块策略对比"></a>2.3 分块策略对比</h5><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>策略类型</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>固定大小</td>
+<td>实现简单</td>
+<td>可能切断完整语义</td>
+<td>古诗，对联等句式整齐的</td>
+</tr>
+<tr>
+<td>按段落分割</td>
+<td>保持逻辑完整性</td>
+<td>段落长度差异大</td>
+<td>文学小说·</td>
+</tr>
+<tr>
+<td>语义分割</td>
+<td>确保内容完整性</td>
+<td>计算资源消耗大</td>
+<td>专业领域文档</td>
+</tr>
+<tr>
+<td>正则匹配</td>
+<td>效果好</td>
+<td>需要写正则表达式</td>
+<td>基本都可以</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h5 id="2-4-分块常见问题"><a href="#2-4-分块常见问题" class="headerlink" title="2.4 分块常见问题"></a>2.4 分块常见问题</h5><h6 id="2-4-1-如何确定最佳块大小"><a href="#2-4-1-如何确定最佳块大小" class="headerlink" title="2.4.1 如何确定最佳块大小"></a>2.4.1 如何确定最佳块大小</h6><p>测试不同尺寸查看检索效果</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 测试块大小对召回率的影响</span></span><br><span class="line">sizes = [<span class="number">128</span>, <span class="number">256</span>, <span class="number">512</span>]</span><br><span class="line"><span class="keyword">for</span> size <span class="keyword">in</span> sizes:</span><br><span class="line">    rest_call = evaluate_chunk_size(size)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;块大小<span class="subst">&#123;size&#125;</span>    召回率<span class="subst">&#123;rest_recall:<span class="number">.2</span>f%&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+<h6 id="2-4-2-分块是否重叠越多越好"><a href="#2-4-2-分块是否重叠越多越好" class="headerlink" title="2.4.2 分块是否重叠越多越好"></a>2.4.2 分块是否重叠越多越好</h6><p>适当重叠(10%-20%)可以防止信息断裂，但过多会造成冗余。</p>
+<h5 id="2-5-切分示例-固定分块vs语句切分vs语义切分"><a href="#2-5-切分示例-固定分块vs语句切分vs语义切分" class="headerlink" title="2.5 切分示例: 固定分块vs语句切分vs语义切分"></a>2.5 切分示例: 固定分块vs语句切分vs语义切分</h5><p>固定分块: 到达chunk_size马上切分</p>
+<p>语句切分:  尽量让句子保持完整，如果开始下个句子后会超出chunk_size，则从当前句子切分</p>
+<p>语义切分: 利用大模型的语义理解能力，将表达完整的语句作为一个分块。</p>
+<h6 id="2-5-1-固定分块"><a href="#2-5-1-固定分块" class="headerlink" title="2.5.1 固定分块"></a>2.5.1 固定分块</h6><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SimpleDirectoryReader</span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载所有文档</span></span><br><span class="line">documents = SimpleDirectoryReader(input_files=[<span class="string">&quot;/home/cw/projects/demo_20/data/ai.txt&quot;</span>]).load_data()</span><br><span class="line"></span><br><span class="line"><span class="comment">#使用固定分块大小进行切分</span></span><br><span class="line"><span class="keyword">from</span> llama_index.core.node_parser <span class="keyword">import</span> TokenTextSplitter</span><br><span class="line"></span><br><span class="line">fixed_splitter = TokenTextSplitter(chunk_size=<span class="number">256</span>, chunk_overlap=<span class="number">20</span>) <span class="comment"># chunk_size到了就切分, chunk_overlap重叠度</span></span><br><span class="line">fixed_nodes = fixed_splitter.get_nodes_from_documents(documents)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;固定分块示例：&quot;</span>, [<span class="built_in">len</span>(n.text) <span class="keyword">for</span> n <span class="keyword">in</span> fixed_nodes[:<span class="number">3</span>]])  <span class="comment"># 输出：[200, 200, 200]</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">print</span>(<span class="string">&quot;首个节点内容:\n&quot;</span>, fixed_nodes[<span class="number">0</span>].text))</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">print</span>(<span class="string">&quot;第二个节点内容:\n&quot;</span>, fixed_nodes[<span class="number">1</span>].text))</span><br></pre></td></tr></table></figure>
+<p>结果如下:</p>
+<p><img src="/2025/06/30/llm-application-17/image-20250615235115768.png" alt="image-20250615235115768"></p>
+<h6 id="2-5-2-语句切分"><a href="#2-5-2-语句切分" class="headerlink" title="2.5.2 语句切分"></a>2.5.2 语句切分</h6><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core.node_parser <span class="keyword">import</span> SentenceSplitter</span><br><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SimpleDirectoryReader</span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载所有文档</span></span><br><span class="line">documents = SimpleDirectoryReader(input_files=[<span class="string">&quot;/root/autodl-tmp/day19/data/ai.txt&quot;</span>]).load_data()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用句子分割器：按照句子进行切分</span></span><br><span class="line">splitter = SentenceSplitter(chunk_size=<span class="number">128</span>, chunk_overlap=<span class="number">50</span>) <span class="comment"># 如果接下面的句子会超过chunk_size，则提前终止</span></span><br><span class="line">nodes = splitter.get_nodes_from_documents(documents)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看结果</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;生成节点数: <span class="subst">&#123;<span class="built_in">len</span>(nodes)&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;首个节点内容:\n&quot;</span>, nodes[<span class="number">0</span>].text)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;第二个节点内容:\n&quot;</span>, nodes[<span class="number">1</span>].text)</span><br></pre></td></tr></table></figure>
+<p>结果如下: 根据语义第一个节点中”1. 起源阶段…”部分文字被划分到第二个节点,  因为加上这部分就会超了，句子说不完整。</p>
+<p><img src="/2025/06/30/llm-application-17/image-20250615235835463.png" alt="image-20250615235835463"></p>
+<h6 id="2-5-3-语义切分"><a href="#2-5-3-语义切分" class="headerlink" title="2.5.3 语义切分"></a>2.5.3 语义切分</h6><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SimpleDirectoryReader</span><br><span class="line"><span class="keyword">from</span> llama_index.embeddings.huggingface <span class="keyword">import</span> HuggingFaceEmbedding</span><br><span class="line"><span class="keyword">from</span> llama_index.core.node_parser <span class="keyword">import</span> SemanticSplitterNodeParser</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 加载文档</span></span><br><span class="line">documents = SimpleDirectoryReader(input_files=[<span class="string">&quot;/home/cw/projects/demo_20/data/test.txt&quot;</span>]).load_data()</span><br><span class="line"></span><br><span class="line"><span class="comment"># # 3. 筛选Markdown文档</span></span><br><span class="line"><span class="comment"># md_docs = [d for d in documents if d.metadata[&quot;file_path&quot;].endswith(&quot;.md&quot;)]</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 初始化模型和解析器</span></span><br><span class="line">embed_model = HuggingFaceEmbedding(</span><br><span class="line">    <span class="comment">#指定了一个预训练的sentence-transformer模型的路径</span></span><br><span class="line">    model_name=<span class="string">&quot;/home/cw/llms/embedding_model/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">semantic_parser = SemanticSplitterNodeParser(</span><br><span class="line">    buffer_size=<span class="number">1</span>,</span><br><span class="line">    breakpoint_percentile_threshold=<span class="number">90</span>, <span class="comment"># 给的越高语句越完整</span></span><br><span class="line">    embed_model=embed_model</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 5. 执行语义分割</span></span><br><span class="line">semantic_nodes = semantic_parser.get_nodes_from_documents(documents)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 6. 打印结果</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;语义分割节点数: <span class="subst">&#123;<span class="built_in">len</span>(semantic_nodes)&#125;</span>&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> i, node <span class="keyword">in</span> <span class="built_in">enumerate</span>(semantic_nodes[:<span class="number">2</span>]):  <span class="comment"># 只打印前两个节点</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;\n节点<span class="subst">&#123;i+<span class="number">1</span>&#125;</span>:\n<span class="subst">&#123;node.text&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;-&quot;</span>*<span class="number">50</span>)</span><br></pre></td></tr></table></figure>
+<p>对比三种分块方法，第三种最好，因为它借助了大模型的语义理解能力，不会造成句子语义不完整：</p>
+<p>但第三种同样存在问题，比如在分割法律条款时，它将所有的法律条款视为一个分块，而我们在实际中一般需要它按章节以及条目进行分块。</p>
+<p>实际上文档切分并没有固定的处理方式，需要根据知识文档的数据格式选择切分方式，所以还需要结合正则匹配，甚至人工划分。</p>
+<h4 id="三-召回率提升方案"><a href="#三-召回率提升方案" class="headerlink" title="三. 召回率提升方案"></a>三. 召回率提升方案</h4><h5 id="3-1-什么是召回率"><a href="#3-1-什么是召回率" class="headerlink" title="3.1 什么是召回率"></a>3.1 什么是召回率</h5><p>召回率涉及的是检索阶段。检索逻辑太粗会导致一些信息没有被召回，召回率低。检索逻辑太细会导致一些冗余信息被召回，导致准确率低。</p>
+<p>首先得把召回率提上来，后面再把准确率提高，比如有8个node个查询有关，如果一开始只准确召回4个(召回率低，准确率高)，那后面再怎么处理都没用了；如果一卡是召回12个，里面有8个正确4个错误(召回率高，准确率低)，那么召回后可以通过重排提高准确率。</p>
+<h5 id="3-2-提升召回率的三大策略"><a href="#3-2-提升召回率的三大策略" class="headerlink" title="3.2 提升召回率的三大策略:"></a>3.2 提升召回率的三大策略:</h5><h6 id="3-2-1-查询扩展-给问题加修饰词"><a href="#3-2-1-查询扩展-给问题加修饰词" class="headerlink" title="3.2.1 查询扩展: 给问题加修饰词"></a>3.2.1 查询扩展: 给问题加修饰词</h6><ul>
+<li>原始问题: 如何做番茄炒蛋</li>
+<li>扩展后: 家常番茄炒蛋做法步骤，厨房新手教程，简单易学。</li>
+</ul>
+<h6 id="3-2-2-混合检索-结合两种搜索方式"><a href="#3-2-2-混合检索-结合两种搜索方式" class="headerlink" title="3.2.2 混合检索: 结合两种搜索方式"></a>3.2.2 混合检索: 结合两种搜索方式</h6><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">graph LR</span><br><span class="line">	A[用户问题]--&gt;B[关键词搜索]--&gt;C[初步结果]--&gt;D[合并去重]</span><br><span class="line">	A--&gt;E[语义搜索]--&gt;C</span><br></pre></td></tr></table></figure>
+<p>用户问题关键词搜索语义搜索初步结果合并去重。</p>
+<p>但是混合检索也有弊端: 响应慢。关键词搜索的前提是用户规范提问，能问到点子上(关键词)</p>
+<h6 id="3-2-3-向量优化"><a href="#3-2-3-向量优化" class="headerlink" title="3.2.3 向量优化"></a>3.2.3 向量优化</h6><p>微调大模型型，如果数据集中含有专有名词，大模型不能理解，则需要微调。再RAG中成为“向量优化”。</p>
+<p>微调前: Transformer 理解为 “变形金刚”</p>
+<p>微调后: Transformer 理解为”深度学习模型”。</p>
+<p>3.2.4 基础检索vs混合检索</p>
+<p>下面用一个完整的RAG代码展示向量检索和关键词检索的效果对比：代码流程未: 加载本地Embedding模型和LLM模型—&gt;加载并解析数据—&gt;检索—&gt;查询，代码如下:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.embeddings.huggingface <span class="keyword">import</span> HuggingFaceEmbedding</span><br><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> Settings, VectorStoreIndex</span><br><span class="line"><span class="keyword">from</span> llama_index.llms.huggingface <span class="keyword">import</span> HuggingFaceLLM</span><br><span class="line"><span class="keyword">from</span> llama_index.core.schema <span class="keyword">import</span> TextNode</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 1. 初始化本地模型</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">setup_local_models</span>():</span><br><span class="line">    <span class="comment"># 设置本地embedding模型</span></span><br><span class="line">    embed_model = HuggingFaceEmbedding(</span><br><span class="line">        model_name=<span class="string">&quot;/home/cw/llms/embedding_model/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2&quot;</span>,</span><br><span class="line">        device=<span class="string">&quot;cuda&quot;</span> <span class="keyword">if</span> torch.cuda.is_available() <span class="keyword">else</span> <span class="string">&quot;cpu&quot;</span></span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 设置本地LLM模型</span></span><br><span class="line">    llm = HuggingFaceLLM(</span><br><span class="line">        model_name=<span class="string">&quot;/home/cw/llms/Qwen/Qwen1.5-1.8B-Chat&quot;</span>,</span><br><span class="line">        tokenizer_name=<span class="string">&quot;/home/cw/llms/Qwen/Qwen1.5-1.8B-Chat&quot;</span>,</span><br><span class="line">        model_kwargs=&#123;<span class="string">&quot;trust_remote_code&quot;</span>: <span class="literal">True</span>&#125;,</span><br><span class="line">        tokenizer_kwargs=&#123;<span class="string">&quot;trust_remote_code&quot;</span>: <span class="literal">True</span>&#125;,</span><br><span class="line">        device_map=<span class="string">&quot;auto&quot;</span>,</span><br><span class="line">        generate_kwargs=&#123;<span class="string">&quot;temperature&quot;</span>: <span class="number">0.3</span>, <span class="string">&quot;do_sample&quot;</span>: <span class="literal">True</span>&#125;  <span class="comment"># 修改为do_sample=True避免警告</span></span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 全局设置</span></span><br><span class="line">    Settings.embed_model = embed_model</span><br><span class="line">    Settings.llm = llm</span><br><span class="line">    Settings.chunk_size = <span class="number">512</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 加载数据并处理格式</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">load_data</span>(<span class="params">file_path</span>):</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(file_path, <span class="string">&#x27;r&#x27;</span>, encoding=<span class="string">&#x27;utf-8&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">        data = json.load(f)</span><br><span class="line">    </span><br><span class="line">    nodes = []</span><br><span class="line">    <span class="keyword">for</span> item <span class="keyword">in</span> data:</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">isinstance</span>(item, <span class="built_in">dict</span>):</span><br><span class="line">            <span class="comment"># 处理DPR格式数据</span></span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;query&#x27;</span> <span class="keyword">in</span> item <span class="keyword">and</span> <span class="string">&#x27;positive_passages&#x27;</span> <span class="keyword">in</span> item:</span><br><span class="line">                text = <span class="string">f&quot;查询: <span class="subst">&#123;item[<span class="string">&#x27;query&#x27;</span>]&#125;</span>\n相关文档: <span class="subst">&#123;item[<span class="string">&#x27;positive_passages&#x27;</span>][<span class="number">0</span>][<span class="string">&#x27;text&#x27;</span>]&#125;</span>&quot;</span></span><br><span class="line">            <span class="comment"># 处理QA对格式</span></span><br><span class="line">            <span class="keyword">elif</span> <span class="string">&#x27;question&#x27;</span> <span class="keyword">in</span> item <span class="keyword">and</span> <span class="string">&#x27;answer&#x27;</span> <span class="keyword">in</span> item:</span><br><span class="line">                text = <span class="string">f&quot;问题: <span class="subst">&#123;item[<span class="string">&#x27;question&#x27;</span>]&#125;</span>\n答案: <span class="subst">&#123;item[<span class="string">&#x27;answer&#x27;</span>]&#125;</span>&quot;</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">        <span class="keyword">elif</span> <span class="built_in">isinstance</span>(item, <span class="built_in">str</span>):</span><br><span class="line">            text = item</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">            </span><br><span class="line">        node = TextNode(text=text)</span><br><span class="line">        nodes.append(node)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> nodes</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 初始化本地模型</span></span><br><span class="line">setup_local_models()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 加载数据</span></span><br><span class="line">data_path = <span class="string">&quot;/home/cw/projects/demo_19/data/qa_pairs.json&quot;</span></span><br><span class="line">nodes = load_data(data_path)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 5. 示例查询</span></span><br><span class="line">query = <span class="string">&quot;如何预防机器学习模型过拟合？&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 案例1：向量检索（使用本地embedding模型）</span></span><br><span class="line">vector_index = VectorStoreIndex(nodes)</span><br><span class="line">vector_retriever = vector_index.as_retriever(similarity_top_k=<span class="number">3</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;向量检索结果：&quot;</span>, [node.text[:<span class="number">50</span>] + <span class="string">&quot;...&quot;</span> <span class="keyword">for</span> node <span class="keyword">in</span> vector_retriever.retrieve(query)])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 案例2：关键词检索（不使用bm25模式）</span></span><br><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> KeywordTableIndex</span><br><span class="line">keyword_index = KeywordTableIndex(nodes)</span><br><span class="line">keyword_retriever = keyword_index.as_retriever(similarity_top_k=<span class="number">3</span>)  <span class="comment"># 使用默认模式</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;关键词检索结果：&quot;</span>, [node.text[:<span class="number">50</span>] + <span class="string">&quot;...&quot;</span> <span class="keyword">for</span> node <span class="keyword">in</span> keyword_retriever.retrieve(query)])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 案例3：查询引擎（使用本地LLM生成回答）</span></span><br><span class="line">query_engine = keyword_index.as_query_engine()</span><br><span class="line">response = query_engine.query(query)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;LLM生成回答：&quot;</span>, response)</span><br></pre></td></tr></table></figure>
+<p>使用的数据如下:</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;query&quot;</span><span class="punctuation">:</span> <span class="string">&quot;如何预防机器学习模型过拟合？&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;positive_passages&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="string">&quot;正则化方法通过添加L1/L2惩罚项控制模型复杂度...&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;交叉验证将数据划分为训练集和验证集...&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;早停法（Early Stopping）监控验证集损失...&quot;</span> </span><br><span class="line">    <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;negative_passages&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="string">&quot;GPU加速训练的技术方案...&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;数据标注的质量控制方法...&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;卷积神经网络结构解析...&quot;</span></span><br><span class="line">    <span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<h5 id="3-3-效果验证方法"><a href="#3-3-效果验证方法" class="headerlink" title="3.3 效果验证方法"></a>3.3 效果验证方法</h5><ol>
+<li>准备测试问题集(至少50个典型问题)。</li>
+<li>记录基础方案召回率。</li>
+<li>应用优化策略后再次测试。</li>
+<li>对比提升幅度。</li>
+</ol>
+<h4 id="四-检索结果重排序"><a href="#四-检索结果重排序" class="headerlink" title="四. 检索结果重排序"></a>四. 检索结果重排序</h4><h5 id="4-1-为什么要重排序"><a href="#4-1-为什么要重排序" class="headerlink" title="4.1 为什么要重排序"></a>4.1 为什么要重排序</h5><p>在召回期间，我们是尽量提升召回率，所以和问题沾边的都召回了，导致召回的数据中很多冗余的，要经过重排序把这些冗余的排除。重排序的目的是提高模型响应的精度。排序需要用到重排序模型。</p>
+<h5 id="4-2-常见排序模型对比"><a href="#4-2-常见排序模型对比" class="headerlink" title="4.2 常见排序模型对比"></a>4.2 常见排序模型对比</h5><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>模型名称</th>
+<th>速度</th>
+<th>精度</th>
+<th>硬件要求</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BM25</td>
+<td>块</td>
+<td>中</td>
+<td>低</td>
+<td>关键词匹配</td>
+</tr>
+<tr>
+<td>Cross-Encoder</td>
+<td>慢</td>
+<td>高</td>
+<td>高</td>
+<td>小规模精准排序</td>
+</tr>
+<tr>
+<td>ColBERT</td>
+<td>中</td>
+<td>高</td>
+<td>中</td>
+<td>平衡速度与精度</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>重排序的效果要在实际项目中展示，在后面项目中再详细说明。</p>
+]]></content>
+      <categories>
+        <category>大模型应用</category>
+        <category>项目实战</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>大模型应用系列(十八) 大模型RAG项目实战：本地部署Dify实现RAG</title>
+    <url>/2025/06/30/llm-application-18/</url>
+    <content><![CDATA[<p>介绍如何在Ubuntu22.04服务器上部署Dify并集成本地部署大模型，也介绍了较为简单的Windows部署方式，同时提供示例在Dify平台上快速搭建RAG。</p>
+<span id="more"></span>
+<h4 id="一-安装Dify"><a href="#一-安装Dify" class="headerlink" title="一. 安装Dify"></a>一. 安装Dify</h4><h5 id="1-1-Dify介绍"><a href="#1-1-Dify介绍" class="headerlink" title="1.1 Dify介绍"></a>1.1 Dify介绍</h5><p>Dify是一个基于GPT的AI应用开发平台，支持多种大语言模型(LLM)，旨在帮助用户快速创建和运营生成式AI原生应用，它具备以下特点：</p>
+<p>多模型支持：兼容OpenAI, Cloude, Hugging Face 等主流模型，并支持私有化部署。</p>
+<p>可视化编排：提供prompt模板，工具链等可视化工具，简化应用开发流程。</p>
+<p>丰富功能：支持文本生成，对话，知识库问答等，满足多样化需求。</p>
+<p>灵活部署：支持云服务器和本地部署，适应不同场景。</p>
+<p>持续更新：团队持续优化，确保平台功能与时俱进。</p>
+<h5 id="1-2-Docker-安装"><a href="#1-2-Docker-安装" class="headerlink" title="1.2 Docker 安装"></a>1.2 Docker 安装</h5><p>Dify要用到Docker，所以先安装Docker, 系统版本可能导致Dify环境配置过程中出现问题, 我这里使用的是:</p>
+<p>Ubuntu22.04</p>
+<p>Docker version 26.1.3, build 26.1.3-0ubuntu1~22.04.1  </p>
+<p>docker-compose version 1.29.2, build unknown  </p>
+<p><strong>准备条件</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">先更新apt工具</span></span><br><span class="line">sudo apt-get update</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">先卸载操作系统默认安装的Docker</span></span><br><span class="line">sudo apt-get remove docker docker-engine docker.io containerd runc</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装必要支持</span></span><br><span class="line">sudo apt install apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release</span><br></pre></td></tr></table></figure>
+<p><strong>准备安装</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">添加Docker官方key和官方源(国内网络可能存在问题)</span></span><br><span class="line">curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -</span><br><span class="line"></span><br><span class="line">sudo add-apt-repository \</span><br><span class="line">   &quot;deb [arch=amd64] https://download.docker.com/linux/ubuntu \</span><br><span class="line"><span class="meta prompt_">   $</span><span class="language-bash">(lsb_release -cs) \</span></span><br><span class="line"><span class="language-bash">   stable<span class="string">&quot;</span></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="string">添加阿里key和源(这里比较推荐)</span></span></span><br><span class="line">curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo apt-key add -</span><br><span class="line"></span><br><span class="line">sudo add-apt-repository \</span><br><span class="line">     &quot;deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu \</span><br><span class="line">     $(lsb_release -cs) \</span><br><span class="line">     stable&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="string">更新源</span></span></span><br><span class="line">sudo apt update</span><br><span class="line">sudo apt-get update</span><br></pre></td></tr></table></figure>
+<p><strong>安装docker</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查找Docker可用版本, 找到26.1.3版本</span></span><br><span class="line">sudo apt-cache madison docker-ce</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查找docker-cli可用版本, 找到2.6.13 版本</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装对应版本</span></span><br><span class="line">sudo apt-get install docker-ce=5:26.1.3-1~ubuntu.22.04~jammy docker-ce-cli=5:26.1.3-1~ubuntu.22.04~jammy containerd.io</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>检验安装</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo docker --version</span><br></pre></td></tr></table></figure>
+<p> 输出如下:<img src="/2025/06/30/llm-application-18/image-20250617223934394.png" alt="image-20250617223934394"></p>
+<p><strong>安装docker-compose</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo pip install docker-compose==1.29.2 -i https://pypi.tuna.tsinghua.edu.cn/simple</span><br></pre></td></tr></table></figure>
+<p>验证安装</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo docker-compose --version</span><br></pre></td></tr></table></figure>
+<p>输出如下:</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250617224136819.png" alt="image-20250617224136819"></p>
+<h5 id="1-3-Dify安装"><a href="#1-3-Dify安装" class="headerlink" title="1.3 Dify安装"></a>1.3 Dify安装</h5><p>Dify代码仓: <a href="https://gitee.com/dify_ai/dify">dify: Dify 是一个易用的 LLMOps 平台，旨在让更多人可以创建可持续运营的原生 AI 应用</a></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/langgenius/dify.git</span><br><span class="line">cd dify/docker</span><br><span class="line">cp .env.example .env # 复制环境变量模板</span><br><span class="line">sudo docker compose up -d # 后台启动docker，会自动拉取镜像 如果装的是1.几的docker-compose 则要用docker-compose</span><br></pre></td></tr></table></figure>
+<p>就会开始拉取:</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250619232446475.png" alt="image-20250619232446475"></p>
+<h4 id="二-本地部署Dify"><a href="#二-本地部署Dify" class="headerlink" title="二. 本地部署Dify"></a>二. 本地部署Dify</h4><p>上述Dify安装后就会启动docker， 默认启动在80端口, 由于我用的是云服务器，所以需要端口转发: 将云服务器的80端口转发到localhost:80</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622224132875.png" alt="image-20250622224132875"></p>
+<p>接着在浏览去输入localhost:80</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622224213071.png" alt="image-20250622224213071"></p>
+<p>设置好管理员账号后登录。</p>
+<p>  <img src="/2025/06/30/llm-application-18/image-20250622224618263.png" alt="image-20250622224618263"></p>
+<p>可以看到Dify可以用于创建RAG, 也可以创建Agent，这里我们用于创建RAG, 主要是设置聊天模型和知识库。</p>
+<h5 id="2-1-设置模型"><a href="#2-1-设置模型" class="headerlink" title="2.1 设置模型"></a>2.1 设置模型</h5><p>Dify只是一个框架, 我们需要集成大模型, 点击右上角头像-&gt;设置-&gt;模型供应商, 可以看到Dify支持很多模型供应商,<img src="/2025/06/30/llm-application-18/image-20250622225529328.png" alt="image-20250622225529328"></p>
+<p> 我们只需要选择对应模型供应商，其实它就是在后台有对应的API请求接口, 我们只需要设置好对应参数(比如API-key)，Dify就帮我们发起请求。</p>
+<p>选择想要的供应商, 然后安装, Dify可能存在bug，我点击供应商后无法点击安装，但先创建聊天助手后从聊天助手进入却可以安装, 这里要多试试。</p>
+<p>这里安装DeepSeek，安装后到DS官网生成API-key，然后填入:</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622231349891.png" alt="image-20250622231349891"></p>
+<p>保存后选择系统模型设置, 选择想接入DS哪个类型的模型，这里先设置普通的对话模型。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622231515324.png" alt="image-20250622231515324"></p>
+<h5 id="2-2-创建聊天助手"><a href="#2-2-创建聊天助手" class="headerlink" title="2.2 创建聊天助手"></a>2.2 创建聊天助手</h5><p>点击创建空白应用-&gt;新手适用-&gt;聊天助手，选择之前接入的模型</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622231903611.png" alt="image-20250622231903611"></p>
+<p>然后就可以进行对话, 但感觉它还是有BUG，我一开始输入后没有反应, 后来重启了服务器的docker, 又可以了, 有几点要注意:浏览器用谷歌；vscode要保持端口转发；服务器连接要保持；</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250622233151715.png" alt="image-20250622233151715"></p>
+<p>如果老是没有输出，尝试vscode重新连接服务器。</p>
+<h4 id="三-云服务器部署Dify-ollama"><a href="#三-云服务器部署Dify-ollama" class="headerlink" title="三. 云服务器部署Dify+ollama"></a>三. 云服务器部署Dify+ollama</h4><p>这部分还没有成功，建议先根据四在本地电脑部署，云服务器比较麻烦。</p>
+<p>Dify同样支持本地部署的大模型, 比如ollama, 或者 vllm/lmdeploy，后两个是类似的，因为它们都是通过Open-AI兼容的API格式调用的。</p>
+<h5 id="3-1-本地部署大模型"><a href="#3-1-本地部署大模型" class="headerlink" title="3.1 本地部署大模型"></a>3.1 本地部署大模型</h5><p>参考 <a href="https://codezrq.github.io/2025/03/21/llm-application-6/">大模型应用系列(六) ollama,vllm,LMDeploy 部署大模型 | 乌漆嘛黑</a></p>
+<p>在GPU不多的情况下，我们一般选择ollama，因为ollama可以在一张GPU上部署多个模型(RAG需要chat模型，embedding模型，甚至rerank模型)，如果有多张卡，也可以用vllm。</p>
+<h5 id="3-2-Dify-ollama"><a href="#3-2-Dify-ollama" class="headerlink" title="3.2 Dify+ollama"></a>3.2 Dify+ollama</h5><p>首先安装ollama插件，接着配置ollama，这里安装后页面改变可能有点慢，要等一下，多刷新页面。配置界面中主要配置url和模型名称</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250623004347877.png" alt="image-20250623004347877"></p>
+<p>如果配置我们云服务器的公网IP和端口，会报错找不到。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250623004627502.png" alt="image-20250623004627502"></p>
+<p>需要进行额外配置。</p>
+<p>接入本地部署的大模型需要更多的配置, 先停止docker。注意:一定要在dify/docker目录下执行:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo docker compose down</span><br></pre></td></tr></table></figure>
+<p><img src="/2025/06/30/llm-application-18/image-20250622234819920.png" alt="image-20250622234819920"></p>
+<p>这里部署deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B。</p>
+<p>安装好ollama环境后，按照上面的教程拉取模型</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250623003324781.png" alt="image-20250623003324781"></p>
+<p>并测试OpenAI风格的API调用正常:</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250623005321174.png" alt="image-20250623005321174"></p>
+<p>接下来要将本地模型接入到Dify, 修改刚才的dify/docker/.env文件，首先在文本最后新增如下内容:</p>
+<p>它的意思是使用自定义的模型, 并设置ollama的IP和端口, 另一个是vllm的ip和端口，这里设置为默认端口, 如果在部署的时候指定了端口，对应改变，另外IP也要改为云服务器的公网IP。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">启用自定义模型</span></span><br><span class="line">CUSTOM_MODEL_ENABLED=true</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将 OLLAMA_API_BASE_URL 改为宿主机的物理 IP</span></span><br><span class="line">OLLAMA_API_BASE_URL=http://117.50.174.219:11434</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">vLLM 的 OpenAI 兼容 API 地址</span></span><br><span class="line">CUSTOM_OPENAI_API_BASE_URL=http://117.50.174.219:8000</span><br></pre></td></tr></table></figure>
+<p>接着修改dify/docker/docker-compose.yaml， 定位到<code>services</code>的位置，要更改这部分代码：（大概在400行左右）</p>
+<p>注意：下面代码主要新增了两部分，一个是新增一个函数(在后面定义)，networks最后加上<code>- dify-net</code>， 并新增<code>extra_hosts</code>字段，目的是把docker的IP映射为本地IP。这里IP要改为自己的公网IP:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">networks:</span><br><span class="line">  - ssrf_proxy_network</span><br><span class="line">  - default</span><br><span class="line">  - dify-net</span><br><span class="line">extra_hosts:</span><br><span class="line">  - &quot;host.docker.internal:117.50.174.219&quot; # 直接映射宿主机 IP</span><br></pre></td></tr></table></figure>
+<p>再定位到<code>networks</code>字段, 定位到如下字段:（大概在1200行左右）</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">networks:</span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">create a network between sandbox, api and ssrf_proxy, and can not access outside.</span></span><br><span class="line">  ssrf_proxy_network:</span><br><span class="line">    driver: bridge</span><br><span class="line">    internal: true</span><br><span class="line">  milvus:</span><br><span class="line">    driver: bridge</span><br><span class="line">  opensearch-net:</span><br><span class="line">    driver: bridge</span><br><span class="line">    internal: true</span><br></pre></td></tr></table></figure>
+<p>在后面新增一个字段<code>dify-net</code></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">networks:</span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">create a network between sandbox, api and ssrf_proxy, and can not access outside.</span></span><br><span class="line">  ssrf_proxy_network:</span><br><span class="line">    driver: bridge</span><br><span class="line">    internal: true</span><br><span class="line">  milvus:</span><br><span class="line">    driver: bridge</span><br><span class="line">  opensearch-net:</span><br><span class="line">    driver: bridge</span><br><span class="line">    internal: true</span><br><span class="line">  dify-net:</span><br><span class="line">    driver: bridge</span><br><span class="line">    attachable: true</span><br></pre></td></tr></table></figure>
+<p>然后重新启动docker, 在dify/docker目录下:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo docker compose up -d</span><br></pre></td></tr></table></figure>
+<p>然后重新打开网页, 可能有点慢，多等会，多刷新。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250623013250100.png" alt="image-20250623013250100"></p>
+<p>配置好url和名称，一般就能成功了，但由于用的云服务器，网络很容易出问题，我这里就出问题了。</p>
+<p>首先排查本地能否访问到云服务器上的ollama, 打开本地cmd，url访问</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">验证跨网络访问</span></span><br><span class="line">curl http://117.50.174.219:11434/api/chat -H &quot;Content-Type: application/json&quot; -d &#x27;&#123;&quot;model&quot;: &quot;deepseek-r1:1.5b&quot;&#125;&#x27;</span><br><span class="line"></span><br><span class="line">curl http://localhost:11434/api/chat -H &quot;Content-Type: application/json&quot; -d &#x27;&#123;&quot;model&quot;: &quot;bge-large:latest&quot;&#125;&#x27;</span><br></pre></td></tr></table></figure>
+<p>我这里就是访问不上:</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250623013912531.png" alt="image-20250623013912531"></p>
+<p>ollama启动是ip要是0.0.0.0, 如果不是, 要修改。</p>
+<p>这里的部署老是不成功，主要是云服务器IP比较难配置，后买你再更新，为了方便，我选择在本地电脑的windows系统搭建Dify+Ollama</p>
+<h4 id="四-windows部署Dify-Ollama"><a href="#四-windows部署Dify-Ollama" class="headerlink" title="四. windows部署Dify+Ollama"></a>四. windows部署Dify+Ollama</h4><h5 id="4-1-安装wsl"><a href="#4-1-安装wsl" class="headerlink" title="4.1 安装wsl"></a>4.1 安装wsl</h5><p>windows要安装wsl，并安装ubuntu22.04。<a href="https://learn.microsoft.com/zh-cn/windows/wsl/install">安装 WSL | Microsoft Learn</a></p>
+<p>在<a href="https://www.docker.com/products/docker-desktop/">Docker Desktop: The #1 Containerization Tool for Developers | Docker</a></p>
+<h5 id="4-2-安装Docker-Desktop"><a href="#4-2-安装Docker-Desktop" class="headerlink" title="4.2 安装Docker Desktop"></a>4.2 安装Docker Desktop</h5><p>按装Dokcer Desktop, 安装dify需要用到docker。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626215244316.png" alt="image-20250626215244316"></p>
+<p>如果显示<code>WSL integration with distro &#39;Ubuntu-22.04&#39; unexpectedly stopped. Do you want to restart it?</code>, 是因为wsl ubuntu 版本和docker不一致，打开cmd，输入</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wsl --list --verbose</span><br></pre></td></tr></table></figure>
+<p>如果版本不一致，输入：其中系统名要和上面查出来的Name一致，等待几分钟。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wsl --set-version Ubuntu-22.04 2</span><br></pre></td></tr></table></figure>
+<p>重新查询，版本一致</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626223013599.png" alt="image-20250626223013599"></p>
+<p>配置镜像源</p>
+<p>点击docker desktop右上角设置, Docker Engine，在json中加入字段:</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="attr">&quot;registry-mirrors&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;https://hub-mirror.c.163.com&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;https://mirror.ccs.tencentyun.com&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;https://mirrors.aliyun.com&quot;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+<p>然后点击Apply&amp;restart</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626223232194.png" alt="image-20250626223232194"></p>
+<p>验证换源成功, 输入以下命令，</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker info</span><br></pre></td></tr></table></figure>
+<p>显示如下, 说明换源成功:</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626223554294.png" alt="image-20250626223554294"></p>
+<h5 id="4-3-结合WSL与Docker-Desktop"><a href="#4-3-结合WSL与Docker-Desktop" class="headerlink" title="4.3 结合WSL与Docker Desktop"></a>4.3 结合WSL与Docker Desktop</h5><p>进入设置-&gt;Resources-&gt;WSL integration,勾选Ubuntu，点击Apply &amp; restart。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626223840589.png" alt="image-20250626223840589"></p>
+<p>检验docker是否正常工作，打开cmd，输入</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wsl</span><br><span class="line">docker --version</span><br></pre></td></tr></table></figure>
+<p> 显示如下，说明docker正常工作</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250626224113839.png" alt="image-20250626224113839"></p>
+<p>安装dify, 在想要放置dify源码的文件夹中输入</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wsl</span><br><span class="line">git clone https://github.com/langgenius/dify.git</span><br></pre></td></tr></table></figure>
+<h5 id="4-4-安装ollama"><a href="#4-4-安装ollama" class="headerlink" title="4.4 安装ollama"></a>4.4 安装ollama</h5><p>直接到官网下载<a href="https://ollama.com/">Ollama</a> ，安装，可能有点慢。</p>
+<p>安装后cmd输入</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ollama --version</span><br></pre></td></tr></table></figure>
+<p>显示如下，说明安装正确</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250627220935102.png" alt="image-20250627220935102"></p>
+<p><strong>下载模型</strong></p>
+<p>在官网搜索想要的模型，复制命令后在本地执行即可。</p>
+<h4 id="五-Dify集成Ollama"><a href="#五-Dify集成Ollama" class="headerlink" title="五. Dify集成Ollama"></a>五. Dify集成Ollama</h4><p>在Dify/docker目录下输入:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cp .env.example .env # 复制环境变量模板</span><br><span class="line">sudo docker compose up -d # 后台启动docker，会自动拉取镜像 如果装的是1.几的docker-compose 则要用docker-compose</span><br></pre></td></tr></table></figure>
+<p>启动dify，打开浏览器(最好谷歌), 输入 <code>http://localhost:80</code>启动Dify</p>
+<p>Dify集成Ollama主要填写以下信息</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250627234656002.png" alt="image-20250627234656002"></p>
+<p>所以要先设置ollama的地址，在环境变量中添加如下变量</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250627234815805.png" alt="image-20250627234815805"></p>
+<p>ip地址可以cmd输入<code>ipconfig</code>查找，设置后如果IP变了要更改，不然会出错。</p>
+<p>设置后重启电脑，重新启动dify和ollama，在dify中设置其中url填写<code>http://(IP地址):11434</code>，模型名称要写<code>ollama list</code> 中对应模型名, 由于搭建知识库需要chat模型和Embedding模型，所以我加载了两个模型:</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250627235414845.png" alt="image-20250627235414845"></p>
+<p>测试</p>
+<p>Dify集成了模型输出对比功能, 这里对比Ollama部署的qwen3-0.6b和在线API调用的glm-4-0520,输出如下:</p>
+<p>可以看出，glm-4-0520给出了正确答案，而qwen3-0.6b证了个寂寞。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250627235901627.png" alt="image-20250627235901627"></p>
+<h4 id="六-创建知识库"><a href="#六-创建知识库" class="headerlink" title="六.创建知识库"></a>六.创建知识库</h4><p>根据五的步骤完成Dify集成chat模型和Embedding后，就可以在Dify中创建知识库了。</p>
+<h5 id="6-1-新建知识库"><a href="#6-1-新建知识库" class="headerlink" title="6.1 新建知识库"></a>6.1 新建知识库</h5><p>准备好自己的知识库，我这里使用如下文本: 可从下载</p>
+<p>部分数据示例如下:</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">	<span class="attr">&quot;中国电信5G套餐&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;套餐名称&quot;</span><span class="punctuation">:</span> <span class="string">&quot;5G畅享套餐&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;月费&quot;</span><span class="punctuation">:</span> <span class="string">&quot;158元起&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;流量&quot;</span><span class="punctuation">:</span> <span class="string">&quot;60GB起，最高可达1TB&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;通话&quot;</span><span class="punctuation">:</span> <span class="string">&quot;2000分钟通话&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;适用人群&quot;</span><span class="punctuation">:</span> <span class="string">&quot;适合对流量和通话有极高需求的用户&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;优惠信息&quot;</span><span class="punctuation">:</span> <span class="string">&quot;赠送一年视频会员，每月赠送10GB流量&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">	<span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">    ...</span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>找到: 知识库-&gt;创建知识库</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250628225934097.png" alt="image-20250628225934097"></p>
+<p>接着设置参数，Dify虽然搭建RAG简单，但文档切分只支持分块处理，这里所有参数都用预置参数，点击开始后开始处理文档</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250630215458981.png" alt="image-20250630215458981"></p>
+<p>这里如果rerank如果配本地模型还会有问题，在线API可以，这里就不适用rerank。接着在聊天助手中接入知识库，点击创建好的聊天助手，点击添加知识库，添加刚才创建好的知识库，</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250630220509317.png" alt="image-20250630220509317"></p>
+<h5 id="6-2-RAG测试"><a href="#6-2-RAG测试" class="headerlink" title="6.2 RAG测试"></a>6.2 RAG测试</h5><p>创建好RAG后，在聊天框输入问题，聊天模型会根据知识库内容进行回答。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250630220706199.png" alt="image-20250630220706199"></p>
+<p>对比下面没有知识库时的模型输出，可以看出添加知识库后模型的输出更有意义，即RAG可以减少大模型幻觉。</p>
+<p><img src="/2025/06/30/llm-application-18/image-20250630220845572.png" alt="image-20250630220845572"></p>
+<p>但这里我们知识库只分为一个段，其实RAG精度不高。</p>
+<h5 id="6-3-总结"><a href="#6-3-总结" class="headerlink" title="6.3 总结"></a>6.3 总结</h5><p>总的来说,Dify支持快速构建RAG，但只支持文档的固定分块大小，RAG效果其实不好，在实际应用中，我们更多地是要做定制化处理，比如其他的文档分块方式，这时候Dify效果并不好。</p>
+<h5 id="6-4-问题"><a href="#6-4-问题" class="headerlink" title="6.4 问题"></a>6.4 问题</h5><p>1.GPT模型本身就会对文本进行嵌入，那能不能直接用GPT模型作为Embedding模型？</p>
+<p>可以，但是相比起来，GPT除了嵌入层，还多了后续的模型层，所以更大，不如直接使用嵌入模型快，如果我们在添加GPT模型时把它作为嵌入模型，也是可以的。</p>
+<p> <img src="/2025/06/30/llm-application-18/image-20250630222614405.png" alt="image-20250630222614405"></p>
+<p>2.更改Embedding是否需要重新处理文档?</p>
+<p>需要，更改Embedding需要对文档重新嵌入处理。</p>
+<p>3.Dify的缺点</p>
+<p>在Windows上比较简单，但在Linux上很麻烦，主要是Dify运行在Docker中，需要做端口映射。</p>
+<p>构建知识库时，文档分块方式比较固定。</p>
+]]></content>
+      <categories>
+        <category>大模型应用</category>
+        <category>项目实战</category>
       </categories>
   </entry>
 </search>

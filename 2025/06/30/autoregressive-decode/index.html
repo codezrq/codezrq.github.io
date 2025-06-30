@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="推导Transformer注意力机制的计算过程，解释训练和推理过程注意力计算的不同，解释为什么有kv-cache而没有q-cache">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Transformer注意力机制计算公式解析，自回归解码，KV-cache">
+<meta property="og:url" content="http://example.com/2025/06/30/autoregressive-decode/index.html">
+<meta property="og:site_name" content="乌漆嘛黑">
+<meta property="og:description" content="推导Transformer注意力机制的计算过程，解释训练和推理过程注意力计算的不同，解释为什么有kv-cache而没有q-cache">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/06/30/autoregressive-decode/640.webp">
+<meta property="og:image" content="http://example.com/2025/06/30/autoregressive-decode/640-17512966407353.png">
+<meta property="article:published_time" content="2025-06-30T15:21:21.000Z">
+<meta property="article:modified_time" content="2025-06-30T15:45:06.261Z">
+<meta property="article:author" content="zheng rq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/06/30/autoregressive-decode/640.webp">
+
+<link rel="canonical" href="http://example.com/2025/06/30/autoregressive-decode/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Transformer注意力机制计算公式解析，自回归解码，KV-cache | 乌漆嘛黑</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">乌漆嘛黑</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/06/30/autoregressive-decode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="乌漆嘛黑">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Transformer注意力机制计算公式解析，自回归解码，KV-cache
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-06-30 23:21:21 / 修改时间：23:45:06" itemprop="dateCreated datePublished" datetime="2025-06-30T23:21:21+08:00">2025-06-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E6%A6%82%E5%BF%B5%E5%92%8C%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">概念和原理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>推导Transformer注意力机制的计算过程，解释训练和推理过程注意力计算的不同，解释为什么有kv-cache而没有q-cache</p>
+<span id="more"></span>
+<p>在LLM推理中最关键的就是下图中的Multi-Head Attention, 其主要的计算集中在左图中灰色的Linar(矩阵乘)和Scaled Dot-Product Attention 中的MatMul矩阵乘法:<br><img src="/2025/06/30/autoregressive-decode/640.webp" alt="alt text"><img src="/2025/06/30/autoregressive-decode/640-17512966407353.png" alt="alt text"><br>说明:<br>Multi-Head Attention: 输入$X$经过$W_Q, W_K, W_V$矩阵的线性变换, 对结果进行拆分后为每个注意力头生成一组输入$Q,K,K$, 经过计算每个注意力头输出一个注意力矩阵,拼接后生成总的注意力矩阵, 最后经过一个全连接层得到输出矩阵。<br>Scaled Dot-Product Attention 流程为 $Q,K$进行矩阵乘得到$QK^T$,接着除以$\sqrt{d_k}$使方差变小, 然后和因果掩码矩阵$Mask(opt.)$相乘, 最后经过$SoftMax(\cdot)$归一化后和$V$相乘。<br>注意力的计算公式如下:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    Attention(K, Q,V)=softmax(\frac{QK^T}{\sqrt{d_k}})V   
+\end{equation}</script><ol>
+<li>Attention不直接使用$X$，而是使用经过矩阵乘法生成的这三个矩阵，因为使用三个可训练的参数矩阵，可增强模型的拟合能力。</li>
+<li>$softmax(\cdot )$是归一化函数, 使结果更平滑。</li>
+<li>$d_k$是头维度,这个除法称为Scale, 当$d_k$很大时, $QK^T$的乘法结果方差变大, 进行Scale可以使方差变小, 训练时梯度更新更稳定。</li>
+<li>因果掩码矩阵:因果掩码矩阵是一个上三角, 在解码器训练的过程中，不能让模型知道未来时间步的信息，否则就相当于告诉了模型的最终答案是什么。例如我们给解码器输入”I like eating pears”，当我们在计算’like’这个词与与其他词的注意力权重时，因为解码器是一个单词一个单词预测的，在预测’like’这个词时是不应该知道后面的单词，所以与’like’后面的单词不应该产生关联性。</li>
+</ol>
+<h4 id="一-训练阶段"><a href="#一-训练阶段" class="headerlink" title="一. 训练阶段"></a>一. 训练阶段</h4><p>涉及的变量<br>参数 含义<br>B batch size<br>t 序列长度<br>$d_{model}$ 模型维度<br>h 注意力头数<br>$d_k$ $d_k = \frac{d_{model}}{h}$ 每个头的维度<br>假设$Batch_size=1$, 一次多头注意力的计算如下:</p>
+<h5 id="step1-输入Embedding"><a href="#step1-输入Embedding" class="headerlink" title="step1 输入Embedding"></a>step1 输入Embedding</h5><p>输入矩阵为<br>$X\in \mathbb{R}^{t\times d_{model}}$</p>
+<h5 id="step2-线性变换生成QKV"><a href="#step2-线性变换生成QKV" class="headerlink" title="step2 线性变换生成QKV"></a>step2 线性变换生成QKV</h5><p>$Q,K,V$都是从同样的输入矩阵$X$线性变换而来:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    Q=XW^Q , K=XW^K , V=XW^V
+\end{equation}</script><p>其中$X \in \mathbb{R}^{t\times d_{model}}, W^Q,W^K,W^V \in \mathbb{R}^{d_{model} \times d_{model}}, Q,K,V\in \mathbb{R}^{t\times d_{model}}$</p>
+<h5 id="step3-多头拆分"><a href="#step3-多头拆分" class="headerlink" title="step3 多头拆分"></a>step3 多头拆分</h5><p>$Q,K,V$先reshape成 $t \times h \times d_{k}$, 其中$h=\frac{d_{model}}{d_k}$, 接着转置为$h\times t \times d_k$</p>
+<h5 id="step4-缩放点积注意力"><a href="#step4-缩放点积注意力" class="headerlink" title="step4 缩放点积注意力"></a>step4 缩放点积注意力</h5><p>在训练时, 通常处理的是完整的序列, $Q,K,V$都是序列长度$\times$头维度($t\times d_k$)的矩阵,此时$K,Q,V\in \mathbb{R}^{t \times d_{k}}$。<br>把$Q,K,V$写成列向量形式:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    Q=
+    \begin{bmatrix}
+        q_1 \\
+        q_2 \\
+        \vdots \\
+        q_t
+    \end{bmatrix},
+    K=
+    \begin{bmatrix}
+        k_1 \\
+        k_2 \\
+        \vdots \\
+        k_t
+    \end{bmatrix},
+    V=
+    \begin{bmatrix}
+        v_1 \\
+        v_2 \\
+        \vdots \\
+        v_t
+    \end{bmatrix}
+\end{equation}</script><p>其中$k_i,q_i,v_i \in \mathbb{R}^{1\times d_k},i=1,2,…,t$, 所以$Q,K,V\in \mathbb{R}^{t,d_{model}}$<br>$Q$和$K$装置的矩阵乘就变成了:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    QK^T=
+    \begin{bmatrix}
+        q_1 \\
+        q_2 \\
+        \vdots \\
+        q_t    
+    \end{bmatrix}
+    \begin{bmatrix}
+        k_1^T & k_2^T & \dots & k_t^T 
+    \end{bmatrix}=
+    \begin{bmatrix}
+        q_1\cdot k_1^T & q_1\cdot k_2^T & \cdots & q_1 \cdot k_t^T \\
+        q_2\cdot k_1^T & q_2^T\cdot k_2^T & \cdots & q_2^T \cdot k_t^T \\
+        \vdots & \vdots & \ddots & \vdots  \\
+        q_t\cdot k_1^T & q_t^T\cdot k_2^T & \cdots & q_t^T \cdot k_t^T \\
+    \end{bmatrix}
+\end{equation}</script><p>忽略除以$\sqrt{d_k}$(这只是一个常数, 不改变矩阵大小), 接着乘以因果掩码矩阵, 并进行归一化后结果为, 这里第$i$行的$SoftMax$简写成$S_i$, 结果为:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+\begin{aligned}
+    M_i = SoftMax(Mask(QK^T))V &= SoftMax\left(
+    \begin{bmatrix}
+        1 & 0 & \cdots & 0 \\
+        1 & 1 & \cdots & 0 \\
+        \vdots & \vdots & \ddots & \vdots \\
+        1 & 1 & \cdots & 1
+    \end{bmatrix}\cdot 
+    \begin{bmatrix}
+        q_1\cdot k_1^T & q_1\cdot k_2^T & \cdots & q_1 \cdot k_t^T \\
+        q_2\cdot k_1^T & q_2\cdot k_2^T & \cdots & q_2 \cdot k_t^T \\
+        \vdots & \vdots & \ddots & \vdots  \\
+        q_t\cdot k_1^T & q_t\cdot k_2^T & \cdots & q_t \cdot k_t^T \\
+    \end{bmatrix}
+    \right) 
+    \begin{bmatrix}
+        v_1 \\
+        v_2 \\ 
+        \vdots \\
+        v_t    
+    \end{bmatrix} \\
+    &= 
+    \begin{bmatrix}
+        S_1(q_1\cdot k_1^T)v_1 \\
+        S_2(q_2\cdot k_1^T)v1 + S_1(q_2\cdot k_2^T)v_2 \\
+        \vdots  \\
+        S_t(q_t\cdot k_1^T)v_1+S_t(q_t\cdot k_2^T)v_2 + \cdots + S_t(q_t\cdot k_t^T)v_t 
+    \end{bmatrix}
+\end{aligned}
+\end{equation}</script><p>其中$m_i$表是第$i,\ i = 1,2,…,h$个注意力头的输出, 大小为$t\times d_{k}$</p>
+<h5 id="step5-拼接所有输出"><a href="#step5-拼接所有输出" class="headerlink" title="step5 拼接所有输出"></a>step5 拼接所有输出</h5><p>拼接所有注意力头的输出:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    M_{concat}=Concat(M_1,...,M_h)   
+\end{equation}</script><p>经过拼接, 最终输出$M_{concat}$形状又变回$t \times d_{model}$</p>
+<h5 id="step6-全连接层-Projection"><a href="#step6-全连接层-Projection" class="headerlink" title="step6 全连接层(Projection)"></a>step6 全连接层(Projection)</h5><script type="math/tex; mode=display">
+\begin{equation}
+    M_{output}=M_{concat}\cdot W^O
+\end{equation}</script><p>其中$W^O\in \mathbb{R}^{d_{model} \times d_{model}}, M_{output}\in \mathbb{R}^{t\times d_{model}}$<br>以上的推导为了方便表示, 没有考虑batch_size, 如果加上batch_size, 各阶段计算如下:</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>参数</th>
+<th>输入</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>step1</td>
+<td>$Embed(\cdot)$</td>
+<td>$B$个字符串</td>
+<td>$X\in \mathbb{R}^{B\times d_{model}}$</td>
+</tr>
+<tr>
+<td>step2</td>
+<td>$W^Q,W^K,W^V \in \mathbb{R}^{d_{model} \times d_{model}}$</td>
+<td>$X\in \mathbb{R}^{B\times t\times d_{model}}$</td>
+<td>$Q,K,V\in \mathbb{R}^{B\times t\times d_{model}}$</td>
+</tr>
+<tr>
+<td>step3</td>
+<td>$Reshape(\cdot)$</td>
+<td>$Q,K,V\in \mathbb{R}^{B\times t\times d_{model}}$</td>
+<td>$Q,K,V\in \mathbb{R}^{ B\times h\times t\times d_k}$</td>
+</tr>
+<tr>
+<td>step4</td>
+<td>$SoftMax(Mask(\frac{QK^T}{\sqrt{d_k}}))V$</td>
+<td>$Q,K,V\in \mathbb{R}^{ B\times h\times t\times d_k}$</td>
+<td>$M_i \in \mathbb{R}^{B\times t\times d_k}, i = 1,2,…,h$</td>
+</tr>
+<tr>
+<td>step5</td>
+<td>$Concat(\cdot)$</td>
+<td>$M_i \in \mathbb{R}^{B\times t\times d_k}, i = 1,2,…,h$</td>
+<td>$M_{concat}\in \mathbb{R}^{B \times t\times d_{model}}$</td>
+</tr>
+<tr>
+<td>step6</td>
+<td>$W^O$</td>
+<td>$M_{concat}\in \mathbb{R}^{B \times t\times d_{model}}$</td>
+<td>$M_{output} \in \mathbb{R}^{B\times t \times d_{model}}$</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="二-推理阶段"><a href="#二-推理阶段" class="headerlink" title="二. 推理阶段"></a>二. 推理阶段</h4><p>训练阶段是整个序列一起计算, 并不需要$kv-cache$<br>推理阶段, 我们实际是要预测第$L$个token, 即输入只有$q_L$, 公式$(5)$只需要算出矩阵的最后一行, 所以只需要当前的$q_L$, 不需要缓存之前的$Query$, 所以没有Q-Cache, 从公式也可以看出, 在预测第$t$个token时, K,V的维度为$L\times d_k$, Q的维度为$1\times d_k$ 所以需要$KV-Cache$而不需要$Q-Cache$<br>在batch_size=1时, 推理过程如下:</p>
+<h5 id="step1-输入"><a href="#step1-输入" class="headerlink" title="step1 输入"></a>step1 输入</h5><p>假设当前要预测第$t$个token$x_t$, 则输入是上一步(第$t-1$步)的输出$x_{t-1}$的Embedding</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    x_{t} \in \mathbb{R}^{1\times d_{model}}
+\end{equation}</script><h5 id="step2-计算-q-t-k-t-v-t"><a href="#step2-计算-q-t-k-t-v-t" class="headerlink" title="step2 计算$q_t,k_t,v_t$"></a>step2 计算$q_t,k_t,v_t$</h5><p>从输入$x_t$线性变换得到$q_t,k_t,v_t$:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    q_t=x_tW^Q,k_t=x_tW^K,v_t=x_tW^V  
+\end{equation}</script><p>其中$x_t\in \mathbb{R}^{1\times d_{model}}, W^Q,W^K,W^V \in \mathbb{R}^{d_{model} \times d_{model}}, q_t,k_t,v_t \in \mathbb{R}^{1\times d_{model}}$</p>
+<h5 id="step3-多头拆分-1"><a href="#step3-多头拆分-1" class="headerlink" title="step3 多头拆分"></a>step3 多头拆分</h5><p>$q_t,k_t,v_t$先reshape成 $1 \times h \times d_{k}$, 其中$h=\frac{d_{model}}{d_k}$, 接着转置为$h\times 1 \times d_k$, 分发到不同的注意力头, 每个头拿到一个输入$q_t,k_t,v_t \in \mathbb{R}^{1\times d_k}$</p>
+<h5 id="step4-缩放点积注意力-1"><a href="#step4-缩放点积注意力-1" class="headerlink" title="step4 缩放点积注意力"></a>step4 缩放点积注意力</h5><p>自回归推理中我们只需要预测当前第$t$个token, 所以只需要计算公式$(5)$的最后一行, 前$t-1$个token的$k,v$我们都缓存了, 读取后和新计算的$k_t,v_t$拼接可以得到:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    Q=q_t,
+    K=
+    \begin{bmatrix}
+        k_1 \\
+        k_2 \\
+        \vdots \\
+        k_t
+    \end{bmatrix},
+    V=
+    \begin{bmatrix}
+        v_1 \\
+        v_2 \\
+        \vdots \\
+        v_t
+    \end{bmatrix}
+\end{equation}</script><p>其中$q_t,k_i,v_i \in \mathbb{R}^{1\times d_k},i=1,2,…,t$, 所以$K,V\in \mathbb{R}^{t,d_k}, Q\in \mathbb{R}^{1\times d_k}$<br>$Q$和$K$装置的矩阵乘就变成了:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    QK^T=q_t    
+    \begin{bmatrix}
+        k_1^T & k_2^T & \dots & k_t^T 
+    \end{bmatrix}=
+    \begin{bmatrix}
+        q_t\cdot k_1^T & q_t\cdot k_2^T & \cdots & q_t \cdot k_t^T \\
+    \end{bmatrix}
+\end{equation}</script><p>忽略除以$\sqrt{d_k}$(这只是一个常数, 不改变矩阵大小), 推理过程需要关注整个序列, 所以不需要乘以因果掩码矩阵, 结果进行归一化后为:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+\begin{aligned}
+    M_i = SoftMax(QK^T)V &= SoftMax\left( 
+    \begin{bmatrix}
+        q_t\cdot k_1^T & q_t\cdot k_2^T & \cdots & q_t \cdot k_t^T \\
+    \end{bmatrix}
+    \right) 
+    \begin{bmatrix}
+        v_1 \\
+        v_2 \\ 
+        \vdots \\
+        v_t    
+    \end{bmatrix} \\
+    &= 
+        S_t(q_t\cdot k_1^T)v_1+S_t(q_t\cdot k_2^T)v_2 + \cdots + S_t(q_t\cdot k_t^T)v_t 
+\end{aligned}
+\end{equation}</script><p>其中$M_i$表示第$i,\ i = 1,2,…,h$个注意力头的输出, 大小为$1\times d_{k}$</p>
+<h5 id="step5-拼接所有输出-1"><a href="#step5-拼接所有输出-1" class="headerlink" title="step5 拼接所有输出"></a>step5 拼接所有输出</h5><p>拼接所有注意力头的输出:</p>
+<script type="math/tex; mode=display">
+\begin{equation}
+    M_{concat}=Concat(M_1,...,M_h)   
+\end{equation}</script><p>经过拼接, 最终输出$M_{concat}$ 形状又变回 $1 \times d_{model}$<br>以上的推导为了方便表示, 没有考虑batch_size, 如果加上batch_size, 各阶段计算如下:</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>参数</th>
+<th>输入</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>step1</td>
+<td>$Embed(\cdot)$</td>
+<td>$B$个字符串的第$t-1$个字符的嵌入向量</td>
+<td>$x_t\in \mathbb{R}^{B\times 1 \times d_{model}}$</td>
+</tr>
+<tr>
+<td>step2</td>
+<td>$W^Q,W^K,W^V \in \mathbb{R}^{d_{model} \times d_{model}}$</td>
+<td>$x_t \in \mathbb{R}^{B\times 1\times d_{model}}$</td>
+<td>$k_t, v_t, q_t\in \mathbb{R}^{B\times 1 \times d_{model}}$</td>
+</tr>
+<tr>
+<td>step3</td>
+<td>$Reshape(\cdot)$</td>
+<td>$k_t, v_t, q_t\in \mathbb{R}^{B\times 1 \times d_{model}}$</td>
+<td>$k_t, v_t, q_t\in \mathbb{R}^{ B\times h\times 1\times d_k}$</td>
+</tr>
+<tr>
+<td>step4</td>
+<td>$SoftMax(\frac{QK^T}{\sqrt{d_k}})V$</td>
+<td>$K,V\in \mathbb{R}^{ B\times h\times t\times d_k}, q_t\in \mathbb{R}^{B\times 1 \times d_{model}}$</td>
+<td>$M_i \in \mathbb{R}^{B\times 1\times d_k}, i = 1,2,…,h$</td>
+</tr>
+<tr>
+<td>step5</td>
+<td>$Concat(\cdot)$</td>
+<td>$M_i \in \mathbb{R}^{B\times 1\times d_k}, i = 1,2,…,h$</td>
+<td>$M_{concat}\in \mathbb{R}^{B \times 1\times d_{model}}$</td>
+</tr>
+<tr>
+<td>step6</td>
+<td>$W^O\in \mathbb{R}^{d_{model}\times d_{model}}$</td>
+<td>$M_{concat}\in \mathbb{R}^{B \times 1 \times d_{model}}$</td>
+<td>$M_{output} \in \mathbb{R}^{B\times 1 \times d_{model}}$</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/06/30/llm-application-18/" rel="prev" title="大模型应用系列(十八) 大模型RAG项目实战：本地部署Dify实现RAG">
+      <i class="fa fa-chevron-left"></i> 大模型应用系列(十八) 大模型RAG项目实战：本地部署Dify实现RAG
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E8%AE%AD%E7%BB%83%E9%98%B6%E6%AE%B5"><span class="nav-number">1.</span> <span class="nav-text">一. 训练阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#step1-%E8%BE%93%E5%85%A5Embedding"><span class="nav-number">1.1.</span> <span class="nav-text">step1 输入Embedding</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#step2-%E7%BA%BF%E6%80%A7%E5%8F%98%E6%8D%A2%E7%94%9F%E6%88%90QKV"><span class="nav-number">1.2.</span> <span class="nav-text">step2 线性变换生成QKV</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#step3-%E5%A4%9A%E5%A4%B4%E6%8B%86%E5%88%86"><span class="nav-number">1.3.</span> <span class="nav-text">step3 多头拆分</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#step4-%E7%BC%A9%E6%94%BE%E7%82%B9%E7%A7%AF%E6%B3%A8%E6%84%8F%E5%8A%9B"><span class="nav-number">1.4.</span> <span class="nav-text">step4 缩放点积注意力</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#step5-%E6%8B%BC%E6%8E%A5%E6%89%80%E6%9C%89%E8%BE%93%E5%87%BA"><span class="nav-number">1.5.</span> <span class="nav-text">step5 拼接所有输出</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#step6-%E5%85%A8%E8%BF%9E%E6%8E%A5%E5%B1%82-Projection"><span class="nav-number">1.6.</span> <span class="nav-text">step6 全连接层(Projection)</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-%E6%8E%A8%E7%90%86%E9%98%B6%E6%AE%B5"><span class="nav-number">2.</span> <span class="nav-text">二. 推理阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#step1-%E8%BE%93%E5%85%A5"><span class="nav-number">2.1.</span> <span class="nav-text">step1 输入</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#step2-%E8%AE%A1%E7%AE%97-q-t-k-t-v-t"><span class="nav-number">2.2.</span> <span class="nav-text">step2 计算$q_t,k_t,v_t$</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#step3-%E5%A4%9A%E5%A4%B4%E6%8B%86%E5%88%86-1"><span class="nav-number">2.3.</span> <span class="nav-text">step3 多头拆分</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#step4-%E7%BC%A9%E6%94%BE%E7%82%B9%E7%A7%AF%E6%B3%A8%E6%84%8F%E5%8A%9B-1"><span class="nav-number">2.4.</span> <span class="nav-text">step4 缩放点积注意力</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#step5-%E6%8B%BC%E6%8E%A5%E6%89%80%E6%9C%89%E8%BE%93%E5%87%BA-1"><span class="nav-number">2.5.</span> <span class="nav-text">step5 拼接所有输出</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">46</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
