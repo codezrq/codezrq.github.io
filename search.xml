@@ -4015,7 +4015,7 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
     <url>/2025/06/30/autoregressive-decode/</url>
     <content><![CDATA[<p>推导Transformer注意力机制的计算过程，解释训练和推理过程注意力计算的不同，解释为什么有kv-cache而没有q-cache</p>
 <span id="more"></span>
-<p>在LLM推理中最关键的就是下图中的Multi-Head Attention, 其主要的计算集中在左图中灰色的Linar(矩阵乘)和Scaled Dot-Product Attention 中的MatMul矩阵乘法:<br><img src="/2025/06/30/autoregressive-decode/640.webp" alt="alt text"><img src="/2025/06/30/autoregressive-decode/640-17512966407353.png" alt="alt text"><br>说明:<br>Multi-Head Attention: 输入$X$经过$W_Q, W_K, W_V$矩阵的线性变换, 对结果进行拆分后为每个注意力头生成一组输入$Q,K,K$, 经过计算每个注意力头输出一个注意力矩阵,拼接后生成总的注意力矩阵, 最后经过一个全连接层得到输出矩阵。<br>Scaled Dot-Product Attention 流程为 $Q,K$进行矩阵乘得到$QK^T$,接着除以$\sqrt{d_k}$使方差变小, 然后和因果掩码矩阵$Mask(opt.)$相乘, 最后经过$SoftMax(\cdot)$归一化后和$V$相乘。<br>注意力的计算公式如下:</p>
+<p>在LLM推理中最关键的就是下图中的Multi-Head Attention, 其主要的计算集中在左图中灰色的Linar(矩阵乘)和Scaled Dot-Product Attention 中的MatMul矩阵乘法:<br> <img src="/2025/06/30/autoregressive-decode/image-20250701000556780.png" alt="image-20250701000556780"><br>说明:<br>Multi-Head Attention: 输入$X$经过$W_Q, W_K, W_V$矩阵的线性变换, 对结果进行拆分后为每个注意力头生成一组输入$Q,K,K$, 经过计算每个注意力头输出一个注意力矩阵,拼接后生成总的注意力矩阵, 最后经过一个全连接层得到输出矩阵。<br>Scaled Dot-Product Attention 流程为 $Q,K$进行矩阵乘得到$QK^T$,接着除以$\sqrt{d_k}$使方差变小, 然后和因果掩码矩阵$Mask(opt.)$相乘, 最后经过$SoftMax(\cdot)$归一化后和$V$相乘。<br>注意力的计算公式如下:</p>
 <script type="math/tex; mode=display">
 \begin{equation}
     Attention(K, Q,V)=softmax(\frac{QK^T}{\sqrt{d_k}})V   
