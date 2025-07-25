@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="介绍RAG的一般实现流程，如何收集数据，处理数据，以及RAG的常见优化方向。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大模型应用系列(十九) 大模型RAG项目实战：法律条文助手--方案与数据">
+<meta property="og:url" content="http://example.com/2025/07/25/llm-application-19/index.html">
+<meta property="og:site_name" content="乌漆嘛黑">
+<meta property="og:description" content="介绍RAG的一般实现流程，如何收集数据，处理数据，以及RAG的常见优化方向。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/07/25/llm-application-19/image-20250725235004301.png">
+<meta property="og:image" content="http://example.com/2025/07/25/llm-application-19/image-20250723231041824.png">
+<meta property="article:published_time" content="2025-07-25T15:41:57.000Z">
+<meta property="article:modified_time" content="2025-07-25T15:51:49.277Z">
+<meta property="article:author" content="zheng rq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2025/07/25/llm-application-19/image-20250725235004301.png">
+
+<link rel="canonical" href="http://example.com/2025/07/25/llm-application-19/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>大模型应用系列(十九) 大模型RAG项目实战：法律条文助手--方案与数据 | 乌漆嘛黑</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">乌漆嘛黑</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/07/25/llm-application-19/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zheng rq">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="乌漆嘛黑">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          大模型应用系列(十九) 大模型RAG项目实战：法律条文助手--方案与数据
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-07-25 23:41:57 / 修改时间：23:51:49" itemprop="dateCreated datePublished" datetime="2025-07-25T23:41:57+08:00">2025-07-25</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">大模型应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%BA%94%E7%94%A8/%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">项目实战</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>介绍RAG的一般实现流程，如何收集数据，处理数据，以及RAG的常见优化方向。</p>
+<span id="more"></span>
+<h4 id="一-方案"><a href="#一-方案" class="headerlink" title="一. 方案"></a>一. 方案</h4><h5 id="1-1-项目背景与需求设计"><a href="#1-1-项目背景与需求设计" class="headerlink" title="1.1 项目背景与需求设计"></a>1.1 项目背景与需求设计</h5><h6 id="1-1-1-核心需求"><a href="#1-1-1-核心需求" class="headerlink" title="1.1.1 核心需求"></a>1.1.1 核心需求</h6><p><strong>场景: </strong> 法律条文智能问答系统，需满足:</p>
+<ul>
+<li>定期更新最新法律条文</li>
+<li>支持条款精准引用，如”《劳动法》第36条”</li>
+<li>处理复杂查询，如”劳动纠纷中的多条款关联分析”</li>
+</ul>
+<h6 id="1-1-2-技术选型-RAG-vs-微调"><a href="#1-1-2-技术选型-RAG-vs-微调" class="headerlink" title="1.1.2 技术选型: RAG vs 微调"></a>1.1.2 技术选型: RAG vs 微调</h6><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>对比维度</th>
+<th>RAG方案</th>
+<th>微调方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据更新频率</td>
+<td>支持动态更新知识库</td>
+<td>需重新标注并训练模型</td>
+</tr>
+<tr>
+<td>内容准确性</td>
+<td>直接引用原文，避免生成失真</td>
+<td>依赖标注质量，易产生偏差</td>
+</tr>
+<tr>
+<td>知识覆盖范围</td>
+<td>适合大规模知识体系</td>
+<td>需海量标注数据</td>
+</tr>
+<tr>
+<td>可解释性</td>
+<td>支持条款溯源，符合法律严谨性</td>
+<td>黑盒模型，解释性差</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>重点:</strong> RAG在动态更新和可解释性上的优势</p>
+<h5 id="1-2-核心实现流程"><a href="#1-2-核心实现流程" class="headerlink" title="1.2 核心实现流程"></a>1.2 核心实现流程</h5><h6 id="1-2-1-流程图"><a href="#1-2-1-流程图" class="headerlink" title="1.2.1 流程图"></a>1.2.1 流程图</h6><p> <img src="/2025/07/25/llm-application-19/image-20250725235004301.png" alt="image-20250725235004301"></p>
+<h6 id="1-2-2-关键模块"><a href="#1-2-2-关键模块" class="headerlink" title="1.2.2 关键模块"></a>1.2.2 关键模块</h6><ol>
+<li>RAG检索层 <ul>
+<li>使用微调后的通用大模型(如劳动法领域适配模型)，在实际中，一般先用通用大模型，如果发现效果不行，再微调。</li>
+<li>知识库构建: 结构化法律条文(json格式)</li>
+</ul>
+</li>
+<li>数据更新模块<ul>
+<li>定时爬取政府官网最新法规(自动化获取)</li>
+<li>自动化解析条款(正则匹配)</li>
+</ul>
+</li>
+</ol>
+<p><strong>重点:</strong> RAG与领域微调的结合策略。</p>
+<h5 id="1-3-数据收集与整理"><a href="#1-3-数据收集与整理" class="headerlink" title="1.3 数据收集与整理"></a>1.3 数据收集与整理</h5><p>法律条文一般比较规范化，律师在回答法律问题时，一般会说，”根据《xx法律》第xx条…”，所以我们希望知识库中法律条文每条就是一个node，可以通过网络爬虫和数据自动化处理来实现，这里爬取的是 <a target="_blank" rel="noopener" href="http://www.npc.gov.cn/npc/c2/c30834/201905/t20190521_296651.html">中华人民共和国劳动法_中国人大网</a> ，爬虫脚本需要根据数据网页结构进行调整。主要分为两步: 数据爬取(bs4)和文档切分(正则匹配)，代码如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">fetch_and_parse</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="comment"># 请求网页</span></span><br><span class="line">    response = requests.get(url)</span><br><span class="line">    <span class="comment"># 设置网页编码格式</span></span><br><span class="line">    response.encoding = <span class="string">&#x27;utf-8&#x27;</span></span><br><span class="line">    <span class="comment"># 解析网页内容</span></span><br><span class="line">    soup = BeautifulSoup(response.text, <span class="string">&#x27;html.parser&#x27;</span>)</span><br><span class="line">    <span class="comment"># 提取正文内容</span></span><br><span class="line">    content = soup.find_all(<span class="string">&#x27;p&#x27;</span>)</span><br><span class="line">    <span class="comment"># 初始化存储数据</span></span><br><span class="line">    data = []</span><br><span class="line">    <span class="comment"># 提取文本并格式化</span></span><br><span class="line">    <span class="keyword">for</span> para <span class="keyword">in</span> content:</span><br><span class="line">        text = para.get_text(strip=<span class="literal">True</span>)</span><br><span class="line">        <span class="keyword">if</span> text:  <span class="comment"># 只处理非空文本</span></span><br><span class="line">            <span class="comment"># 根据需求格式化内容</span></span><br><span class="line">            data.append(text)</span><br><span class="line">    <span class="comment"># 将data列表转换为字符串</span></span><br><span class="line">    data_str = <span class="string">&#x27;\n&#x27;</span>.join(data)</span><br><span class="line">    <span class="keyword">return</span> data_str</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">extract_law_articles</span>(<span class="params">data_str</span>):</span><br><span class="line">    <span class="comment"># 正则表达式，匹配每个条款号及其内容</span></span><br><span class="line">    pattern = re.<span class="built_in">compile</span>(<span class="string">r&#x27;第([一二三四五六七八九十零百]+)条.*?(?=\n第|$)&#x27;</span>, re.DOTALL)</span><br><span class="line">    <span class="comment"># 初始化字典来存储条款号和内容</span></span><br><span class="line">    lawarticles = &#123;&#125;</span><br><span class="line">    <span class="comment"># 搜索所有匹配项</span></span><br><span class="line">    <span class="keyword">for</span> <span class="keyword">match</span> <span class="keyword">in</span> pattern.finditer(data_str):</span><br><span class="line">        articlenumber = <span class="keyword">match</span>.group(<span class="number">1</span>)</span><br><span class="line">        articlecontent = <span class="keyword">match</span>.group(<span class="number">0</span>).replace(<span class="string">&#x27;第&#x27;</span> + articlenumber + <span class="string">&#x27;条&#x27;</span>, <span class="string">&#x27;&#x27;</span>).strip()</span><br><span class="line">        lawarticles[<span class="string">f&quot;中华人民共和国劳动法 第<span class="subst">&#123;articlenumber&#125;</span>条&quot;</span>] = articlecontent</span><br><span class="line">    <span class="comment"># 转换字典为JSON字符串</span></span><br><span class="line">    jsonstr = json.dumps(lawarticles, ensure_ascii=<span class="literal">False</span>, indent=<span class="number">4</span>)</span><br><span class="line">    <span class="keyword">return</span> [jsonstr]</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    <span class="comment"># 请求页面</span></span><br><span class="line">    url = <span class="string">&quot;http://www.npc.gov.cn/npc/c2/c30834/201905/t20190521_296651.html&quot;</span></span><br><span class="line">    data_str = fetch_and_parse(url)</span><br><span class="line">    json_str = extract_law_articles(data_str)</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&#x27;data.json&#x27;</span>, <span class="string">&#x27;w&#x27;</span>, encoding=<span class="string">&#x27;utf-8&#x27;</span>) <span class="keyword">as</span> file:</span><br><span class="line">        json.dump(json_str, file, ensure_ascii=<span class="literal">False</span>, indent=<span class="number">4</span>) </span><br></pre></td></tr></table></figure>
+<p>经过整理，最终数据格式如下:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span><span class="punctuation">&#123;</span></span><br><span class="line"><span class="attr">&quot;中华人民共和国劳动法 第一百零四条&quot;</span><span class="punctuation">:</span> <span class="string">&quot;国家工作人员和社会保险基金经办机构的工作人员挪用社会保险基金，构成犯罪的，依法追究刑事责任。&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;中华人民共和国劳动法 第一百零五条&quot;</span><span class="punctuation">:</span> <span class="string">&quot;违反本法规定侵害劳动者合法权益，其他法律、行政法规已规定处罚的，依照该法律、行政法规的规定处罚。&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;中华人民共和国劳动法 第一百零六条&quot;</span><span class="punctuation">:</span> <span class="string">&quot;省、自治区、直辖市人民政府根据本法和本地区的实际情况，规定劳动合同制度的实施步骤，报国务院备案。&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;中华人民共和国劳动法 第一百零七条&quot;</span><span class="punctuation">:</span> <span class="string">&quot;本法自1995年1月1日起施行。&quot;</span><span class="punctuation">,</span></span><br><span class="line">    ...</span><br><span class="line"><span class="punctuation">&#125;</span><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+<p>这样就可以将每个键值对划分为一个node，这样LLM看到一个node就是一个条款。</p>
+<p><strong>重点: </strong> 正则表达式设计与结构化存储。</p>
+<h5 id="1-4-Lora微调优化"><a href="#1-4-Lora微调优化" class="headerlink" title="1.4 Lora微调优化"></a>1.4 Lora微调优化</h5><h6 id="1-4-1-微调场景"><a href="#1-4-1-微调场景" class="headerlink" title="1.4.1 微调场景"></a>1.4.1 微调场景</h6><p>RAG的效果取决于两个方面:1.给的文档素材是否正确(数据收集与整理)；2.LLM本身能力(微调)。</p>
+<p>知识库检索之前还有一步是大模型理解问题，所以大模型能否正确理解问题会极大影响最终效果，对于法律条文助手，大模型的理解能力已经很不错，可能不需要微调，但对于一些小众领域，可能需要提升大模型的理解能力，这时就要通过微调实现。</p>
+<h6 id="1-4-2-微调步骤"><a href="#1-4-2-微调步骤" class="headerlink" title="1.4.2 微调步骤"></a>1.4.2 微调步骤</h6><ol>
+<li><p>准备少量高质量问答数据, 格式如下:</p>
+ <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;question&quot;</span><span class="punctuation">:</span> <span class="string">&quot;劳动合同解除的法定条件是什么?&quot;</span><span class="punctuation">,</span></span><br><span class="line"> <span class="attr">&quot;answer&quot;</span><span class="punctuation">:</span> <span class="string">&quot;《劳动合同法》第36条规定...&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Lora微调通用模型，得到领域适配模型。</p>
+</li>
+</ol>
+<p><strong>重点:</strong> 小样本微调和RAG协同优化</p>
+<h5 id="1-5-加载数据"><a href="#1-5-加载数据" class="headerlink" title="1.5 加载数据"></a>1.5 加载数据</h5><p>使用 llama_index加载数据集，将文档嵌入并生成Embedding代码及解释如下:</p>
+<p>运行过程中会报错缺少某些包, 直接到官网搜索该包名称会提供下载方法:<a target="_blank" rel="noopener" href="https://docs.llamaindex.ai/en/stable/">LlamaIndex - LlamaIndex</a></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> pathlib <span class="keyword">import</span> Path</span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">List</span>, <span class="type">Dict</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> chromadb</span><br><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> VectorStoreIndex, StorageContext, Settings</span><br><span class="line"><span class="keyword">from</span> llama_index.core.schema <span class="keyword">import</span> TextNode</span><br><span class="line"><span class="keyword">from</span> llama_index.llms.huggingface <span class="keyword">import</span> HuggingFaceLLM</span><br><span class="line"><span class="keyword">from</span> llama_index.embeddings.huggingface <span class="keyword">import</span> HuggingFaceEmbedding</span><br><span class="line"><span class="keyword">from</span> llama_index.vector_stores.chroma <span class="keyword">import</span> ChromaVectorStore</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># ================== 配置区 ==================</span></span><br><span class="line"><span class="comment"># 需要修xu</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Config</span>:</span><br><span class="line">    <span class="comment"># 模型路径</span></span><br><span class="line">    EMBED_MODEL_PATH = <span class="string">r&quot;/home/cw/llms/embedding_model/sungw111/text2vec-base-chinese-sentence&quot;</span></span><br><span class="line">    LLM_MODEL_PATH = <span class="string">r&quot;/home/cw/llms/Qwen/Qwen1___5-1___8B-Chat&quot;</span></span><br><span class="line">    <span class="comment"># 存放json文件的文件夹路径</span></span><br><span class="line">    <span class="comment"># 向量数据库路径</span></span><br><span class="line">    DATA_DIR = <span class="string">&quot;/home/cw/projects/demo_22/data&quot;</span></span><br><span class="line">    VECTOR_DB_DIR = <span class="string">&quot;/home/cw/projects/demo_22/chroma_db&quot;</span></span><br><span class="line">    PERSIST_DIR = <span class="string">&quot;/home/cw/projects/demo_22/storage&quot;</span></span><br><span class="line">    </span><br><span class="line">    COLLECTION_NAME = <span class="string">&quot;chinese_labor_laws&quot;</span></span><br><span class="line">    TOP_K = <span class="number">3</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ================== 初始化模型 ==================</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">init_models</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot;初始化模型并验证&quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># Embedding模型</span></span><br><span class="line">    embed_model = HuggingFaceEmbedding(</span><br><span class="line">        model_name=Config.EMBED_MODEL_PATH,</span><br><span class="line">        <span class="comment"># encode_kwargs = &#123;</span></span><br><span class="line">        <span class="comment">#     &#x27;normalize_embeddings&#x27;: True,</span></span><br><span class="line">        <span class="comment">#     &#x27;device&#x27;: &#x27;cuda&#x27; if hasattr(Settings, &#x27;device&#x27;) else &#x27;cpu&#x27;</span></span><br><span class="line">        <span class="comment"># &#125;</span></span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    Settings.embed_model = embed_model</span><br><span class="line"> </span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 验证模型</span></span><br><span class="line">    test_embedding = embed_model.get_text_embedding(<span class="string">&quot;测试文本&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Embedding维度验证：<span class="subst">&#123;<span class="built_in">len</span>(test_embedding)&#125;</span>&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> embed_model</span><br><span class="line"></span><br><span class="line"><span class="comment"># ================== 数据处理 ==================</span></span><br><span class="line"><span class="comment"># 处理data_dir下的所有json文件, 每个json文件都是一个字典列表，类似</span></span><br><span class="line"><span class="comment"># [&#123;</span></span><br><span class="line"><span class="comment">#     &quot;中华人民共和国劳动法 第一百零六条&quot;: &quot;省、自治区、直辖市人民政府根据本法和本地区的实际情况，规定劳动合同制度的实施步骤，报国务院备案。&quot;,</span></span><br><span class="line"><span class="comment">#     &quot;中华人民共和国劳动法 第一百零七条&quot;: &quot;本法自1995年1月1日起施行。&quot;</span></span><br><span class="line"><span class="comment"># &#125;]</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">load_and_validate_json_files</span>(<span class="params">data_dir: <span class="built_in">str</span></span>) -&gt; <span class="type">List</span>[<span class="type">Dict</span>]:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;加载并验证JSON法律文件&quot;&quot;&quot;</span></span><br><span class="line">    json_files = <span class="built_in">list</span>(Path(data_dir).glob(<span class="string">&quot;*.json&quot;</span>))</span><br><span class="line">    <span class="keyword">assert</span> json_files, <span class="string">f&quot;未找到JSON文件于 <span class="subst">&#123;data_dir&#125;</span>&quot;</span></span><br><span class="line">    </span><br><span class="line">    all_data = []</span><br><span class="line">    <span class="keyword">for</span> json_file <span class="keyword">in</span> json_files:</span><br><span class="line">        <span class="keyword">with</span> <span class="built_in">open</span>(json_file, <span class="string">&#x27;r&#x27;</span>, encoding=<span class="string">&#x27;utf-8&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                data = json.load(f)</span><br><span class="line">                <span class="comment"># 验证数据结构</span></span><br><span class="line">                <span class="keyword">if</span> <span class="keyword">not</span> <span class="built_in">isinstance</span>(data, <span class="built_in">list</span>):</span><br><span class="line">                    <span class="keyword">raise</span> ValueError(<span class="string">f&quot;文件 <span class="subst">&#123;json_file.name&#125;</span> 根元素应为列表&quot;</span>)</span><br><span class="line">                <span class="keyword">for</span> item <span class="keyword">in</span> data:</span><br><span class="line">                    <span class="keyword">if</span> <span class="keyword">not</span> <span class="built_in">isinstance</span>(item, <span class="built_in">dict</span>):</span><br><span class="line">                        <span class="keyword">raise</span> ValueError(<span class="string">f&quot;文件 <span class="subst">&#123;json_file.name&#125;</span> 包含非字典元素&quot;</span>)</span><br><span class="line">                    <span class="keyword">for</span> k, v <span class="keyword">in</span> item.items():</span><br><span class="line">                        <span class="keyword">if</span> <span class="keyword">not</span> <span class="built_in">isinstance</span>(v, <span class="built_in">str</span>):</span><br><span class="line">                            <span class="keyword">raise</span> ValueError(<span class="string">f&quot;文件 <span class="subst">&#123;json_file.name&#125;</span> 中键 &#x27;<span class="subst">&#123;k&#125;</span>&#x27; 的值不是字符串&quot;</span>)</span><br><span class="line">                all_data.extend(&#123;</span><br><span class="line">                    <span class="string">&quot;content&quot;</span>: item,  <span class="comment"># item是文件中的字典列表</span></span><br><span class="line">                    <span class="string">&quot;metadata&quot;</span>: &#123;<span class="string">&quot;source&quot;</span>: json_file.name&#125;   <span class="comment"># 把文件名称作为元数据, 所以这里文件名取为中华人民共和国劳动法(法律名称)</span></span><br><span class="line">                &#125; <span class="keyword">for</span> item <span class="keyword">in</span> data)</span><br><span class="line">            <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">                <span class="keyword">raise</span> RuntimeError(<span class="string">f&quot;加载文件 <span class="subst">&#123;json_file&#125;</span> 失败: <span class="subst">&#123;<span class="built_in">str</span>(e)&#125;</span>&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;成功加载 <span class="subst">&#123;<span class="built_in">len</span>(all_data)&#125;</span> 个法律文件条目&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> all_data</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">create_nodes</span>(<span class="params">raw_data: <span class="type">List</span>[<span class="type">Dict</span>]</span>) -&gt; <span class="type">List</span>[TextNode]:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;添加ID稳定性保障&quot;&quot;&quot;</span></span><br><span class="line">    nodes = []</span><br><span class="line">    <span class="keyword">for</span> entry <span class="keyword">in</span> raw_data:</span><br><span class="line">        law_dict = entry[<span class="string">&quot;content&quot;</span>] <span class="comment"># 取出所有字典</span></span><br><span class="line">        source_file = entry[<span class="string">&quot;metadata&quot;</span>][<span class="string">&quot;source&quot;</span>] <span class="comment"># 文件名</span></span><br><span class="line">        <span class="keyword">for</span> full_title, content <span class="keyword">in</span> law_dict.items():</span><br><span class="line">            <span class="comment"># 生成稳定ID（避免重复）</span></span><br><span class="line">            node_id = <span class="string">f&quot;<span class="subst">&#123;source_file&#125;</span>::<span class="subst">&#123;full_title&#125;</span>&quot;</span> <span class="comment"># 中华人民共和国劳动法::第一百零六条</span></span><br><span class="line">            </span><br><span class="line">            parts = full_title.split(<span class="string">&quot; &quot;</span>, <span class="number">1</span>)</span><br><span class="line">            law_name = parts[<span class="number">0</span>] <span class="keyword">if</span> <span class="built_in">len</span>(parts) &gt; <span class="number">0</span> <span class="keyword">else</span> <span class="string">&quot;未知法律&quot;</span></span><br><span class="line">            article = parts[<span class="number">1</span>] <span class="keyword">if</span> <span class="built_in">len</span>(parts) &gt; <span class="number">1</span> <span class="keyword">else</span> <span class="string">&quot;未知条款&quot;</span></span><br><span class="line">            <span class="comment"># 每个法律条款生成一个节点</span></span><br><span class="line">            node = TextNode(</span><br><span class="line">                text=content,</span><br><span class="line">                id_=node_id,  <span class="comment"># 显式设置稳定ID</span></span><br><span class="line">                metadata=&#123;</span><br><span class="line">                    <span class="string">&quot;law_name&quot;</span>: law_name,</span><br><span class="line">                    <span class="string">&quot;article&quot;</span>: article,</span><br><span class="line">                    <span class="string">&quot;full_title&quot;</span>: full_title,</span><br><span class="line">                    <span class="string">&quot;source_file&quot;</span>: source_file,</span><br><span class="line">                    <span class="string">&quot;content_type&quot;</span>: <span class="string">&quot;legal_article&quot;</span></span><br><span class="line">                &#125;</span><br><span class="line">            )</span><br><span class="line">            nodes.append(node)</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;生成 <span class="subst">&#123;<span class="built_in">len</span>(nodes)&#125;</span> 个文本节点（ID示例：<span class="subst">&#123;nodes[<span class="number">0</span>].id_&#125;</span>）&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> nodes</span><br><span class="line"></span><br><span class="line"><span class="comment"># ================== 向量存储 ==================</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">init_vector_store</span>(<span class="params">nodes: <span class="type">List</span>[TextNode]</span>) -&gt; VectorStoreIndex:</span><br><span class="line">    chroma_client = chromadb.PersistentClient(path=Config.VECTOR_DB_DIR) <span class="comment"># 持久化存储</span></span><br><span class="line">    chroma_collection = chroma_client.get_or_create_collection(</span><br><span class="line">        name=Config.COLLECTION_NAME,</span><br><span class="line">        metadata=&#123;<span class="string">&quot;hnsw:space&quot;</span>: <span class="string">&quot;cosine&quot;</span>&#125;</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 确保存储上下文正确初始化</span></span><br><span class="line">    storage_context = StorageContext.from_defaults(</span><br><span class="line">        vector_store=ChromaVectorStore(chroma_collection=chroma_collection)</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 判断是否需要新建索引, 如果本地有数据库,就直接加载数据库,否则重新嵌入</span></span><br><span class="line">    <span class="keyword">if</span> chroma_collection.count() == <span class="number">0</span> <span class="keyword">and</span> nodes <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;创建新索引（<span class="subst">&#123;<span class="built_in">len</span>(nodes)&#125;</span>个节点）...&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 显式将节点添加到存储上下文</span></span><br><span class="line">        storage_context.docstore.add_documents(nodes)  </span><br><span class="line">        </span><br><span class="line">        index = VectorStoreIndex(</span><br><span class="line">            nodes,</span><br><span class="line">            storage_context=storage_context,</span><br><span class="line">            show_progress=<span class="literal">True</span></span><br><span class="line">        )</span><br><span class="line">        <span class="comment"># 双重持久化保障</span></span><br><span class="line">        storage_context.persist(persist_dir=Config.PERSIST_DIR) <span class="comment"># 存文档,用于人看,RAG用不到</span></span><br><span class="line">        index.storage_context.persist(persist_dir=Config.PERSIST_DIR)  <span class="comment"># &lt;-- 新增</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;加载已有索引...&quot;</span>)</span><br><span class="line">        storage_context = StorageContext.from_defaults(</span><br><span class="line">            persist_dir=Config.PERSIST_DIR,</span><br><span class="line">            vector_store=ChromaVectorStore(chroma_collection=chroma_collection)</span><br><span class="line">        )</span><br><span class="line">        index = VectorStoreIndex.from_vector_store(</span><br><span class="line">            storage_context.vector_store,</span><br><span class="line">            storage_context=storage_context,</span><br><span class="line">            embed_model=Settings.embed_model</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 安全验证</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;\n存储验证结果：&quot;</span>)</span><br><span class="line">    doc_count = <span class="built_in">len</span>(storage_context.docstore.docs)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;DocStore记录数：<span class="subst">&#123;doc_count&#125;</span>&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> doc_count &gt; <span class="number">0</span>:</span><br><span class="line">        sample_key = <span class="built_in">next</span>(<span class="built_in">iter</span>(storage_context.docstore.docs.keys()))</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;示例节点ID：<span class="subst">&#123;sample_key&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;警告：文档存储为空，请检查节点添加逻辑！&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> index</span><br><span class="line"></span><br><span class="line"><span class="comment"># ================== 主程序 ==================</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    embed_model = init_models()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 仅当需要更新数据时执行</span></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> Path(Config.VECTOR_DB_DIR).exists():</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\n初始化数据...&quot;</span>)</span><br><span class="line">        raw_data = load_and_validate_json_files(Config.DATA_DIR)</span><br><span class="line">        nodes = create_nodes(raw_data)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        nodes = <span class="literal">None</span>  <span class="comment"># 已有数据时不加载</span></span><br><span class="line">    </span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;\n初始化向量存储...&quot;</span>)</span><br><span class="line">    start_time = time.time()</span><br><span class="line">    index = init_vector_store(nodes)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;索引加载耗时：<span class="subst">&#123;time.time()-start_time:<span class="number">.2</span>f&#125;</span>s&quot;</span>)</span><br><span class="line">    </span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+<p>这里只建了数据库，还没有查询，所以没有加载大模型。</p>
+<p>结果如下: 说明向量数据库创建成功</p>
+<p><img src="/2025/07/25/llm-application-19/image-20250723231041824.png" alt="image-20250723231041824"></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>如果您读文章后有收获，可以打赏我喝咖啡哦～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="zheng rq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/06/30/autoregressive-decode/" rel="prev" title="Transformer注意力机制计算公式解析，自回归解码，KV-cache">
+      <i class="fa fa-chevron-left"></i> Transformer注意力机制计算公式解析，自回归解码，KV-cache
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/07/25/llm-application-20/" rel="next" title="大模型应用系列(二十) 大模型RAG项目实战：法律条文助手--实现与部署">
+      大模型应用系列(二十) 大模型RAG项目实战：法律条文助手--实现与部署 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E6%96%B9%E6%A1%88"><span class="nav-number">1.</span> <span class="nav-text">一. 方案</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-1-%E9%A1%B9%E7%9B%AE%E8%83%8C%E6%99%AF%E4%B8%8E%E9%9C%80%E6%B1%82%E8%AE%BE%E8%AE%A1"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 项目背景与需求设计</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#1-1-1-%E6%A0%B8%E5%BF%83%E9%9C%80%E6%B1%82"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1.1 核心需求</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-1-2-%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B-RAG-vs-%E5%BE%AE%E8%B0%83"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.1.2 技术选型: RAG vs 微调</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-%E6%A0%B8%E5%BF%83%E5%AE%9E%E7%8E%B0%E6%B5%81%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 核心实现流程</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#1-2-1-%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.2.1 流程图</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-2-2-%E5%85%B3%E9%94%AE%E6%A8%A1%E5%9D%97"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2.2 关键模块</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-3-%E6%95%B0%E6%8D%AE%E6%94%B6%E9%9B%86%E4%B8%8E%E6%95%B4%E7%90%86"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 数据收集与整理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-Lora%E5%BE%AE%E8%B0%83%E4%BC%98%E5%8C%96"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 Lora微调优化</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#1-4-1-%E5%BE%AE%E8%B0%83%E5%9C%BA%E6%99%AF"><span class="nav-number">1.4.1.</span> <span class="nav-text">1.4.1 微调场景</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-4-2-%E5%BE%AE%E8%B0%83%E6%AD%A5%E9%AA%A4"><span class="nav-number">1.4.2.</span> <span class="nav-text">1.4.2 微调步骤</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-5-%E5%8A%A0%E8%BD%BD%E6%95%B0%E6%8D%AE"><span class="nav-number">1.5.</span> <span class="nav-text">1.5 加载数据</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">zheng rq</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">48</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        <!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+</script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+-->
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zheng rq</span>
+</div>
+
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+
+<!--
+<script async src="https://busuanzi.sukap.cn/busuanzi.pure.mini.js"></script>
+本文总阅读量 <span id="busuanzi_value_page_pv"></span> 次
+本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+本站总访客数 <span id="busuanzi_value_site_uv"></span> 人
+本文总访客量 <span id="busuanzi_value_page_uv"></span> 人 
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
