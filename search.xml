@@ -4836,7 +4836,7 @@ A_{ij}=\frac{exp(q_i^TK_j/\sqrt{d})}{\sum_{t=1}^{\lceil /B\rceil }exp(q_i^TK_t/\
     <url>/2025/07/25/llm-application-20/</url>
     <content><![CDATA[<p>基于RAG构建法律条文助手，llamaindex框架，自定义数据划分方式，分为基础搭建，重排序优化，性能优化几个步骤。</p>
 <span id="more"></span>
-<p>本文涉及的数据和代码在: </p>
+<p>本文涉及的数据和代码在:  <a href="https://download.csdn.net/download/weixin_46091520/91521841">RAG实现法律助手，包括代码和数据资源-CSDN下载</a></p>
 <p>用到的模型有: </p>
 <p>对话模型: Qwen1.5-1.8B-Chat</p>
 <p>词嵌入模型: text2vec-base-chinese</p>
